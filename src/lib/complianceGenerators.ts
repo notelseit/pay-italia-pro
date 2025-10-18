@@ -260,31 +260,186 @@ export const generateF24 = (
   const doc = new jsPDF();
   const [year, monthNum] = month.split("-");
   
-  // Header
-  doc.setFontSize(18);
-  doc.text("MODELLO F24", 105, 20, { align: "center" });
-  
-  doc.setFontSize(10);
-  doc.text(`Periodo: ${monthNum}/${year}`, 20, 35);
-  doc.text(`Tipo Versamento: ${paymentType}`, 20, 42);
-  doc.text(`Contribuente: ${companyData.name}`, 20, 49);
-  doc.text(`P.IVA: ${companyData.vat_number || "N/A"}`, 20, 56);
-  
+  // Calcoli totali
   const totalINPS = payrollRecords.reduce((sum, r) => sum + r.inps_contribution, 0);
   const totalIRPEF = payrollRecords.reduce((sum, r) => sum + r.irpef_tax, 0);
   
-  const tableData = [
-    ["INPS", "Contributi previdenziali", totalINPS.toFixed(2)],
-    ["IRPEF", "Ritenute fiscali", totalIRPEF.toFixed(2)],
+  // === INTESTAZIONE ===
+  doc.setFontSize(16);
+  doc.setFont("helvetica", "bold");
+  doc.text("AGENZIA ENTRATE", 20, 15);
+  doc.setFontSize(14);
+  doc.text("MODELLO DI PAGAMENTO", 20, 22);
+  doc.text("UNIFICATO", 20, 28);
+  
+  doc.setFontSize(18);
+  doc.setFont("helvetica", "bold");
+  doc.setFillColor(173, 216, 230);
+  doc.rect(165, 10, 25, 10, "F");
+  doc.text("F24", 170, 17);
+  
+  // === CONTRIBUENTE ===
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.setFillColor(173, 216, 230);
+  doc.rect(20, 35, 170, 6, "F");
+  doc.text("CONTRIBUENTE", 22, 39);
+  
+  doc.setFont("helvetica", "normal");
+  doc.text("CODICE FISCALE:", 22, 47);
+  doc.rect(60, 43, 80, 6);
+  doc.text(companyData.vat_number || "", 62, 47);
+  
+  doc.text("DATI ANAGRAFICI", 22, 56);
+  doc.text(`Cognome, denominazione o ragione sociale: ${companyData.name}`, 22, 62);
+  doc.rect(22, 64, 168, 6);
+  doc.text(companyData.name, 24, 68);
+  
+  // === IMPOSTE DIRETTE - IVA - RITENUTE ALLA FONTE ===
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.setFillColor(173, 216, 230);
+  doc.rect(20, 80, 170, 6, "F");
+  doc.text("IMPOSTE DIRETTE - IVA", 22, 84);
+  doc.text("RITENUTE ALLA FONTE", 22, 89);
+  doc.text("ALTRI TRIBUTI ED INTERESSI", 22, 94);
+  
+  // Tabella sezione erario
+  const erarioHeaders = ["codice tributo", "rateazione", "anno rif.", "importi a debito", "importi a credito"];
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  
+  const erarioData = [
+    ["1001", "", year, totalIRPEF.toFixed(2), ""],
   ];
   
   autoTable(doc, {
-    startY: 70,
-    head: [["Codice", "Descrizione", "Importo (€)"]],
-    body: tableData,
-    foot: [["", "TOTALE DA VERSARE", (totalINPS + totalIRPEF).toFixed(2)]],
+    startY: 100,
+    head: [erarioHeaders],
+    body: erarioData,
+    foot: [["", "", "TOTALE A", totalIRPEF.toFixed(2), "B"]],
     theme: "grid",
+    styles: { fontSize: 8, cellPadding: 2 },
+    headStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0] },
+    footStyles: { fillColor: [220, 220, 220], fontStyle: 'bold' },
+    columnStyles: {
+      0: { cellWidth: 30 },
+      1: { cellWidth: 25 },
+      2: { cellWidth: 25 },
+      3: { cellWidth: 35, halign: 'right' },
+      4: { cellWidth: 35, halign: 'right' },
+    },
   });
+  
+  // === SEZIONE INPS ===
+  let yPos = (doc as any).lastAutoTable.finalY + 10;
+  
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.setFillColor(173, 216, 230);
+  doc.rect(20, yPos, 170, 6, "F");
+  doc.text("SEZIONE INPS", 22, yPos + 4);
+  
+  yPos += 10;
+  const inpsHeaders = ["codice sede", "causale contributo", "matricola INPS", "periodo dal/al", "importi a debito", "importi a credito"];
+  
+  const inpsData = [
+    ["", "M001", companyData.vat_number?.substring(0, 10) || "", `${monthNum}/${year}`, totalINPS.toFixed(2), ""],
+  ];
+  
+  autoTable(doc, {
+    startY: yPos,
+    head: [inpsHeaders],
+    body: inpsData,
+    foot: [["", "", "", "TOTALE C", totalINPS.toFixed(2), "D"]],
+    theme: "grid",
+    styles: { fontSize: 8, cellPadding: 2 },
+    headStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0] },
+    footStyles: { fillColor: [220, 220, 220], fontStyle: 'bold' },
+    columnStyles: {
+      0: { cellWidth: 25 },
+      1: { cellWidth: 25 },
+      2: { cellWidth: 30 },
+      3: { cellWidth: 30 },
+      4: { cellWidth: 35, halign: 'right' },
+      5: { cellWidth: 35, halign: 'right' },
+    },
+  });
+  
+  // === SALDO FINALE ===
+  yPos = (doc as any).lastAutoTable.finalY + 10;
+  
+  const totalDebito = totalIRPEF + totalINPS;
+  
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.setFillColor(173, 216, 230);
+  doc.rect(120, yPos, 70, 8, "F");
+  doc.text("SALDO FINALE", 125, yPos + 5);
+  doc.text(`€ ${totalDebito.toFixed(2)}`, 160, yPos + 5, { align: 'right' });
+  
+  // === CODICI TRIBUTO ===
+  yPos += 15;
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "bold");
+  doc.text("CODICI TRIBUTO UTILIZZATI:", 20, yPos);
+  doc.setFont("helvetica", "normal");
+  yPos += 6;
+  doc.text("• 1001 - IRPEF Ritenute su redditi da lavoro dipendente", 25, yPos);
+  yPos += 5;
+  doc.text("• M001 - Contributi previdenziali INPS", 25, yPos);
+  
+  // === MODALITÀ DI PAGAMENTO ===
+  yPos += 10;
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.text("MODALITÀ DI PAGAMENTO:", 20, yPos);
+  doc.setFont("helvetica", "normal");
+  yPos += 6;
+  doc.text(`Tipo: ${paymentType}`, 25, yPos);
+  yPos += 5;
+  doc.text(`Periodo di riferimento: ${monthNum}/${year}`, 25, yPos);
+  yPos += 5;
+  doc.text(`Data elaborazione: ${new Date().toLocaleDateString("it-IT")}`, 25, yPos);
+  
+  // === ESTREMI DEL VERSAMENTO ===
+  yPos += 10;
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.setFillColor(173, 216, 230);
+  doc.rect(20, yPos, 170, 6, "F");
+  doc.text("ESTREMI DEL VERSAMENTO", 22, yPos + 4);
+  
+  yPos += 10;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.text("Il pagamento deve essere effettuato tramite:", 22, yPos);
+  yPos += 5;
+  doc.text("• Home banking", 27, yPos);
+  yPos += 4;
+  doc.text("• Sportello bancario o postale", 27, yPos);
+  yPos += 4;
+  doc.text("• Intermediario abilitato", 27, yPos);
+  
+  // === NOTE ===
+  yPos += 10;
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "italic");
+  doc.text("Il modello deve essere firmato dal contribuente o da chi ne ha la rappresentanza legale.", 20, yPos);
+  yPos += 4;
+  doc.text("ATTENZIONE: Il modello F24 deve essere presentato esclusivamente in via telematica", 20, yPos);
+  yPos += 4;
+  doc.text("tramite i servizi telematici Entratel o Fisconline dell'Agenzia delle Entrate.", 20, yPos);
+  
+  // Footer
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "italic");
+  doc.text(
+    `F24 - ${monthNum}/${year} - ${companyData.name}`,
+    105,
+    285,
+    { align: "center" }
+  );
   
   doc.save(`F24_${monthNum}_${year}.pdf`);
 };
