@@ -31,8 +31,8 @@ export const PresenceDialog = ({
   month,
   year 
 }: PresenceDialogProps) => {
-  const { employees = [] } = useEmployees();
   const [companyId, setCompanyId] = useState<string>("");
+  const { employees = [], isLoading: loadingEmployees } = useEmployees(companyId);
   const [formData, setFormData] = useState({
     employee_id: "",
     working_days: 0,
@@ -114,16 +114,23 @@ export const PresenceDialog = ({
                   setFormData({ ...formData, employee_id: value })
                 }
                 required
+                disabled={loadingEmployees}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Seleziona dipendente" />
+                  <SelectValue placeholder={loadingEmployees ? "Caricamento..." : "Seleziona dipendente"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {employees.map((employee) => (
-                    <SelectItem key={employee.id} value={employee.id}>
-                      {employee.full_name}
-                    </SelectItem>
-                  ))}
+                  {employees.length === 0 && !loadingEmployees ? (
+                    <div className="p-2 text-sm text-muted-foreground text-center">
+                      Nessun dipendente disponibile
+                    </div>
+                  ) : (
+                    employees.map((employee) => (
+                      <SelectItem key={employee.id} value={employee.id}>
+                        {employee.full_name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>

@@ -28,8 +28,9 @@ import { supabase } from "@/integrations/supabase/client";
 const Presence = () => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedMonth, setSelectedMonth] = useState(11); // November
-  const [selectedYear, setSelectedYear] = useState(2024);
+  const currentDate = new Date();
+  const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedPresence, setSelectedPresence] = useState<any>(null);
 
@@ -186,12 +187,21 @@ const Presence = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="gennaio-2025">Gennaio 2025</SelectItem>
+                    <SelectItem value="febbraio-2025">Febbraio 2025</SelectItem>
+                    <SelectItem value="marzo-2025">Marzo 2025</SelectItem>
+                    <SelectItem value="aprile-2025">Aprile 2025</SelectItem>
+                    <SelectItem value="maggio-2025">Maggio 2025</SelectItem>
+                    <SelectItem value="giugno-2025">Giugno 2025</SelectItem>
+                    <SelectItem value="luglio-2025">Luglio 2025</SelectItem>
+                    <SelectItem value="agosto-2025">Agosto 2025</SelectItem>
+                    <SelectItem value="settembre-2025">Settembre 2025</SelectItem>
+                    <SelectItem value="ottobre-2025">Ottobre 2025</SelectItem>
+                    <SelectItem value="novembre-2025">Novembre 2025</SelectItem>
+                    <SelectItem value="dicembre-2025">Dicembre 2025</SelectItem>
+                    <SelectItem value="dicembre-2024">Dicembre 2024</SelectItem>
                     <SelectItem value="novembre-2024">Novembre 2024</SelectItem>
                     <SelectItem value="ottobre-2024">Ottobre 2024</SelectItem>
-                    <SelectItem value="settembre-2024">Settembre 2024</SelectItem>
-                    <SelectItem value="agosto-2024">Agosto 2024</SelectItem>
-                    <SelectItem value="luglio-2024">Luglio 2024</SelectItem>
-                    <SelectItem value="giugno-2024">Giugno 2024</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
