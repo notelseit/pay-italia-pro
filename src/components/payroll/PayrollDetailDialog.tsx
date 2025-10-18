@@ -5,12 +5,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Download } from "lucide-react";
 import { formatCurrency } from "@/lib/payrollCalculations";
+import { generatePayrollPDF } from "@/lib/pdfGenerator";
 
 interface PayrollRecord {
   id: string;
   employee_id: string;
+  company_id: string;
   month: number;
   year: number;
   base_salary: number;
@@ -20,9 +24,22 @@ interface PayrollRecord {
   inps_contribution: number;
   irpef_tax: number;
   net_salary: number;
-  status: string;
+  status: "bozza" | "confermato" | "inviato" | "generato";
   created_at: string;
-  employees?: { full_name: string };
+  updated_at: string;
+  confirmed_at: string | null;
+  sent_at: string | null;
+  pdf_url: string | null;
+  employees?: { 
+    full_name: string;
+    tax_code?: string;
+    hire_date?: string;
+    employee_type?: string;
+    national_contract_type?: string;
+    working_hours?: number;
+    inps_position?: string;
+    inail_position?: string;
+  };
 }
 
 interface PayrollDetailDialogProps {
@@ -70,15 +87,25 @@ export function PayrollDetailDialog({
   
   const totalDeductions = Number(payroll.inps_contribution) + Number(payroll.irpef_tax);
 
+  const handleDownloadPDF = () => {
+    generatePayrollPDF(payroll);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
-            <DialogTitle>Dettaglio Cedolino</DialogTitle>
-            <Badge variant="outline" className={getStatusBadge(payroll.status)}>
-              {getStatusLabel(payroll.status)}
-            </Badge>
+            <div className="flex items-center gap-3">
+              <DialogTitle>Dettaglio Cedolino</DialogTitle>
+              <Badge variant="outline" className={getStatusBadge(payroll.status)}>
+                {getStatusLabel(payroll.status)}
+              </Badge>
+            </div>
+            <Button onClick={handleDownloadPDF} size="sm" className="gap-2">
+              <Download className="h-4 w-4" />
+              Scarica PDF
+            </Button>
           </div>
         </DialogHeader>
 
