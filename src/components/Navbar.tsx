@@ -7,19 +7,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
+  const { signOut } = useAuth();
 
-  const handleLogout = () => {
-    toast({
-      title: "Disconnesso",
-      description: "A presto!",
-    });
-    navigate("/");
+  const handleLogout = async () => {
+    await signOut();
   };
 
   const navItems = [

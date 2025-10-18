@@ -3,6 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/hooks/useAuth";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -21,18 +23,44 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/employees" element={<Employees />} />
-          <Route path="/presence" element={<Presence />} />
-          <Route path="/payroll" element={<Payroll />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/settings" element={<Settings />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/dashboard" element={
+              <ProtectedRoute requireRole={['admin', 'hr_manager']}>
+                <Dashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/employees" element={
+              <ProtectedRoute requireRole={['admin', 'hr_manager']}>
+                <Employees />
+              </ProtectedRoute>
+            } />
+            <Route path="/presence" element={
+              <ProtectedRoute requireRole={['admin', 'hr_manager']}>
+                <Presence />
+              </ProtectedRoute>
+            } />
+            <Route path="/payroll" element={
+              <ProtectedRoute requireRole={['admin', 'hr_manager']}>
+                <Payroll />
+              </ProtectedRoute>
+            } />
+            <Route path="/reports" element={
+              <ProtectedRoute requireRole={['admin', 'hr_manager']}>
+                <Reports />
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute requireRole={['admin', 'hr_manager']}>
+                <Settings />
+              </ProtectedRoute>
+            } />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,40 +7,92 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
 import { FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { z } from "zod";
+
+const loginSchema = z.object({
+  email: z.string().email("Email non valida"),
+  password: z.string().min(6, "La password deve essere almeno 6 caratteri"),
+});
+
+const registerSchema = z.object({
+  fullName: z.string().min(2, "Nome richiesto"),
+  companyName: z.string().min(2, "Nome azienda richiesto"),
+  email: z.string().email("Email non valida"),
+  password: z.string().min(6, "La password deve essere almeno 6 caratteri"),
+  confirmPassword: z.string(),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Le password non coincidono",
+  path: ["confirmPassword"],
+});
 
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signIn, signUp, user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [loginData, setLoginData] = useState({ email: "", password: "" });
+  const [registerData, setRegisterData] = useState({
+    fullName: "",
+    companyName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     
-    // Simulate login - will be replaced with real auth
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      loginSchema.parse(loginData);
+      setIsLoading(true);
+      await signIn(loginData.email, loginData.password);
       toast({
         title: "Accesso effettuato",
         description: "Benvenuto in PayHub",
       });
-      navigate("/dashboard");
-    }, 1000);
+    } catch (error: any) {
+      toast({
+        title: "Errore",
+        description: error.message || "Credenziali non valide",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     
-    // Simulate registration - will be replaced with real auth
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      registerSchema.parse(registerData);
+      setIsLoading(true);
+      await signUp(
+        registerData.email,
+        registerData.password,
+        registerData.fullName,
+        registerData.companyName
+      );
       toast({
         title: "Registrazione completata",
         description: "Account creato con successo",
       });
-      navigate("/dashboard");
-    }, 1000);
+    } catch (error: any) {
+      toast({
+        title: "Errore",
+        description: error.message || "Errore durante la registrazione",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -72,7 +124,9 @@ const Login = () => {
                     <Input 
                       id="email" 
                       type="email" 
-                      placeholder="hr@azienda.it" 
+                      placeholder="hr@azienda.it"
+                      value={loginData.email}
+                      onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
                       required 
                     />
                   </div>
@@ -80,7 +134,9 @@ const Login = () => {
                     <Label htmlFor="password">Password</Label>
                     <Input 
                       id="password" 
-                      type="password" 
+                      type="password"
+                      value={loginData.password}
+                      onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
                       required 
                     />
                   </div>
@@ -98,10 +154,22 @@ const Login = () => {
               <TabsContent value="register">
                 <form onSubmit={handleRegister} className="space-y-4">
                   <div className="space-y-2">
+                    <Label htmlFor="fullName">Nome Completo</Label>
+                    <Input 
+                      id="fullName" 
+                      placeholder="Mario Rossi"
+                      value={registerData.fullName}
+                      onChange={(e) => setRegisterData({ ...registerData, fullName: e.target.value })}
+                      required 
+                    />
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="company">Nome Azienda</Label>
                     <Input 
                       id="company" 
-                      placeholder="Azienda S.r.l." 
+                      placeholder="Azienda S.r.l."
+                      value={registerData.companyName}
+                      onChange={(e) => setRegisterData({ ...registerData, companyName: e.target.value })}
                       required 
                     />
                   </div>
@@ -110,7 +178,9 @@ const Login = () => {
                     <Input 
                       id="reg-email" 
                       type="email" 
-                      placeholder="hr@azienda.it" 
+                      placeholder="hr@azienda.it"
+                      value={registerData.email}
+                      onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
                       required 
                     />
                   </div>
@@ -118,7 +188,9 @@ const Login = () => {
                     <Label htmlFor="reg-password">Password</Label>
                     <Input 
                       id="reg-password" 
-                      type="password" 
+                      type="password"
+                      value={registerData.password}
+                      onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
                       required 
                     />
                   </div>
@@ -126,7 +198,9 @@ const Login = () => {
                     <Label htmlFor="confirm-password">Conferma Password</Label>
                     <Input 
                       id="confirm-password" 
-                      type="password" 
+                      type="password"
+                      value={registerData.confirmPassword}
+                      onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
                       required 
                     />
                   </div>
