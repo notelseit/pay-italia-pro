@@ -263,183 +263,409 @@ export const generateF24 = (
   // Calcoli totali
   const totalINPS = payrollRecords.reduce((sum, r) => sum + r.inps_contribution, 0);
   const totalIRPEF = payrollRecords.reduce((sum, r) => sum + r.irpef_tax, 0);
+  const totalDebito = totalIRPEF + totalINPS;
+  
+  // Layout constants
+  const margin = 10;
+  const pageWidth = 210; // A4 width in mm
+  const contentWidth = pageWidth - (margin * 2);
   
   // === INTESTAZIONE ===
-  doc.setFontSize(16);
-  doc.setFont("helvetica", "bold");
-  doc.text("AGENZIA ENTRATE", 20, 15);
-  doc.setFontSize(14);
-  doc.text("MODELLO DI PAGAMENTO", 20, 22);
-  doc.text("UNIFICATO", 20, 28);
-  
-  doc.setFontSize(18);
-  doc.setFont("helvetica", "bold");
-  doc.setFillColor(173, 216, 230);
-  doc.rect(165, 10, 25, 10, "F");
-  doc.text("F24", 170, 17);
-  
-  // === CONTRIBUENTE ===
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.setFillColor(173, 216, 230);
-  doc.rect(20, 35, 170, 6, "F");
-  doc.text("CONTRIBUENTE", 22, 39);
-  
-  doc.setFont("helvetica", "normal");
-  doc.text("CODICE FISCALE:", 22, 47);
-  doc.rect(60, 43, 80, 6);
-  doc.text(companyData.vat_number || "", 62, 47);
-  
-  doc.text("DATI ANAGRAFICI", 22, 56);
-  doc.text(`Cognome, denominazione o ragione sociale: ${companyData.name}`, 22, 62);
-  doc.rect(22, 64, 168, 6);
-  doc.text(companyData.name, 24, 68);
-  
-  // === IMPOSTE DIRETTE - IVA - RITENUTE ALLA FONTE ===
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.setFillColor(173, 216, 230);
-  doc.rect(20, 80, 170, 6, "F");
-  doc.text("IMPOSTE DIRETTE - IVA", 22, 84);
-  doc.text("RITENUTE ALLA FONTE", 22, 89);
-  doc.text("ALTRI TRIBUTI ED INTERESSI", 22, 94);
-  
-  // Tabella sezione erario
-  const erarioHeaders = ["codice tributo", "rateazione", "anno rif.", "importi a debito", "importi a credito"];
-  doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
-  
-  const erarioData = [
-    ["1001", "", year, totalIRPEF.toFixed(2), ""],
-  ];
-  
-  autoTable(doc, {
-    startY: 100,
-    head: [erarioHeaders],
-    body: erarioData,
-    foot: [["", "", "TOTALE A", totalIRPEF.toFixed(2), "B"]],
-    theme: "grid",
-    styles: { fontSize: 8, cellPadding: 2 },
-    headStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0] },
-    footStyles: { fillColor: [220, 220, 220], fontStyle: 'bold' },
-    columnStyles: {
-      0: { cellWidth: 30 },
-      1: { cellWidth: 25 },
-      2: { cellWidth: 25 },
-      3: { cellWidth: 35, halign: 'right' },
-      4: { cellWidth: 35, halign: 'right' },
-    },
-  });
-  
-  // === SEZIONE INPS ===
-  let yPos = (doc as any).lastAutoTable.finalY + 10;
-  
-  doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
-  doc.setFillColor(173, 216, 230);
-  doc.rect(20, yPos, 170, 6, "F");
-  doc.text("SEZIONE INPS", 22, yPos + 4);
-  
-  yPos += 10;
-  const inpsHeaders = ["codice sede", "causale contributo", "matricola INPS", "periodo dal/al", "importi a debito", "importi a credito"];
-  
-  const inpsData = [
-    ["", "M001", companyData.vat_number?.substring(0, 10) || "", `${monthNum}/${year}`, totalINPS.toFixed(2), ""],
-  ];
-  
-  autoTable(doc, {
-    startY: yPos,
-    head: [inpsHeaders],
-    body: inpsData,
-    foot: [["", "", "", "TOTALE C", totalINPS.toFixed(2), "D"]],
-    theme: "grid",
-    styles: { fontSize: 8, cellPadding: 2 },
-    headStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0] },
-    footStyles: { fillColor: [220, 220, 220], fontStyle: 'bold' },
-    columnStyles: {
-      0: { cellWidth: 25 },
-      1: { cellWidth: 25 },
-      2: { cellWidth: 30 },
-      3: { cellWidth: 30 },
-      4: { cellWidth: 35, halign: 'right' },
-      5: { cellWidth: 35, halign: 'right' },
-    },
-  });
-  
-  // === SALDO FINALE ===
-  yPos = (doc as any).lastAutoTable.finalY + 10;
-  
-  const totalDebito = totalIRPEF + totalINPS;
+  doc.text("MOD. F24 – 2013 EURO", margin, 10);
   
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
-  doc.setFillColor(173, 216, 230);
-  doc.rect(120, yPos, 70, 8, "F");
-  doc.text("SALDO FINALE", 125, yPos + 5);
-  doc.text(`€ ${totalDebito.toFixed(2)}`, 160, yPos + 5, { align: 'right' });
+  doc.text("MODELLO DI PAGAMENTO UNIFICATO", margin, 18);
   
-  // === CODICI TRIBUTO ===
-  yPos += 15;
+  // Box F24 a destra
+  doc.setFontSize(18);
+  doc.rect(165, 8, 35, 12);
+  doc.text("F24", 182, 16, { align: "center" });
+  
+  // === CONTRIBUENTE ===
+  let yPos = 25;
   doc.setFontSize(9);
   doc.setFont("helvetica", "bold");
-  doc.text("CODICI TRIBUTO UTILIZZATI:", 20, yPos);
-  doc.setFont("helvetica", "normal");
-  yPos += 6;
-  doc.text("• 1001 - IRPEF Ritenute su redditi da lavoro dipendente", 25, yPos);
-  yPos += 5;
-  doc.text("• M001 - Contributi previdenziali INPS", 25, yPos);
+  doc.setFillColor(220, 220, 220);
+  doc.rect(margin, yPos, contentWidth, 6, "FD");
+  doc.text("CONTRIBUENTE", margin + 2, yPos + 4);
   
-  // === MODALITÀ DI PAGAMENTO ===
+  yPos += 8;
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "normal");
+  doc.text("CODICE FISCALE", margin, yPos);
+  
+  // Box per codice fiscale
+  doc.rect(margin + 35, yPos - 3, 80, 6);
+  doc.setFont("helvetica", "bold");
+  doc.text(companyData.vat_number || "", margin + 37, yPos + 1);
+  
+  // Checkbox anno non coincidente
+  doc.setFontSize(6);
+  doc.setFont("helvetica", "normal");
+  doc.rect(margin + 120, yPos - 3, 3, 3);
+  doc.text("barrare in caso di anno d'imposta non coincidente con anno solare", margin + 125, yPos);
+  
+  // === DATI ANAGRAFICI ===
+  yPos += 8;
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.text("DATI ANAGRAFICI", margin, yPos);
+  
+  yPos += 5;
+  doc.setFont("helvetica", "normal");
+  doc.text("cognome, denominazione o ragione sociale", margin, yPos);
+  doc.rect(margin, yPos + 1, contentWidth * 0.65, 6);
+  doc.setFont("helvetica", "bold");
+  doc.text(companyData.name, margin + 2, yPos + 5);
+  
+  doc.setFont("helvetica", "normal");
+  doc.text("nome", margin + contentWidth * 0.67, yPos);
+  doc.rect(margin + contentWidth * 0.67, yPos + 1, contentWidth * 0.33, 6);
+  
+  // === DOMICILIO FISCALE ===
   yPos += 10;
+  doc.setFont("helvetica", "bold");
+  doc.text("DOMICILIO FISCALE", margin, yPos);
+  
+  yPos += 5;
+  doc.setFont("helvetica", "normal");
+  doc.text("comune", margin, yPos);
+  doc.rect(margin, yPos + 1, 70, 6);
+  
+  doc.text("prov.", margin + 72, yPos);
+  doc.rect(margin + 72, yPos + 1, 10, 6);
+  
+  doc.text("via e numero civico", margin + 84, yPos);
+  doc.rect(margin + 84, yPos + 1, contentWidth - 84, 6);
+  if (companyData.address) {
+    doc.text(companyData.address, margin + 86, yPos + 5);
+  }
+  
+  // === SEZIONE ERARIO ===
+  yPos += 12;
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "bold");
+  doc.setFillColor(220, 220, 220);
+  doc.rect(margin, yPos, contentWidth, 6, "FD");
+  doc.text("SEZIONE ERARIO", margin + 2, yPos + 4);
+  
+  yPos += 8;
+  doc.setFontSize(7);
+  doc.setFont("helvetica", "normal");
+  doc.text("IMPOSTE DIRETTE – IVA – RITENUTE ALLA FONTE – ALTRI TRIBUTI ED INTERESSI", margin, yPos);
+  
+  // Intestazione tabella
+  yPos += 3;
+  const colWidths = [25, 35, 20, 30, 30];
+  const startX = margin;
+  
+  doc.setFontSize(6);
+  doc.rect(startX, yPos, colWidths[0], 8);
+  doc.text("codice tributo", startX + 1, yPos + 3);
+  
+  doc.rect(startX + colWidths[0], yPos, colWidths[1], 8);
+  doc.text("rateazione/regione/", startX + colWidths[0] + 1, yPos + 2);
+  doc.text("prov./mese rif.", startX + colWidths[0] + 1, yPos + 5);
+  
+  doc.rect(startX + colWidths[0] + colWidths[1], yPos, colWidths[2], 8);
+  doc.text("anno di", startX + colWidths[0] + colWidths[1] + 1, yPos + 2);
+  doc.text("riferimento", startX + colWidths[0] + colWidths[1] + 1, yPos + 5);
+  
+  doc.rect(startX + colWidths[0] + colWidths[1] + colWidths[2], yPos, colWidths[3], 8);
+  doc.text("importi a debito", startX + colWidths[0] + colWidths[1] + colWidths[2] + 1, yPos + 2);
+  doc.text("versati", startX + colWidths[0] + colWidths[1] + colWidths[2] + 1, yPos + 5);
+  
+  doc.rect(startX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3], yPos, colWidths[4], 8);
+  doc.text("importi a credito", startX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 1, yPos + 2);
+  doc.text("compensati", startX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 1, yPos + 5);
+  
+  // Riga dati IRPEF
+  yPos += 8;
+  doc.setFontSize(8);
+  doc.rect(startX, yPos, colWidths[0], 6);
+  doc.text("1001", startX + 2, yPos + 4);
+  
+  doc.rect(startX + colWidths[0], yPos, colWidths[1], 6);
+  doc.text(`${monthNum}`, startX + colWidths[0] + 2, yPos + 4);
+  
+  doc.rect(startX + colWidths[0] + colWidths[1], yPos, colWidths[2], 6);
+  doc.text(year, startX + colWidths[0] + colWidths[1] + 2, yPos + 4);
+  
+  doc.rect(startX + colWidths[0] + colWidths[1] + colWidths[2], yPos, colWidths[3], 6);
+  doc.text(totalIRPEF.toFixed(2), startX + colWidths[0] + colWidths[1] + colWidths[2] + 25, yPos + 4, { align: "right" });
+  
+  doc.rect(startX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3], yPos, colWidths[4], 6);
+  
+  // Righe vuote per altri tributi
+  for (let i = 0; i < 3; i++) {
+    yPos += 6;
+    doc.rect(startX, yPos, colWidths[0], 6);
+    doc.rect(startX + colWidths[0], yPos, colWidths[1], 6);
+    doc.rect(startX + colWidths[0] + colWidths[1], yPos, colWidths[2], 6);
+    doc.rect(startX + colWidths[0] + colWidths[1] + colWidths[2], yPos, colWidths[3], 6);
+    doc.rect(startX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3], yPos, colWidths[4], 6);
+  }
+  
+  // Riga TOTALE ERARIO
+  yPos += 6;
+  doc.setFontSize(7);
+  doc.setFont("helvetica", "bold");
+  doc.rect(startX, yPos, colWidths[0] + colWidths[1] + colWidths[2], 6);
+  doc.text("SALDO (A-B)", startX + 2, yPos + 4);
+  
+  doc.rect(startX + colWidths[0] + colWidths[1] + colWidths[2], yPos, colWidths[3], 6);
+  doc.text("TOTALE", startX + colWidths[0] + colWidths[1] + colWidths[2] + 2, yPos + 4);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  doc.text(totalIRPEF.toFixed(2), startX + colWidths[0] + colWidths[1] + colWidths[2] + 25, yPos + 4, { align: "right" });
+  
+  doc.rect(startX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3], yPos, colWidths[4], 6);
+  doc.setFontSize(7);
+  doc.text("A", startX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 2, yPos + 4);
+  doc.text("B", startX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + 20, yPos + 4);
+  
+  // === SEZIONE INPS ===
+  yPos += 10;
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "bold");
+  doc.setFillColor(220, 220, 220);
+  doc.rect(margin, yPos, contentWidth, 6, "FD");
+  doc.text("SEZIONE INPS", margin + 2, yPos + 4);
+  
+  yPos += 8;
+  doc.setFontSize(6);
+  doc.setFont("helvetica", "normal");
+  
+  // Intestazione INPS
+  const inpsColWidths = [15, 15, 35, 15, 15, 35, 30];
+  const inpsStartX = margin;
+  
+  doc.rect(inpsStartX, yPos, inpsColWidths[0], 8);
+  doc.text("codice", inpsStartX + 1, yPos + 2);
+  doc.text("sede", inpsStartX + 1, yPos + 5);
+  
+  doc.rect(inpsStartX + inpsColWidths[0], yPos, inpsColWidths[1], 8);
+  doc.text("causale", inpsStartX + inpsColWidths[0] + 1, yPos + 3);
+  
+  doc.rect(inpsStartX + inpsColWidths[0] + inpsColWidths[1], yPos, inpsColWidths[2], 8);
+  doc.text("matricola INPS/codice INPS/", inpsStartX + inpsColWidths[0] + inpsColWidths[1] + 1, yPos + 2);
+  doc.text("sede contributo", inpsStartX + inpsColWidths[0] + inpsColWidths[1] + 1, yPos + 5);
+  
+  doc.rect(inpsStartX + inpsColWidths[0] + inpsColWidths[1] + inpsColWidths[2], yPos, inpsColWidths[3], 8);
+  doc.text("filiale", inpsStartX + inpsColWidths[0] + inpsColWidths[1] + inpsColWidths[2] + 1, yPos + 2);
+  doc.text("azienda", inpsStartX + inpsColWidths[0] + inpsColWidths[1] + inpsColWidths[2] + 1, yPos + 5);
+  
+  doc.rect(inpsStartX + inpsColWidths[0] + inpsColWidths[1] + inpsColWidths[2] + inpsColWidths[3], yPos, inpsColWidths[4], 8);
+  doc.text("periodo di riferimento:", inpsStartX + inpsColWidths[0] + inpsColWidths[1] + inpsColWidths[2] + inpsColWidths[3] + 1, yPos + 2);
+  doc.text("da mm/aaaa", inpsStartX + inpsColWidths[0] + inpsColWidths[1] + inpsColWidths[2] + inpsColWidths[3] + 1, yPos + 5);
+  
+  doc.rect(inpsStartX + inpsColWidths[0] + inpsColWidths[1] + inpsColWidths[2] + inpsColWidths[3] + inpsColWidths[4], yPos, inpsColWidths[5], 8);
+  doc.text("a mm/aaaa", inpsStartX + inpsColWidths[0] + inpsColWidths[1] + inpsColWidths[2] + inpsColWidths[3] + inpsColWidths[4] + 1, yPos + 2);
+  doc.text("importi a debito", inpsStartX + inpsColWidths[0] + inpsColWidths[1] + inpsColWidths[2] + inpsColWidths[3] + inpsColWidths[4] + 1, yPos + 5);
+  
+  doc.rect(inpsStartX + inpsColWidths[0] + inpsColWidths[1] + inpsColWidths[2] + inpsColWidths[3] + inpsColWidths[4] + inpsColWidths[5], yPos, inpsColWidths[6], 8);
+  doc.text("importi a credito", inpsStartX + inpsColWidths[0] + inpsColWidths[1] + inpsColWidths[2] + inpsColWidths[3] + inpsColWidths[4] + inpsColWidths[5] + 1, yPos + 2);
+  doc.text("compensati", inpsStartX + inpsColWidths[0] + inpsColWidths[1] + inpsColWidths[2] + inpsColWidths[3] + inpsColWidths[4] + inpsColWidths[5] + 1, yPos + 5);
+  
+  // Riga dati INPS
+  yPos += 8;
+  doc.setFontSize(8);
+  doc.rect(inpsStartX, yPos, inpsColWidths[0], 6);
+  
+  doc.rect(inpsStartX + inpsColWidths[0], yPos, inpsColWidths[1], 6);
+  doc.text("M001", inpsStartX + inpsColWidths[0] + 1, yPos + 4);
+  
+  doc.rect(inpsStartX + inpsColWidths[0] + inpsColWidths[1], yPos, inpsColWidths[2], 6);
+  doc.text(companyData.vat_number?.substring(0, 16) || "", inpsStartX + inpsColWidths[0] + inpsColWidths[1] + 1, yPos + 4);
+  
+  doc.rect(inpsStartX + inpsColWidths[0] + inpsColWidths[1] + inpsColWidths[2], yPos, inpsColWidths[3], 6);
+  
+  doc.rect(inpsStartX + inpsColWidths[0] + inpsColWidths[1] + inpsColWidths[2] + inpsColWidths[3], yPos, inpsColWidths[4], 6);
+  doc.text(`${monthNum}/${year}`, inpsStartX + inpsColWidths[0] + inpsColWidths[1] + inpsColWidths[2] + inpsColWidths[3] + 1, yPos + 4);
+  
+  doc.rect(inpsStartX + inpsColWidths[0] + inpsColWidths[1] + inpsColWidths[2] + inpsColWidths[3] + inpsColWidths[4], yPos, inpsColWidths[5], 6);
+  doc.text(totalINPS.toFixed(2), inpsStartX + inpsColWidths[0] + inpsColWidths[1] + inpsColWidths[2] + inpsColWidths[3] + inpsColWidths[4] + 30, yPos + 4, { align: "right" });
+  
+  doc.rect(inpsStartX + inpsColWidths[0] + inpsColWidths[1] + inpsColWidths[2] + inpsColWidths[3] + inpsColWidths[4] + inpsColWidths[5], yPos, inpsColWidths[6], 6);
+  
+  // Righe vuote INPS
+  for (let i = 0; i < 2; i++) {
+    yPos += 6;
+    for (let j = 0; j < inpsColWidths.length; j++) {
+      const xPos = inpsStartX + inpsColWidths.slice(0, j).reduce((a, b) => a + b, 0);
+      doc.rect(xPos, yPos, inpsColWidths[j], 6);
+    }
+  }
+  
+  // Riga TOTALE INPS
+  yPos += 6;
+  doc.setFontSize(7);
+  doc.setFont("helvetica", "bold");
+  const inpsTotalStartX = inpsStartX + inpsColWidths[0] + inpsColWidths[1] + inpsColWidths[2] + inpsColWidths[3] + inpsColWidths[4];
+  doc.rect(inpsStartX, yPos, inpsTotalStartX - inpsStartX, 6);
+  doc.text("SALDO (C-D)", inpsStartX + 2, yPos + 4);
+  
+  doc.rect(inpsTotalStartX, yPos, inpsColWidths[5], 6);
+  doc.text("TOTALE", inpsTotalStartX + 2, yPos + 4);
+  doc.setFontSize(8);
+  doc.text(totalINPS.toFixed(2), inpsTotalStartX + 30, yPos + 4, { align: "right" });
+  
+  doc.rect(inpsTotalStartX + inpsColWidths[5], yPos, inpsColWidths[6], 6);
+  doc.setFontSize(7);
+  doc.text("C", inpsTotalStartX + inpsColWidths[5] + 2, yPos + 4);
+  doc.text("D", inpsTotalStartX + inpsColWidths[5] + 20, yPos + 4);
+  
+  // === SEZIONE REGIONI (vuota) ===
+  yPos += 10;
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "bold");
+  doc.setFillColor(220, 220, 220);
+  doc.rect(margin, yPos, contentWidth, 6, "FD");
+  doc.text("SEZIONE REGIONI", margin + 2, yPos + 4);
+  
+  yPos += 8;
+  doc.setFontSize(6);
+  doc.setFont("helvetica", "normal");
+  
+  const regionColWidths = [20, 25, 30, 20, 30, 30];
+  let regionX = margin;
+  
+  doc.rect(regionX, yPos, regionColWidths[0], 8);
+  doc.text("codice", regionX + 1, yPos + 2);
+  doc.text("regione", regionX + 1, yPos + 5);
+  
+  regionX += regionColWidths[0];
+  doc.rect(regionX, yPos, regionColWidths[1], 8);
+  doc.text("codice tributo", regionX + 1, yPos + 3);
+  
+  regionX += regionColWidths[1];
+  doc.rect(regionX, yPos, regionColWidths[2], 8);
+  doc.text("rateazione/", regionX + 1, yPos + 2);
+  doc.text("mese rif.", regionX + 1, yPos + 5);
+  
+  regionX += regionColWidths[2];
+  doc.rect(regionX, yPos, regionColWidths[3], 8);
+  doc.text("anno di", regionX + 1, yPos + 2);
+  doc.text("riferimento", regionX + 1, yPos + 5);
+  
+  regionX += regionColWidths[3];
+  doc.rect(regionX, yPos, regionColWidths[4], 8);
+  doc.text("importi a debito", regionX + 1, yPos + 2);
+  doc.text("versati", regionX + 1, yPos + 5);
+  
+  regionX += regionColWidths[4];
+  doc.rect(regionX, yPos, regionColWidths[5], 8);
+  doc.text("importi a credito", regionX + 1, yPos + 2);
+  doc.text("compensati", regionX + 1, yPos + 5);
+  
+  // Riga vuota
+  yPos += 8;
+  regionX = margin;
+  for (let i = 0; i < regionColWidths.length; i++) {
+    doc.rect(regionX, yPos, regionColWidths[i], 6);
+    regionX += regionColWidths[i];
+  }
+  
+  // Totale regioni
+  yPos += 6;
+  doc.setFontSize(7);
+  doc.setFont("helvetica", "bold");
+  regionX = margin;
+  const regionTotalWidth = regionColWidths[0] + regionColWidths[1] + regionColWidths[2] + regionColWidths[3];
+  doc.rect(regionX, yPos, regionTotalWidth, 6);
+  doc.text("SALDO (E-F)", regionX + 2, yPos + 4);
+  
+  regionX += regionTotalWidth;
+  doc.rect(regionX, yPos, regionColWidths[4], 6);
+  doc.text("TOTALE", regionX + 2, yPos + 4);
+  
+  regionX += regionColWidths[4];
+  doc.rect(regionX, yPos, regionColWidths[5], 6);
+  doc.text("E", regionX + 2, yPos + 4);
+  doc.text("F", regionX + 20, yPos + 4);
+  
+  // === SALDO FINALE ===
+  yPos += 12;
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
-  doc.text("MODALITÀ DI PAGAMENTO:", 20, yPos);
+  doc.text("SALDO FINALE", margin, yPos);
+  
+  yPos += 2;
+  doc.setFontSize(8);
+  doc.text("TOTALE M", margin + 100, yPos);
+  doc.rect(margin + 125, yPos - 3, 30, 8);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.text(totalDebito.toFixed(2), margin + 150, yPos + 2, { align: "right" });
+  
+  doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
-  yPos += 6;
-  doc.text(`Tipo: ${paymentType}`, 25, yPos);
+  doc.text("SALDO FINALE N", margin + 160, yPos);
+  doc.rect(margin + 160, yPos - 3, 3, 3);
+  
+  yPos += 8;
+  doc.setFontSize(9);
+  doc.text("EURO +", margin + 125, yPos);
+  
+  // === FIRMA ===
   yPos += 5;
-  doc.text(`Periodo di riferimento: ${monthNum}/${year}`, 25, yPos);
-  yPos += 5;
-  doc.text(`Data elaborazione: ${new Date().toLocaleDateString("it-IT")}`, 25, yPos);
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.text("FIRMA", margin, yPos);
+  doc.setFont("helvetica", "normal");
+  doc.line(margin + 15, yPos, margin + 80, yPos);
   
   // === ESTREMI DEL VERSAMENTO ===
-  yPos += 10;
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.setFillColor(173, 216, 230);
-  doc.rect(20, yPos, 170, 6, "F");
-  doc.text("ESTREMI DEL VERSAMENTO", 22, yPos + 4);
-  
-  yPos += 10;
-  doc.setFont("helvetica", "normal");
+  yPos += 8;
   doc.setFontSize(9);
-  doc.text("Il pagamento deve essere effettuato tramite:", 22, yPos);
-  yPos += 5;
-  doc.text("• Home banking", 27, yPos);
-  yPos += 4;
-  doc.text("• Sportello bancario o postale", 27, yPos);
-  yPos += 4;
-  doc.text("• Intermediario abilitato", 27, yPos);
+  doc.setFont("helvetica", "bold");
+  doc.setFillColor(220, 220, 220);
+  doc.rect(margin, yPos, contentWidth, 6, "FD");
+  doc.text("ESTREMI DEL VERSAMENTO", margin + 2, yPos + 4);
   
-  // === NOTE ===
-  yPos += 10;
-  doc.setFontSize(8);
+  yPos += 8;
+  doc.setFontSize(7);
+  doc.setFont("helvetica", "normal");
+  doc.text("(DA COMPILARE A CURA DI BANCA/POSTE/AGENTE DELLA RISCOSSIONE)", margin, yPos);
+  
+  yPos += 5;
+  doc.text("DATA", margin, yPos);
+  doc.rect(margin + 15, yPos - 3, 30, 6);
+  
+  doc.text("CODICE BANCA/POSTE/AGENTE DELLA RISCOSSIONE", margin + 50, yPos);
+  doc.rect(margin + 125, yPos - 3, 20, 6);
+  
+  yPos += 8;
+  doc.text("Pagamento effettuato con assegno bancario/postale", margin, yPos);
+  doc.rect(margin, yPos - 3, 3, 3);
+  
+  doc.text("AZIENDA", margin + 70, yPos);
+  doc.rect(margin + 85, yPos - 3, 30, 6);
+  
+  doc.text("CAB/SPORTELLO", margin + 120, yPos);
+  doc.rect(margin + 145, yPos - 3, 25, 6);
+  
+  doc.text("n.ro", margin + 172, yPos);
+  doc.rect(margin + 180, yPos - 3, 15, 6);
+  
+  // Note in fondo
+  yPos += 12;
+  doc.setFontSize(7);
   doc.setFont("helvetica", "italic");
-  doc.text("Il modello deve essere firmato dal contribuente o da chi ne ha la rappresentanza legale.", 20, yPos);
+  doc.text(`Periodo di riferimento: ${monthNum}/${year} - ${paymentType}`, margin, yPos);
   yPos += 4;
-  doc.text("ATTENZIONE: Il modello F24 deve essere presentato esclusivamente in via telematica", 20, yPos);
+  doc.text(`Data elaborazione: ${new Date().toLocaleDateString("it-IT")}`, margin, yPos);
   yPos += 4;
-  doc.text("tramite i servizi telematici Entratel o Fisconline dell'Agenzia delle Entrate.", 20, yPos);
+  doc.text("ATTENZIONE: Il modello F24 deve essere presentato esclusivamente in via telematica", margin, yPos);
+  yPos += 3;
+  doc.text("tramite i servizi telematici dell'Agenzia delle Entrate, home banking o intermediari abilitati.", margin, yPos);
   
   // Footer
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "italic");
-  doc.text(
-    `F24 - ${monthNum}/${year} - ${companyData.name}`,
-    105,
-    285,
-    { align: "center" }
-  );
+  doc.setFontSize(7);
+  doc.text(`${companyData.name} - F24 ${monthNum}/${year}`, 105, 290, { align: "center" });
   
   doc.save(`F24_${monthNum}_${year}.pdf`);
 };
