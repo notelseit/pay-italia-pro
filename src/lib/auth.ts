@@ -24,35 +24,15 @@ export const authService = {
     if (authError) throw authError;
     if (!authData.user) throw new Error("Registrazione fallita");
 
-    // Create company for new user
-    const { data: company, error: companyError } = await supabase
-      .from("companies")
-      .insert({
-        name: companyName,
-      })
-      .select()
-      .single();
-
-    if (companyError) throw companyError;
-
-    // Update profile with company_id
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .update({ company_id: company.id })
-      .eq("id", authData.user.id);
-
-    if (profileError) throw profileError;
-
-    // Assign admin role
-    const { error: roleError } = await supabase
-      .from("user_roles")
-      .insert({
-        user_id: authData.user.id,
-        company_id: company.id,
-        role: "admin",
+    // Use security definer function to create company, assign it to user, and set admin role
+    const { data: companyId, error: companyError } = await supabase
+      .rpc("create_company_for_user", {
+        _user_id: authData.user.id,
+        _company_name: companyName,
+        _company_email: email,
       });
 
-    if (roleError) throw roleError;
+    if (companyError) throw companyError;
 
     return { user: authData.user, session: authData.session };
   },
