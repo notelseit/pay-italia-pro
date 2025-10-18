@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Upload, Download, Plus } from "lucide-react";
@@ -19,55 +19,147 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { usePresence } from "@/hooks/usePresence";
+import { PresenceDialog } from "@/components/presence/PresenceDialog";
+import { exportPresenceToCSV, parseCSVFile } from "@/lib/csvUtils";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Presence = () => {
-  const [selectedMonth, setSelectedMonth] = useState("novembre-2024");
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedMonth, setSelectedMonth] = useState(11); // November
+  const [selectedYear, setSelectedYear] = useState(2024);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedPresence, setSelectedPresence] = useState<any>(null);
 
-  // Mock presence data
-  const presenceData = [
-    {
-      employee: "Mario Rossi",
-      workingDays: 21,
-      absences: 1,
-      vacation: 0,
-      sickLeave: 1,
-      overtime: 8,
-      status: "Validato"
-    },
-    {
-      employee: "Laura Bianchi",
-      workingDays: 20,
-      absences: 2,
-      vacation: 2,
-      sickLeave: 0,
-      overtime: 4,
-      status: "In Attesa"
-    },
-    {
-      employee: "Giuseppe Verdi",
-      workingDays: 22,
-      absences: 0,
-      vacation: 0,
-      sickLeave: 0,
-      overtime: 12,
-      status: "Validato"
-    },
-    {
-      employee: "Anna Neri",
-      workingDays: 21,
-      absences: 1,
-      vacation: 1,
-      sickLeave: 0,
-      overtime: 0,
-      status: "Validato"
-    },
-  ];
+  const { 
+    presenceRecords, 
+    isLoading, 
+    createPresence, 
+    updatePresence, 
+    validatePresence 
+  } = usePresence(selectedMonth, selectedYear);
 
-  const monthlyStats = {
-    totalWorkingDays: 22,
-    totalAbsences: 4,
-    pendingValidation: 23,
-    validated: 119
+  const monthlyStats = useMemo(() => {
+    const totalAbsences = presenceRecords.reduce(
+      (sum, record) => sum + record.vacation_days + record.sick_days + record.other_absences,
+      0
+    );
+    const pendingValidation = presenceRecords.filter(r => !r.is_validated).length;
+    const validated = presenceRecords.filter(r => r.is_validated).length;
+    const totalWorkingDays = presenceRecords.reduce(
+      (sum, record) => sum + record.working_days,
+      0
+    );
+
+    return {
+      totalWorkingDays,
+      totalAbsences,
+      pendingValidation,
+      validated,
+    };
+  }, [presenceRecords]);
+
+  const handleMonthChange = (value: string) => {
+    const [monthStr, yearStr] = value.split("-");
+    const monthNames: { [key: string]: number } = {
+      "gennaio": 1, "febbraio": 2, "marzo": 3, "aprile": 4,
+      "maggio": 5, "giugno": 6, "luglio": 7, "agosto": 8,
+      "settembre": 9, "ottobre": 10, "novembre": 11, "dicembre": 12
+    };
+    setSelectedMonth(monthNames[monthStr]);
+    setSelectedYear(parseInt(yearStr));
+  };
+
+  const handleExport = () => {
+    exportPresenceToCSV(presenceRecords, selectedMonth, selectedYear);
+    toast({
+      title: "Esportazione completata",
+      description: "I dati sono stati esportati in formato CSV.",
+    });
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const data = await parseCSVFile(file);
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Utente non autenticato");
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("company_id")
+        .eq("id", user.id)
+        .single();
+
+      if (!profile?.company_id) throw new Error("Company ID non trovato");
+
+      const { data: employees } = await supabase
+        .from("employees")
+        .select("id, full_name")
+        .eq("company_id", profile.company_id);
+
+      if (!employees) throw new Error("Nessun dipendente trovato");
+
+      for (const row of data) {
+        const employee = employees.find(e => e.full_name === row.Dipendente);
+        if (!employee) continue;
+
+        await createPresence.mutateAsync({
+          employee_id: employee.id,
+          company_id: profile.company_id,
+          month: selectedMonth,
+          year: selectedYear,
+          working_days: parseInt(row["Giorni Lavorativi"]) || 0,
+          vacation_days: parseInt(row["Giorni Ferie"]) || 0,
+          sick_days: parseInt(row["Giorni Malattia"]) || 0,
+          other_absences: parseInt(row["Altre Assenze"]) || 0,
+          overtime_hours: parseFloat(row["Ore Straordinarie"]) || 0,
+          is_validated: false,
+        });
+      }
+
+      toast({
+        title: "Importazione completata",
+        description: `${data.length} registrazioni importate con successo.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Errore nell'importazione",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleSubmit = (data: any) => {
+    if (data.id) {
+      updatePresence.mutate(data);
+    } else {
+      createPresence.mutate(data);
+    }
+  };
+
+  const handleValidate = (id: string) => {
+    validatePresence.mutate(id);
+  };
+
+  const handleEdit = (presence: any) => {
+    setSelectedPresence(presence);
+    setDialogOpen(true);
+  };
+
+  const handleNewRecord = () => {
+    setSelectedPresence(null);
+    setDialogOpen(true);
   };
 
   return (
@@ -85,7 +177,10 @@ const Presence = () => {
           <CardContent className="pt-6">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
               <div className="flex items-center gap-4">
-                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <Select 
+                  value={`${["", "gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"][selectedMonth]}-${selectedYear}`}
+                  onValueChange={handleMonthChange}
+                >
                   <SelectTrigger className="w-[200px]">
                     <Calendar className="mr-2 h-4 w-4" />
                     <SelectValue />
@@ -94,20 +189,37 @@ const Presence = () => {
                     <SelectItem value="novembre-2024">Novembre 2024</SelectItem>
                     <SelectItem value="ottobre-2024">Ottobre 2024</SelectItem>
                     <SelectItem value="settembre-2024">Settembre 2024</SelectItem>
+                    <SelectItem value="agosto-2024">Agosto 2024</SelectItem>
+                    <SelectItem value="luglio-2024">Luglio 2024</SelectItem>
+                    <SelectItem value="giugno-2024">Giugno 2024</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               
               <div className="flex gap-2">
-                <Button variant="outline">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv"
+                  onChange={handleImport}
+                  className="hidden"
+                />
+                <Button 
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                >
                   <Upload className="mr-2 h-4 w-4" />
                   Importa CSV
                 </Button>
-                <Button variant="outline">
+                <Button 
+                  variant="outline"
+                  onClick={handleExport}
+                  disabled={presenceRecords.length === 0}
+                >
                   <Download className="mr-2 h-4 w-4" />
                   Esporta
                 </Button>
-                <Button variant="hero">
+                <Button variant="hero" onClick={handleNewRecord}>
                   <Plus className="mr-2 h-4 w-4" />
                   Nuova Registrazione
                 </Button>
@@ -163,54 +275,98 @@ const Presence = () => {
         {/* Presence Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Riepilogo Presenze - Novembre 2024</CardTitle>
+            <CardTitle>
+              Riepilogo Presenze - {["", "Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"][selectedMonth]} {selectedYear}
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Dipendente</TableHead>
-                  <TableHead className="text-center">Giorni Lav.</TableHead>
-                  <TableHead className="text-center">Assenze</TableHead>
-                  <TableHead className="text-center">Ferie</TableHead>
-                  <TableHead className="text-center">Malattia</TableHead>
-                  <TableHead className="text-center">Straordinari (h)</TableHead>
-                  <TableHead>Stato</TableHead>
-                  <TableHead className="text-right">Azioni</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {presenceData.map((record, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium">{record.employee}</TableCell>
-                    <TableCell className="text-center font-semibold">{record.workingDays}</TableCell>
-                    <TableCell className="text-center">{record.absences}</TableCell>
-                    <TableCell className="text-center">{record.vacation}</TableCell>
-                    <TableCell className="text-center">{record.sickLeave}</TableCell>
-                    <TableCell className="text-center font-semibold text-primary">{record.overtime}</TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant="outline" 
-                        className={
-                          record.status === "Validato" 
-                            ? "bg-primary/10 text-primary border-primary/20" 
-                            : "bg-destructive/10 text-destructive border-destructive/20"
-                        }
-                      >
-                        {record.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="outline" size="sm">
-                        {record.status === "Validato" ? "Modifica" : "Valida"}
-                      </Button>
-                    </TableCell>
+            {isLoading ? (
+              <div className="text-center py-8 text-muted-foreground">Caricamento...</div>
+            ) : presenceRecords.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Nessuna registrazione trovata per questo mese.
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Dipendente</TableHead>
+                    <TableHead className="text-center">Giorni Lav.</TableHead>
+                    <TableHead className="text-center">Ferie</TableHead>
+                    <TableHead className="text-center">Malattia</TableHead>
+                    <TableHead className="text-center">Altre Assenze</TableHead>
+                    <TableHead className="text-center">Straordinari (h)</TableHead>
+                    <TableHead>Stato</TableHead>
+                    <TableHead className="text-right">Azioni</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {presenceRecords.map((record) => {
+                    const totalAbsences = record.vacation_days + record.sick_days + record.other_absences;
+                    
+                    return (
+                      <TableRow key={record.id}>
+                        <TableCell className="font-medium">
+                          {record.employees?.full_name || "N/A"}
+                        </TableCell>
+                        <TableCell className="text-center font-semibold">
+                          {record.working_days}
+                        </TableCell>
+                        <TableCell className="text-center">{record.vacation_days}</TableCell>
+                        <TableCell className="text-center">{record.sick_days}</TableCell>
+                        <TableCell className="text-center">{record.other_absences}</TableCell>
+                        <TableCell className="text-center font-semibold text-primary">
+                          {record.overtime_hours}
+                        </TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant="outline" 
+                            className={
+                              record.is_validated
+                                ? "bg-primary/10 text-primary border-primary/20" 
+                                : "bg-destructive/10 text-destructive border-destructive/20"
+                            }
+                          >
+                            {record.is_validated ? "Validato" : "In Attesa"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex gap-2 justify-end">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleEdit(record)}
+                            >
+                              Modifica
+                            </Button>
+                            {!record.is_validated && (
+                              <Button 
+                                variant="default" 
+                                size="sm"
+                                onClick={() => handleValidate(record.id)}
+                              >
+                                Valida
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
+
+        <PresenceDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          presence={selectedPresence}
+          onSubmit={handleSubmit}
+          month={selectedMonth}
+          year={selectedYear}
+        />
 
         {/* Absence Types Legend */}
         <Card className="mt-6">
