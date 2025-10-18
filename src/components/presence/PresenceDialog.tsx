@@ -31,7 +31,7 @@ export const PresenceDialog = ({
   month,
   year 
 }: PresenceDialogProps) => {
-  const { employees } = useEmployees();
+  const { employees = [] } = useEmployees();
   const [companyId, setCompanyId] = useState<string>("");
   const [formData, setFormData] = useState({
     employee_id: "",
