@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, Send, CheckCircle, Calculator, Plus } from "lucide-react";
+import { Download, Send, CheckCircle, Calculator, Plus, Eye } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { usePayroll } from "@/hooks/usePayroll";
 import { useEmployees } from "@/hooks/useEmployees";
 import { PayrollDialog } from "@/components/payroll/PayrollDialog";
+import { PayrollDetailDialog } from "@/components/payroll/PayrollDetailDialog";
 import { formatCurrency } from "@/lib/payrollCalculations";
 import { supabase } from "@/integrations/supabase/client";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -29,7 +30,9 @@ const Payroll = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [sendDialogOpen, setSendDialogOpen] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedPayrollId, setSelectedPayrollId] = useState<string>("");
+  const [selectedPayroll, setSelectedPayroll] = useState<any>(null);
 
   const { 
     payrollRecords, 
@@ -106,6 +109,11 @@ const Payroll = () => {
   const handleSend = (id: string) => {
     setSelectedPayrollId(id);
     setSendDialogOpen(true);
+  };
+
+  const handleView = (record: any) => {
+    setSelectedPayroll(record);
+    setDetailDialogOpen(true);
   };
 
   const confirmConfirm = () => {
@@ -309,6 +317,15 @@ const Payroll = () => {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleView(record)}
+                            title="Visualizza dettagli"
+                          >
+                            <Eye className="mr-1 h-3 w-3" />
+                            Visualizza
+                          </Button>
                           {record.status === "bozza" && (
                             <Button 
                               variant="outline" 
@@ -351,6 +368,12 @@ const Payroll = () => {
           month={selectedMonth}
           year={selectedYear}
           companyId={companyId}
+        />
+
+        <PayrollDetailDialog
+          open={detailDialogOpen}
+          onOpenChange={setDetailDialogOpen}
+          payroll={selectedPayroll}
         />
 
         <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
