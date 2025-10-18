@@ -324,9 +324,11 @@ export type Database = {
           company_id: string
           created_at: string | null
           employee_id: string
+          exclude_weekends: boolean | null
           id: string
           is_validated: boolean | null
           month: number
+          night_holiday_hours: number | null
           other_absences: number | null
           overtime_hours: number | null
           sick_days: number | null
@@ -341,9 +343,11 @@ export type Database = {
           company_id: string
           created_at?: string | null
           employee_id: string
+          exclude_weekends?: boolean | null
           id?: string
           is_validated?: boolean | null
           month: number
+          night_holiday_hours?: number | null
           other_absences?: number | null
           overtime_hours?: number | null
           sick_days?: number | null
@@ -358,9 +362,11 @@ export type Database = {
           company_id?: string
           created_at?: string | null
           employee_id?: string
+          exclude_weekends?: boolean | null
           id?: string
           is_validated?: boolean | null
           month?: number
+          night_holiday_hours?: number | null
           other_absences?: number | null
           overtime_hours?: number | null
           sick_days?: number | null

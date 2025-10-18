@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -40,6 +41,8 @@ export const PresenceDialog = ({
     sick_days: 0,
     other_absences: 0,
     overtime_hours: 0,
+    exclude_weekends: false,
+    night_holiday_hours: 0,
   });
 
   useEffect(() => {
@@ -70,6 +73,8 @@ export const PresenceDialog = ({
         sick_days: presence.sick_days,
         other_absences: presence.other_absences,
         overtime_hours: presence.overtime_hours,
+        exclude_weekends: presence.exclude_weekends,
+        night_holiday_hours: presence.night_holiday_hours,
       });
     } else {
       setFormData({
@@ -79,6 +84,8 @@ export const PresenceDialog = ({
         sick_days: 0,
         other_absences: 0,
         overtime_hours: 0,
+        exclude_weekends: false,
+        night_holiday_hours: 0,
       });
     }
   }, [presence, open]);
@@ -200,6 +207,36 @@ export const PresenceDialog = ({
                   setFormData({ ...formData, overtime_hours: parseFloat(e.target.value) || 0 })
                 }
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="night_holiday_hours">Ore Notturno e Festivo</Label>
+              <Input
+                id="night_holiday_hours"
+                type="number"
+                min="0"
+                step="0.5"
+                value={formData.night_holiday_hours}
+                onChange={(e) =>
+                  setFormData({ ...formData, night_holiday_hours: parseFloat(e.target.value) || 0 })
+                }
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="exclude_weekends">Sabato e Domenica</Label>
+                <Switch
+                  id="exclude_weekends"
+                  checked={formData.exclude_weekends}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, exclude_weekends: checked })
+                  }
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Se attivo, sabato e domenica sono esclusi dal calcolo delle ore lavorative
+              </p>
             </div>
           </div>
 

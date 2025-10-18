@@ -13,6 +13,8 @@ export interface PresenceRecord {
   sick_days: number;
   other_absences: number;
   overtime_hours: number;
+  exclude_weekends: boolean;
+  night_holiday_hours: number;
   is_validated: boolean;
   validated_at?: string;
   validated_by?: string;

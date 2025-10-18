@@ -120,6 +120,8 @@ const Presence = () => {
           sick_days: parseInt(row["Giorni Malattia"]) || 0,
           other_absences: parseInt(row["Altre Assenze"]) || 0,
           overtime_hours: parseFloat(row["Ore Straordinarie"]) || 0,
+          exclude_weekends: false,
+          night_holiday_hours: 0,
           is_validated: false,
         });
       }
@@ -306,6 +308,8 @@ const Presence = () => {
                     <TableHead className="text-center">Malattia</TableHead>
                     <TableHead className="text-center">Altre Assenze</TableHead>
                     <TableHead className="text-center">Straordinari (h)</TableHead>
+                    <TableHead className="text-center">Nott./Fest. (h)</TableHead>
+                    <TableHead className="text-center">Sab/Dom</TableHead>
                     <TableHead>Stato</TableHead>
                     <TableHead className="text-right">Azioni</TableHead>
                   </TableRow>
@@ -327,6 +331,12 @@ const Presence = () => {
                         <TableCell className="text-center">{record.other_absences}</TableCell>
                         <TableCell className="text-center font-semibold text-primary">
                           {record.overtime_hours}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {record.night_holiday_hours}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {record.exclude_weekends ? "✓" : "—"}
                         </TableCell>
                         <TableCell>
                           <Badge 
