@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Search, Edit, Trash2, Mail, Phone } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import { toast } from "@/hooks/use-toast";
 import {
   Table,
   TableBody,
@@ -79,11 +80,44 @@ const Employees = () => {
     }
   };
 
-  const handleSave = (data: any) => {
+  const handleSave = async (data: any) => {
     if (selectedEmployee) {
       updateEmployee.mutate({ id: selectedEmployee.id, updates: data });
     } else {
-      createEmployee.mutate(data);
+      // For new employees, create user first, then create employee
+      if (!data.email || !data.password) {
+        toast({
+          title: "Errore",
+          description: "Email e password sono obbligatori per creare un nuovo dipendente",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      try {
+        // Create user account via edge function
+        const { data: userData, error: userError } = await supabase.functions.invoke('create-user', {
+          body: {
+            email: data.email,
+            password: data.password,
+            fullName: `${data.first_name} ${data.last_name}`,
+            companyId: companyId,
+            role: 'employee',
+          },
+        });
+
+        if (userError) throw userError;
+
+        // Remove password from employee data before creating employee record
+        const { password, ...employeeData } = data;
+        createEmployee.mutate(employeeData);
+      } catch (error: any) {
+        toast({
+          title: "Errore",
+          description: error.message || "Errore durante la creazione dell'utente",
+          variant: "destructive",
+        });
+      }
     }
   };
 

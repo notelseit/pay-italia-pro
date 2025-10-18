@@ -5,6 +5,7 @@ import { UseFormReturn } from "react-hook-form";
 
 interface BasicInfoTabProps {
   form: UseFormReturn<any>;
+  isNewEmployee?: boolean;
 }
 
 const contractTypes = [
@@ -22,7 +23,7 @@ const ccnlTypes = [
   "CCNL Telecomunicazioni",
 ];
 
-export const BasicInfoTab = ({ form }: BasicInfoTabProps) => {
+export const BasicInfoTab = ({ form, isNewEmployee }: BasicInfoTabProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <FormField
@@ -72,7 +73,7 @@ export const BasicInfoTab = ({ form }: BasicInfoTabProps) => {
         name="email"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Email</FormLabel>
+            <FormLabel>Email *</FormLabel>
             <FormControl>
               <Input {...field} type="email" placeholder="email@esempio.it" />
             </FormControl>
@@ -80,6 +81,22 @@ export const BasicInfoTab = ({ form }: BasicInfoTabProps) => {
           </FormItem>
         )}
       />
+
+      {isNewEmployee && (
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password *</FormLabel>
+              <FormControl>
+                <Input {...field} type="password" placeholder="Password per l'accesso" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
 
       <FormField
         control={form.control}

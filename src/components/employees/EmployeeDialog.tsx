@@ -16,7 +16,7 @@ const employeeSchema = z.object({
   first_name: z.string().min(1, "Nome obbligatorio"),
   last_name: z.string().min(1, "Cognome obbligatorio"),
   tax_code: z.string().min(16, "Codice fiscale deve essere di 16 caratteri").max(16),
-  email: z.string().email("Email non valida").optional().or(z.literal("")),
+  email: z.string().email("Email non valida"),
   phone: z.string().optional(),
   hire_date: z.string().min(1, "Data assunzione obbligatoria"),
   contract_type: z.enum(["indeterminato", "determinato", "part_time", "consulente"]),
@@ -48,6 +48,7 @@ const employeeSchema = z.object({
   visa_issue_date: z.string().optional(),
   visa_expiry_date: z.string().optional(),
   cv_url: z.string().optional(),
+  password: z.string().optional(),
 });
 
 type EmployeeFormData = z.infer<typeof employeeSchema>;
@@ -140,7 +141,7 @@ export const EmployeeDialog = ({ open, onOpenChange, employee, companyId, onSave
               </TabsList>
 
               <TabsContent value="basic" className="mt-6">
-                <BasicInfoTab form={form} />
+                <BasicInfoTab form={form} isNewEmployee={!employee} />
               </TabsContent>
 
               <TabsContent value="citizenship" className="mt-6">
