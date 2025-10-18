@@ -17,6 +17,8 @@ export type Database = {
       companies: {
         Row: {
           address: string | null
+          city: string | null
+          country: string | null
           created_at: string | null
           email: string | null
           id: string
@@ -24,12 +26,17 @@ export type Database = {
           name: string
           phone: string | null
           posizione_inail: string | null
+          postal_code: string | null
+          province: string | null
+          street_number: string | null
           updated_at: string | null
           vat_number: string | null
           voce_inail: string | null
         }
         Insert: {
           address?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string | null
           email?: string | null
           id?: string
@@ -37,12 +44,17 @@ export type Database = {
           name: string
           phone?: string | null
           posizione_inail?: string | null
+          postal_code?: string | null
+          province?: string | null
+          street_number?: string | null
           updated_at?: string | null
           vat_number?: string | null
           voce_inail?: string | null
         }
         Update: {
           address?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string | null
           email?: string | null
           id?: string
@@ -50,6 +62,9 @@ export type Database = {
           name?: string
           phone?: string | null
           posizione_inail?: string | null
+          postal_code?: string | null
+          province?: string | null
+          street_number?: string | null
           updated_at?: string | null
           vat_number?: string | null
           voce_inail?: string | null

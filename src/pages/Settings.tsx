@@ -48,6 +48,11 @@ const Settings = () => {
       name: formData.get("company-name") as string,
       vat_number: formData.get("vat") as string,
       address: formData.get("address") as string,
+      street_number: formData.get("street-number") as string,
+      postal_code: formData.get("postal-code") as string,
+      city: formData.get("city") as string,
+      province: formData.get("province") as string,
+      country: formData.get("country") as string,
       phone: formData.get("phone") as string,
       email: formData.get("email") as string,
       matricola_inps: formData.get("matricola-inps") as string,
@@ -159,9 +164,37 @@ const Settings = () => {
                       </div>
                     </div>
                     
-                    <div className="space-y-2">
-                      <Label htmlFor="address">Indirizzo Sede Legale</Label>
-                      <Input id="address" name="address" defaultValue={company?.address || ""} />
+                    <div className="grid md:grid-cols-4 gap-4">
+                      <div className="md:col-span-3 space-y-2">
+                        <Label htmlFor="address">Indirizzo Sede Legale</Label>
+                        <Input id="address" name="address" defaultValue={company?.address || ""} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="street-number">Numero Civico</Label>
+                        <Input id="street-number" name="street-number" defaultValue={company?.street_number || ""} />
+                      </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-4 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="postal-code">CAP</Label>
+                        <Input id="postal-code" name="postal-code" defaultValue={company?.postal_code || ""} />
+                      </div>
+                      <div className="md:col-span-2 space-y-2">
+                        <Label htmlFor="city">Città</Label>
+                        <Input id="city" name="city" defaultValue={company?.city || ""} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="province">Provincia</Label>
+                        <Input id="province" name="province" defaultValue={company?.province || ""} maxLength={2} />
+                      </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="country">Nazione</Label>
+                        <Input id="country" name="country" defaultValue={company?.country || "Italia"} />
+                      </div>
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-4">
