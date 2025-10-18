@@ -59,6 +59,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, fullName: string, companyName: string) => {
     try {
       await authService.signUp(email, password, fullName, companyName);
+      // Reload user data including roles before navigating
+      const authUser = await authService.getCurrentUser();
+      setCompanyId(authUser.companyId);
+      setRoles(authUser.roles);
       navigate("/dashboard");
     } catch (error: any) {
       throw new Error(error.message || "Errore durante la registrazione");
@@ -68,6 +72,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       await authService.signIn(email, password);
+      // Reload user data including roles before navigating
+      const authUser = await authService.getCurrentUser();
+      setCompanyId(authUser.companyId);
+      setRoles(authUser.roles);
       navigate("/dashboard");
     } catch (error: any) {
       throw new Error(error.message || "Credenziali non valide");
