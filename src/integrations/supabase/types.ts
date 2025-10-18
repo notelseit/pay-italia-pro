@@ -14,16 +14,333 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      companies: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          updated_at: string | null
+          vat_number: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          updated_at?: string | null
+          vat_number?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string | null
+          vat_number?: string | null
+        }
+        Relationships: []
+      }
+      employees: {
+        Row: {
+          base_salary: number
+          company_id: string
+          contract_type: Database["public"]["Enums"]["contract_type"]
+          created_at: string | null
+          email: string
+          full_name: string
+          hire_date: string
+          id: string
+          is_active: boolean | null
+          phone: string | null
+          tax_code: string
+          updated_at: string | null
+        }
+        Insert: {
+          base_salary: number
+          company_id: string
+          contract_type: Database["public"]["Enums"]["contract_type"]
+          created_at?: string | null
+          email: string
+          full_name: string
+          hire_date: string
+          id?: string
+          is_active?: boolean | null
+          phone?: string | null
+          tax_code: string
+          updated_at?: string | null
+        }
+        Update: {
+          base_salary?: number
+          company_id?: string
+          contract_type?: Database["public"]["Enums"]["contract_type"]
+          created_at?: string | null
+          email?: string
+          full_name?: string
+          hire_date?: string
+          id?: string
+          is_active?: boolean | null
+          phone?: string | null
+          tax_code?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employees_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_records: {
+        Row: {
+          base_salary: number
+          bonuses: number | null
+          company_id: string
+          confirmed_at: string | null
+          created_at: string | null
+          employee_id: string
+          gross_total: number
+          id: string
+          inps_contribution: number
+          irpef_tax: number
+          month: number
+          net_salary: number
+          overtime_pay: number | null
+          pdf_url: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["payroll_status"] | null
+          updated_at: string | null
+          year: number
+        }
+        Insert: {
+          base_salary: number
+          bonuses?: number | null
+          company_id: string
+          confirmed_at?: string | null
+          created_at?: string | null
+          employee_id: string
+          gross_total: number
+          id?: string
+          inps_contribution: number
+          irpef_tax: number
+          month: number
+          net_salary: number
+          overtime_pay?: number | null
+          pdf_url?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["payroll_status"] | null
+          updated_at?: string | null
+          year: number
+        }
+        Update: {
+          base_salary?: number
+          bonuses?: number | null
+          company_id?: string
+          confirmed_at?: string | null
+          created_at?: string | null
+          employee_id?: string
+          gross_total?: number
+          id?: string
+          inps_contribution?: number
+          irpef_tax?: number
+          month?: number
+          net_salary?: number
+          overtime_pay?: number | null
+          pdf_url?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["payroll_status"] | null
+          updated_at?: string | null
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_records_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_records_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      presence_records: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          employee_id: string
+          id: string
+          is_validated: boolean | null
+          month: number
+          other_absences: number | null
+          overtime_hours: number | null
+          sick_days: number | null
+          updated_at: string | null
+          vacation_days: number | null
+          validated_at: string | null
+          validated_by: string | null
+          working_days: number | null
+          year: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          employee_id: string
+          id?: string
+          is_validated?: boolean | null
+          month: number
+          other_absences?: number | null
+          overtime_hours?: number | null
+          sick_days?: number | null
+          updated_at?: string | null
+          vacation_days?: number | null
+          validated_at?: string | null
+          validated_by?: string | null
+          working_days?: number | null
+          year: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          employee_id?: string
+          id?: string
+          is_validated?: boolean | null
+          month?: number
+          other_absences?: number | null
+          overtime_hours?: number | null
+          sick_days?: number | null
+          updated_at?: string | null
+          vacation_days?: number | null
+          validated_at?: string | null
+          validated_by?: string | null
+          working_days?: number | null
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "presence_records_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "presence_records_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          company_id: string | null
+          created_at: string | null
+          email: string
+          full_name: string
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string | null
+          email: string
+          full_name: string
+          id: string
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          company_id: string | null
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          user_id: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["user_role"]
+          user_id?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_company: {
+        Args: { _user_id: string }
+        Returns: string
+      }
+      has_role_in_company: {
+        Args: {
+          _company_id: string
+          _role: Database["public"]["Enums"]["user_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      absence_type: "ferie" | "malattia" | "permesso" | "congedo_parentale"
+      contract_type:
+        | "indeterminato"
+        | "determinato"
+        | "part_time"
+        | "consulente"
+      payroll_status: "bozza" | "generato" | "inviato" | "confermato"
+      user_role: "admin" | "hr_manager" | "employee"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +467,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      absence_type: ["ferie", "malattia", "permesso", "congedo_parentale"],
+      contract_type: [
+        "indeterminato",
+        "determinato",
+        "part_time",
+        "consulente",
+      ],
+      payroll_status: ["bozza", "generato", "inviato", "confermato"],
+      user_role: ["admin", "hr_manager", "employee"],
+    },
   },
 } as const
