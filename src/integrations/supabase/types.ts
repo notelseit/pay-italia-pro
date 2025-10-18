@@ -20,30 +20,39 @@ export type Database = {
           created_at: string | null
           email: string | null
           id: string
+          matricola_inps: string | null
           name: string
           phone: string | null
+          posizione_inail: string | null
           updated_at: string | null
           vat_number: string | null
+          voce_inail: string | null
         }
         Insert: {
           address?: string | null
           created_at?: string | null
           email?: string | null
           id?: string
+          matricola_inps?: string | null
           name: string
           phone?: string | null
+          posizione_inail?: string | null
           updated_at?: string | null
           vat_number?: string | null
+          voce_inail?: string | null
         }
         Update: {
           address?: string | null
           created_at?: string | null
           email?: string | null
           id?: string
+          matricola_inps?: string | null
           name?: string
           phone?: string | null
+          posizione_inail?: string | null
           updated_at?: string | null
           vat_number?: string | null
+          voce_inail?: string | null
         }
         Relationships: []
       }
