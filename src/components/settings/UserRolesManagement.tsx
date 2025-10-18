@@ -20,7 +20,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Shield, UserCog } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2, Shield, UserCog, UserPlus } from "lucide-react";
 
 type UserRole = "admin" | "hr_manager" | "employee";
 
@@ -37,6 +48,9 @@ export function UserRolesManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<UserRole>("employee");
 
   const isAdmin = hasRole("admin");
 
@@ -127,6 +141,83 @@ export function UserRolesManagement() {
     },
   });
 
+  const addUserMutation = useMutation({
+    mutationFn: async ({
+      email,
+      role,
+    }: {
+      email: string;
+      role: UserRole;
+    }) => {
+      if (!companyId) throw new Error("No company");
+
+      // Find user by email
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id, company_id")
+        .eq("email", email)
+        .maybeSingle();
+
+      if (profileError) throw profileError;
+
+      if (!profile) {
+        throw new Error("Utente non trovato. L'utente deve prima registrarsi alla piattaforma.");
+      }
+
+      if (profile.company_id && profile.company_id !== companyId) {
+        throw new Error("Questo utente appartiene già ad un'altra azienda.");
+      }
+
+      // Update profile with company_id if not set
+      if (!profile.company_id) {
+        const { error: updateError } = await supabase
+          .from("profiles")
+          .update({ company_id: companyId })
+          .eq("id", profile.id);
+
+        if (updateError) throw updateError;
+      }
+
+      // Check if user already has a role in this company
+      const { data: existingRole } = await supabase
+        .from("user_roles")
+        .select("id")
+        .eq("user_id", profile.id)
+        .eq("company_id", companyId)
+        .maybeSingle();
+
+      if (existingRole) {
+        throw new Error("Questo utente è già presente nell'azienda.");
+      }
+
+      // Add role
+      const { error: roleError } = await supabase.from("user_roles").insert({
+        user_id: profile.id,
+        company_id: companyId,
+        role: role,
+      });
+
+      if (roleError) throw roleError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["company-users", companyId] });
+      toast({
+        title: "Successo",
+        description: "Utente aggiunto correttamente",
+      });
+      setIsInviteDialogOpen(false);
+      setInviteEmail("");
+      setInviteRole("employee");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Errore",
+        description: error.message || "Impossibile aggiungere l'utente",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleRoleChange = (
     userId: string,
     roleId: string,
@@ -134,6 +225,19 @@ export function UserRolesManagement() {
   ) => {
     setUpdatingUserId(userId);
     updateRoleMutation.mutate({ userId, roleId, newRole });
+  };
+
+  const handleAddUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inviteEmail.trim()) {
+      toast({
+        title: "Errore",
+        description: "Inserisci un'email valida",
+        variant: "destructive",
+      });
+      return;
+    }
+    addUserMutation.mutate({ email: inviteEmail.trim(), role: inviteRole });
   };
 
   const getRoleBadge = (role: UserRole) => {
@@ -186,6 +290,76 @@ export function UserRolesManagement() {
 
   return (
     <div className="space-y-4">
+      {isAdmin && (
+        <div className="flex justify-end">
+          <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="hero">
+                <UserPlus className="mr-2 h-4 w-4" />
+                Aggiungi Utente
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Aggiungi Utente all'Azienda</DialogTitle>
+                <DialogDescription>
+                  Inserisci l'email di un utente già registrato per aggiungerlo alla tua azienda
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleAddUser}>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email Utente</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="utente@esempio.com"
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="role">Ruolo</Label>
+                    <Select
+                      value={inviteRole}
+                      onValueChange={(value) => setInviteRole(value as UserRole)}
+                    >
+                      <SelectTrigger id="role">
+                        <SelectValue placeholder="Seleziona ruolo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="admin">Amministratore</SelectItem>
+                        <SelectItem value="hr_manager">HR Manager</SelectItem>
+                        <SelectItem value="employee">Dipendente</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsInviteDialogOpen(false)}
+                  >
+                    Annulla
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={addUserMutation.isPending}
+                  >
+                    {addUserMutation.isPending && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Aggiungi
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+      )}
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
