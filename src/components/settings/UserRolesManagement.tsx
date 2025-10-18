@@ -31,7 +31,17 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Shield, UserCog, UserPlus } from "lucide-react";
+import { Loader2, Shield, UserCog, UserPlus, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type UserRole = "admin" | "hr_manager" | "employee";
 
@@ -53,6 +63,7 @@ export function UserRolesManagement() {
   const [invitePassword, setInvitePassword] = useState("");
   const [inviteFullName, setInviteFullName] = useState("");
   const [inviteRole, setInviteRole] = useState<UserRole>("employee");
+  const [userToDelete, setUserToDelete] = useState<UserWithRole | null>(null);
 
   const isAdmin = hasRole("admin");
 
@@ -198,6 +209,48 @@ export function UserRolesManagement() {
         description: error.message || "Impossibile creare l'utente",
         variant: "destructive",
       });
+    },
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      if (!companyId) throw new Error("No company");
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Non autenticato");
+
+      const response = await supabase.functions.invoke("delete-user", {
+        body: {
+          userId,
+          companyId,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || "Errore nell'eliminazione dell'utente");
+      }
+
+      if (response.data?.error) {
+        throw new Error(response.data.error);
+      }
+
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["company-users", companyId] });
+      toast({
+        title: "Successo",
+        description: "Utente eliminato correttamente",
+      });
+      setUserToDelete(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Errore",
+        description: error.message || "Impossibile eliminare l'utente",
+        variant: "destructive",
+      });
+      setUserToDelete(null);
     },
   });
 
@@ -389,7 +442,7 @@ export function UserRolesManagement() {
               <TableHead>Nome</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Ruolo</TableHead>
-              {isAdmin && <TableHead className="w-[200px]">Azioni</TableHead>}
+              {isAdmin && <TableHead className="w-[250px]">Azioni</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -400,28 +453,38 @@ export function UserRolesManagement() {
                 <TableCell>{getRoleBadge(user.role)}</TableCell>
                 {isAdmin && (
                   <TableCell>
-                    <Select
-                      value={user.role}
-                      onValueChange={(value) =>
-                        handleRoleChange(user.id, user.role_id, value as UserRole)
-                      }
-                      disabled={updatingUserId === user.id}
-                    >
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Seleziona ruolo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="admin">
-                          {getRoleLabel("admin")}
-                        </SelectItem>
-                        <SelectItem value="hr_manager">
-                          {getRoleLabel("hr_manager")}
-                        </SelectItem>
-                        <SelectItem value="employee">
-                          {getRoleLabel("employee")}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="flex items-center gap-2">
+                      <Select
+                        value={user.role}
+                        onValueChange={(value) =>
+                          handleRoleChange(user.id, user.role_id, value as UserRole)
+                        }
+                        disabled={updatingUserId === user.id}
+                      >
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Seleziona ruolo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="admin">
+                            {getRoleLabel("admin")}
+                          </SelectItem>
+                          <SelectItem value="hr_manager">
+                            {getRoleLabel("hr_manager")}
+                          </SelectItem>
+                          <SelectItem value="employee">
+                            {getRoleLabel("employee")}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setUserToDelete(user)}
+                        disabled={deleteUserMutation.isPending}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
                   </TableCell>
                 )}
               </TableRow>
@@ -435,6 +498,33 @@ export function UserRolesManagement() {
           Solo gli amministratori possono modificare i ruoli degli utenti
         </p>
       )}
+
+      <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Conferma eliminazione</AlertDialogTitle>
+            <AlertDialogDescription>
+              Sei sicuro di voler eliminare l'utente <strong>{userToDelete?.full_name}</strong>? 
+              Questa azione è irreversibile e eliminerà tutti i dati associati all'utente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteUserMutation.isPending}>
+              Annulla
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => userToDelete && deleteUserMutation.mutate(userToDelete.id)}
+              disabled={deleteUserMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteUserMutation.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Elimina
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
