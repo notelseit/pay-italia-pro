@@ -47,48 +47,189 @@ export type Database = {
         }
         Relationships: []
       }
+      education_records: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          date: string | null
+          employee_id: string
+          grade: string | null
+          id: string
+          name: string
+          type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          date?: string | null
+          employee_id: string
+          grade?: string | null
+          id?: string
+          name: string
+          type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          date?: string | null
+          employee_id?: string
+          grade?: string | null
+          id?: string
+          name?: string
+          type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "education_records_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "education_records_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           base_salary: number
           company_id: string
           contract_type: Database["public"]["Enums"]["contract_type"]
           created_at: string | null
+          cv_url: string | null
+          dependents_count: number | null
           email: string
+          employee_type: string | null
+          first_name: string | null
           full_name: string
           hire_date: string
+          iban: string | null
           id: string
+          id_card_expiry_date: string | null
+          id_card_issue_date: string | null
+          id_card_municipality: string | null
+          id_card_province: string | null
+          inail_position: string | null
+          inps_position: string | null
           is_active: boolean | null
+          last_name: string | null
+          marital_status: string | null
+          national_contract_type: string | null
+          nationality: string | null
+          passport_expiry_date: string | null
+          passport_issue_date: string | null
+          passport_municipality: string | null
+          passport_number: string | null
+          passport_province: string | null
+          payment_category: string | null
+          pension_fund: string | null
           phone: string | null
+          police_station: string | null
           tax_code: string
+          tax_deductions: number | null
           updated_at: string | null
+          visa_document_url: string | null
+          visa_expiry_date: string | null
+          visa_issue_date: string | null
+          visa_number: string | null
+          work_permit_number: string | null
+          working_hours: number | null
         }
         Insert: {
           base_salary: number
           company_id: string
           contract_type: Database["public"]["Enums"]["contract_type"]
           created_at?: string | null
+          cv_url?: string | null
+          dependents_count?: number | null
           email: string
+          employee_type?: string | null
+          first_name?: string | null
           full_name: string
           hire_date: string
+          iban?: string | null
           id?: string
+          id_card_expiry_date?: string | null
+          id_card_issue_date?: string | null
+          id_card_municipality?: string | null
+          id_card_province?: string | null
+          inail_position?: string | null
+          inps_position?: string | null
           is_active?: boolean | null
+          last_name?: string | null
+          marital_status?: string | null
+          national_contract_type?: string | null
+          nationality?: string | null
+          passport_expiry_date?: string | null
+          passport_issue_date?: string | null
+          passport_municipality?: string | null
+          passport_number?: string | null
+          passport_province?: string | null
+          payment_category?: string | null
+          pension_fund?: string | null
           phone?: string | null
+          police_station?: string | null
           tax_code: string
+          tax_deductions?: number | null
           updated_at?: string | null
+          visa_document_url?: string | null
+          visa_expiry_date?: string | null
+          visa_issue_date?: string | null
+          visa_number?: string | null
+          work_permit_number?: string | null
+          working_hours?: number | null
         }
         Update: {
           base_salary?: number
           company_id?: string
           contract_type?: Database["public"]["Enums"]["contract_type"]
           created_at?: string | null
+          cv_url?: string | null
+          dependents_count?: number | null
           email?: string
+          employee_type?: string | null
+          first_name?: string | null
           full_name?: string
           hire_date?: string
+          iban?: string | null
           id?: string
+          id_card_expiry_date?: string | null
+          id_card_issue_date?: string | null
+          id_card_municipality?: string | null
+          id_card_province?: string | null
+          inail_position?: string | null
+          inps_position?: string | null
           is_active?: boolean | null
+          last_name?: string | null
+          marital_status?: string | null
+          national_contract_type?: string | null
+          nationality?: string | null
+          passport_expiry_date?: string | null
+          passport_issue_date?: string | null
+          passport_municipality?: string | null
+          passport_number?: string | null
+          passport_province?: string | null
+          payment_category?: string | null
+          pension_fund?: string | null
           phone?: string | null
+          police_station?: string | null
           tax_code?: string
+          tax_deductions?: number | null
           updated_at?: string | null
+          visa_document_url?: string | null
+          visa_expiry_date?: string | null
+          visa_issue_date?: string | null
+          visa_number?: string | null
+          work_permit_number?: string | null
+          working_hours?: number | null
         }
         Relationships: [
           {

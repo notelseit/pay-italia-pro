@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,59 +13,91 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { EmployeeDialog } from "@/components/employees/EmployeeDialog";
+import { useEmployees } from "@/hooks/useEmployees";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Employees = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
+  const [companyId, setCompanyId] = useState<string>("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = useState<string | null>(null);
 
-  // Mock employee data
-  const employees = [
-    {
-      id: 1,
-      name: "Mario Rossi",
-      email: "mario.rossi@email.it",
-      phone: "+39 333 1234567",
-      taxCode: "RSSMRA80A01H501U",
-      contractType: "Tempo Indeterminato",
-      salary: "€2,500",
-      status: "Attivo"
-    },
-    {
-      id: 2,
-      name: "Laura Bianchi",
-      email: "laura.bianchi@email.it",
-      phone: "+39 333 2345678",
-      taxCode: "BNCLRA85B42F205W",
-      contractType: "Tempo Determinato",
-      salary: "€2,200",
-      status: "Attivo"
-    },
-    {
-      id: 3,
-      name: "Giuseppe Verdi",
-      email: "giuseppe.verdi@email.it",
-      phone: "+39 333 3456789",
-      taxCode: "VRDGPP75C15L219X",
-      contractType: "Tempo Indeterminato",
-      salary: "€3,000",
-      status: "Attivo"
-    },
-    {
-      id: 4,
-      name: "Anna Neri",
-      email: "anna.neri@email.it",
-      phone: "+39 333 4567890",
-      taxCode: "NRANNA90D50A794Y",
-      contractType: "Part-time",
-      salary: "€1,500",
-      status: "Attivo"
-    },
-  ];
+  const { employees, isLoading, createEmployee, updateEmployee, deleteEmployee } = useEmployees(companyId);
 
-  const filteredEmployees = employees.filter((emp) =>
-    emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    emp.taxCode.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    const fetchCompanyId = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("company_id")
+          .eq("id", user.id)
+          .single();
+        
+        if (data?.company_id) {
+          setCompanyId(data.company_id);
+        }
+      }
+    };
 
+    fetchCompanyId();
+  }, []);
+
+  const handleAddEmployee = () => {
+    setSelectedEmployee(null);
+    setDialogOpen(true);
+  };
+
+  const handleEditEmployee = (employee: any) => {
+    setSelectedEmployee(employee);
+    setDialogOpen(true);
+  };
+
+  const handleDeleteClick = (id: string) => {
+    setEmployeeToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (employeeToDelete) {
+      deleteEmployee.mutate(employeeToDelete);
+      setDeleteDialogOpen(false);
+      setEmployeeToDelete(null);
+    }
+  };
+
+  const handleSave = (data: any) => {
+    if (selectedEmployee) {
+      updateEmployee.mutate({ id: selectedEmployee.id, updates: data });
+    } else {
+      createEmployee.mutate(data);
+    }
+  };
+
+  const contractTypeLabels: Record<string, string> = {
+    indeterminato: "Tempo Indeterminato",
+    determinato: "Tempo Determinato",
+    part_time: "Part-time",
+    consulente: "Consulente",
+  };
+
+  const filteredEmployees = employees?.filter((emp) =>
+    emp.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    emp.tax_code?.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || [];
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -89,7 +121,7 @@ const Employees = () => {
                   className="pl-10"
                 />
               </div>
-              <Button variant="hero">
+              <Button variant="hero" onClick={handleAddEmployee}>
                 <Plus className="mr-2 h-4 w-4" />
                 Aggiungi Dipendente
               </Button>
@@ -106,7 +138,9 @@ const Employees = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-foreground">142</div>
+              <div className="text-3xl font-bold text-foreground">
+                {isLoading ? "..." : employees?.length || 0}
+              </div>
             </CardContent>
           </Card>
           <Card>
@@ -116,7 +150,9 @@ const Employees = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-foreground">108</div>
+              <div className="text-3xl font-bold text-foreground">
+                {isLoading ? "..." : employees?.filter(e => e.contract_type === "indeterminato").length || 0}
+              </div>
             </CardContent>
           </Card>
           <Card>
@@ -126,7 +162,13 @@ const Employees = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-primary">+8</div>
+              <div className="text-3xl font-bold text-primary">
+                {isLoading ? "..." : employees?.filter(e => {
+                  const oneMonthAgo = new Date();
+                  oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+                  return new Date(e.hire_date) > oneMonthAgo;
+                }).length || 0}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -150,46 +192,101 @@ const Employees = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredEmployees.map((employee) => (
-                  <TableRow key={employee.id}>
-                    <TableCell className="font-medium">{employee.name}</TableCell>
-                    <TableCell className="font-mono text-sm">{employee.taxCode}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-col gap-1 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Mail className="h-3 w-3" />
-                          {employee.email}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Phone className="h-3 w-3" />
-                          {employee.phone}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{employee.contractType}</TableCell>
-                    <TableCell className="font-semibold">{employee.salary}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                        {employee.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon">
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8">
+                      Caricamento...
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : filteredEmployees.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      Nessun dipendente trovato
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredEmployees.map((employee) => (
+                    <TableRow key={employee.id}>
+                      <TableCell className="font-medium">{employee.full_name}</TableCell>
+                      <TableCell className="font-mono text-sm">{employee.tax_code}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-1 text-sm text-muted-foreground">
+                          {employee.email && (
+                            <div className="flex items-center gap-1">
+                              <Mail className="h-3 w-3" />
+                              {employee.email}
+                            </div>
+                          )}
+                          {employee.phone && (
+                            <div className="flex items-center gap-1">
+                              <Phone className="h-3 w-3" />
+                              {employee.phone}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {contractTypeLabels[employee.contract_type as keyof typeof contractTypeLabels] || employee.contract_type}
+                      </TableCell>
+                      <TableCell className="font-semibold">
+                        €{employee.base_salary?.toLocaleString('it-IT', { minimumFractionDigits: 2 })}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                          {employee.is_active ? "Attivo" : "Non attivo"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleEditEmployee(employee)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleDeleteClick(employee.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </CardContent>
         </Card>
       </main>
+
+      <EmployeeDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        employee={selectedEmployee}
+        companyId={companyId}
+        onSave={handleSave}
+      />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Conferma eliminazione</AlertDialogTitle>
+            <AlertDialogDescription>
+              Sei sicuro di voler eliminare questo dipendente? Questa azione non può essere annullata.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Elimina
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
