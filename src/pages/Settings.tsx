@@ -10,6 +10,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { UserRolesManagement } from "@/components/settings/UserRolesManagement";
 
 const Settings = () => {
   const [activeSection, setActiveSection] = useState("company");
@@ -239,11 +240,11 @@ const Settings = () => {
                 <CardHeader>
                   <CardTitle>Utenti e Ruoli</CardTitle>
                   <CardDescription>
-                    Gestisci gli utenti e i loro permessi
+                    Gestisci gli utenti della tua azienda e i loro permessi di accesso
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">Funzionalità in sviluppo</p>
+                  <UserRolesManagement />
                 </CardContent>
               </Card>
             )}
