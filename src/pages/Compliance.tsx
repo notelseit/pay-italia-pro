@@ -7,11 +7,12 @@ import Navbar from "@/components/Navbar";
 import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
   generateUNIEMENS,
-  generateF24,
   generateModello770,
   generateCertificazioneUnica,
   generateAutoliquidazioneINAIL,
@@ -19,10 +20,9 @@ import {
 
 const Compliance = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [uniemensMonth, setUniemensMonth] = useState("");
   const [uniemensCode, setUniemensCode] = useState("");
-  const [f24Month, setF24Month] = useState("");
-  const [f24Type, setF24Type] = useState("");
   const [m770Year, setM770Year] = useState("");
   const [m770Simplified, setM770Simplified] = useState(false);
   const [cuYear, setCuYear] = useState("");
@@ -83,40 +83,6 @@ const Compliance = () => {
 
     generateUNIEMENS(uniemensMonth, uniemensCode, mappedRecords, company);
     toast.success("UNIEMENS generato con successo");
-  };
-
-  const handleGenerateF24 = async () => {
-    if (!f24Month || !f24Type) {
-      toast.error("Compila tutti i campi");
-      return;
-    }
-
-    const company = await fetchCompanyData();
-    if (!company) return;
-
-    const [year, month] = f24Month.split("-");
-    const { data: payrollRecords } = await supabase
-      .from("payroll_records")
-      .select("*, employees(full_name)")
-      .eq("company_id", company.id)
-      .eq("month", parseInt(month))
-      .eq("year", parseInt(year));
-
-    if (!payrollRecords || payrollRecords.length === 0) {
-      toast.error("Nessun cedolino trovato per il periodo selezionato");
-      return;
-    }
-
-    const mappedRecords = payrollRecords.map((r: any) => ({
-      employee_full_name: r.employees?.full_name || "N/A",
-      gross_total: r.gross_total,
-      net_salary: r.net_salary,
-      irpef_tax: r.irpef_tax,
-      inps_contribution: r.inps_contribution,
-    }));
-
-    generateF24(f24Month, f24Type, mappedRecords, company);
-    toast.success("Modello F24 generato con successo");
   };
 
   const handleGenerateM770 = async () => {
@@ -247,37 +213,35 @@ const Compliance = () => {
           </Card>
 
           {/* F24 */}
-          <Card>
+          <Card className="border-primary/20 hover:border-primary/40 transition-colors">
             <CardHeader>
               <CardTitle>Modello F24</CardTitle>
               <CardDescription>
-                Versamento unificato imposte e contributi
+                Versamento unificato imposte e contributi - Agenzia delle Entrate
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="f24-month">Mese di Riferimento</Label>
-                  <Input 
-                    id="f24-month" 
-                    type="month"
-                    value={f24Month}
-                    onChange={(e) => setF24Month(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="f24-type">Tipo Versamento</Label>
-                  <Input 
-                    id="f24-type" 
-                    placeholder="INPS / IRPEF / Altro"
-                    value={f24Type}
-                    onChange={(e) => setF24Type(e.target.value)}
-                  />
-                </div>
+              <div className="bg-primary/5 p-4 rounded-md space-y-2">
+                <p className="text-sm text-foreground">
+                  Il modello F24 è utilizzato per il versamento unificato di:
+                </p>
+                <ul className="text-sm text-muted-foreground space-y-1 ml-4">
+                  <li>• Imposte dirette e IVA</li>
+                  <li>• Ritenute alla fonte (IRPEF)</li>
+                  <li>• Contributi INPS</li>
+                  <li>• Tributi regionali e locali</li>
+                </ul>
               </div>
               <Separator className="my-4" />
               <div className="flex gap-2">
-                <Button variant="hero" onClick={handleGenerateF24}>Genera F24</Button>
+                <Button 
+                  variant="hero" 
+                  onClick={() => navigate("/compliance/f24")}
+                  className="w-full"
+                >
+                  Compila Modello F24
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
               </div>
             </CardContent>
           </Card>
