@@ -30,22 +30,22 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={
-              <ProtectedRoute requireRole={['admin', 'hr_manager']}>
+              <ProtectedRoute requireRole={['admin', 'hr_manager', 'employee']}>
                 <Dashboard />
               </ProtectedRoute>
             } />
             <Route path="/employees" element={
-              <ProtectedRoute requireRole={['admin', 'hr_manager']}>
+              <ProtectedRoute requireRole={['admin', 'hr_manager', 'employee']}>
                 <Employees />
               </ProtectedRoute>
             } />
             <Route path="/presence" element={
-              <ProtectedRoute requireRole={['admin', 'hr_manager']}>
+              <ProtectedRoute requireRole={['admin', 'hr_manager', 'employee']}>
                 <Presence />
               </ProtectedRoute>
             } />
             <Route path="/payroll" element={
-              <ProtectedRoute requireRole={['admin', 'hr_manager']}>
+              <ProtectedRoute requireRole={['admin', 'hr_manager', 'employee']}>
                 <Payroll />
               </ProtectedRoute>
             } />
@@ -65,7 +65,7 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/settings" element={
-              <ProtectedRoute requireRole={['admin', 'hr_manager']}>
+              <ProtectedRoute requireRole={['admin', 'hr_manager', 'employee']}>
                 <Settings />
               </ProtectedRoute>
             } />
