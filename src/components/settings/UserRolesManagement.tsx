@@ -50,6 +50,8 @@ export function UserRolesManagement() {
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
+  const [invitePassword, setInvitePassword] = useState("");
+  const [inviteFullName, setInviteFullName] = useState("");
   const [inviteRole, setInviteRole] = useState<UserRole>("employee");
 
   const isAdmin = hasRole("admin");
@@ -144,75 +146,56 @@ export function UserRolesManagement() {
   const addUserMutation = useMutation({
     mutationFn: async ({
       email,
+      password,
+      fullName,
       role,
     }: {
       email: string;
+      password: string;
+      fullName: string;
       role: UserRole;
     }) => {
       if (!companyId) throw new Error("No company");
 
-      // Find user by email
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("id, company_id")
-        .eq("email", email)
-        .maybeSingle();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Non autenticato");
 
-      if (profileError) throw profileError;
-
-      if (!profile) {
-        throw new Error("Utente non trovato. L'utente deve prima registrarsi alla piattaforma.");
-      }
-
-      if (profile.company_id && profile.company_id !== companyId) {
-        throw new Error("Questo utente appartiene già ad un'altra azienda.");
-      }
-
-      // Update profile with company_id if not set
-      if (!profile.company_id) {
-        const { error: updateError } = await supabase
-          .from("profiles")
-          .update({ company_id: companyId })
-          .eq("id", profile.id);
-
-        if (updateError) throw updateError;
-      }
-
-      // Check if user already has a role in this company
-      const { data: existingRole } = await supabase
-        .from("user_roles")
-        .select("id")
-        .eq("user_id", profile.id)
-        .eq("company_id", companyId)
-        .maybeSingle();
-
-      if (existingRole) {
-        throw new Error("Questo utente è già presente nell'azienda.");
-      }
-
-      // Add role
-      const { error: roleError } = await supabase.from("user_roles").insert({
-        user_id: profile.id,
-        company_id: companyId,
-        role: role,
+      const response = await supabase.functions.invoke("create-user", {
+        body: {
+          email,
+          password,
+          fullName,
+          role,
+          companyId,
+        },
       });
 
-      if (roleError) throw roleError;
+      if (response.error) {
+        throw new Error(response.error.message || "Errore nella creazione dell'utente");
+      }
+
+      if (response.data?.error) {
+        throw new Error(response.data.error);
+      }
+
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["company-users", companyId] });
       toast({
         title: "Successo",
-        description: "Utente aggiunto correttamente",
+        description: "Utente creato correttamente",
       });
       setIsInviteDialogOpen(false);
       setInviteEmail("");
+      setInvitePassword("");
+      setInviteFullName("");
       setInviteRole("employee");
     },
     onError: (error: any) => {
       toast({
         title: "Errore",
-        description: error.message || "Impossibile aggiungere l'utente",
+        description: error.message || "Impossibile creare l'utente",
         variant: "destructive",
       });
     },
@@ -229,15 +212,31 @@ export function UserRolesManagement() {
 
   const handleAddUser = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inviteEmail.trim()) {
+    
+    if (!inviteEmail.trim() || !invitePassword.trim() || !inviteFullName.trim()) {
       toast({
         title: "Errore",
-        description: "Inserisci un'email valida",
+        description: "Tutti i campi sono obbligatori",
         variant: "destructive",
       });
       return;
     }
-    addUserMutation.mutate({ email: inviteEmail.trim(), role: inviteRole });
+
+    if (invitePassword.length < 6) {
+      toast({
+        title: "Errore",
+        description: "La password deve essere di almeno 6 caratteri",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    addUserMutation.mutate({
+      email: inviteEmail.trim(),
+      password: invitePassword,
+      fullName: inviteFullName.trim(),
+      role: inviteRole,
+    });
   };
 
   const getRoleBadge = (role: UserRole) => {
@@ -301,22 +300,45 @@ export function UserRolesManagement() {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Aggiungi Utente all'Azienda</DialogTitle>
+                <DialogTitle>Crea Nuovo Utente</DialogTitle>
                 <DialogDescription>
-                  Inserisci l'email di un utente già registrato per aggiungerlo alla tua azienda
+                  Compila i dati per creare un nuovo utente nell'azienda
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleAddUser}>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email Utente</Label>
+                    <Label htmlFor="fullName">Nome Completo</Label>
+                    <Input
+                      id="fullName"
+                      type="text"
+                      placeholder="Mario Rossi"
+                      value={inviteFullName}
+                      onChange={(e) => setInviteFullName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
                     <Input
                       id="email"
                       type="email"
-                      placeholder="utente@esempio.com"
+                      placeholder="mario.rossi@esempio.com"
                       value={inviteEmail}
                       onChange={(e) => setInviteEmail(e.target.value)}
                       required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="Minimo 6 caratteri"
+                      value={invitePassword}
+                      onChange={(e) => setInvitePassword(e.target.value)}
+                      required
+                      minLength={6}
                     />
                   </div>
                   <div className="space-y-2">
@@ -351,7 +373,7 @@ export function UserRolesManagement() {
                     {addUserMutation.isPending && (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
-                    Aggiungi
+                    Crea Utente
                   </Button>
                 </DialogFooter>
               </form>
