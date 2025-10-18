@@ -15,12 +15,94 @@ interface CompanyData {
   address: string;
 }
 
+// Generate UNIEMENS XML following official structure
+export const generateUNIEMENSXML = (
+  month: string,
+  companyCode: string,
+  payrollRecords: PayrollData[],
+  companyData: CompanyData
+) => {
+  const [year, monthNum] = month.split("-");
+  
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  xml += '<ListaPosPA xmlns="http://www.inps.it/namespace/ListaPosPA">\n';
+  
+  // Frontespizio
+  xml += '  <Frontespizio>\n';
+  xml += `    <CodiceFiscale>${companyData.vat_number || ''}</CodiceFiscale>\n`;
+  xml += `    <AnnoMeseRif>${year}${monthNum}</AnnoMeseRif>\n`;
+  xml += `    <CodiceAziendaINPS>${companyCode}</CodiceAziendaINPS>\n`;
+  xml += `    <Denominazione>${escapeXML(companyData.name)}</Denominazione>\n`;
+  xml += `    <Indirizzo>${escapeXML(companyData.address || '')}</Indirizzo>\n`;
+  xml += '  </Frontespizio>\n';
+  
+  // Denunce Individuali
+  payrollRecords.forEach((record, index) => {
+    xml += '  <DenunciaIndividuale>\n';
+    xml += `    <ProgressivoDenuncia>${index + 1}</ProgressivoDenuncia>\n`;
+    xml += `    <Cognome>${escapeXML(record.employee_full_name.split(' ')[0])}</Cognome>\n`;
+    xml += `    <Nome>${escapeXML(record.employee_full_name.split(' ').slice(1).join(' '))}</Nome>\n`;
+    
+    // Periodo nel mese
+    xml += '    <PeriodoNelMese>\n';
+    xml += `      <ImponibilePrevidenziale>${record.gross_total.toFixed(2)}</ImponibilePrevidenziale>\n`;
+    xml += `      <ContributiINPS>${record.inps_contribution.toFixed(2)}</ContributiINPS>\n`;
+    xml += `      <ImponibileFiscale>${record.gross_total.toFixed(2)}</ImponibileFiscale>\n`;
+    xml += `      <RitenuteIRPEF>${record.irpef_tax.toFixed(2)}</RitenuteIRPEF>\n`;
+    xml += `      <NettoInBusta>${record.net_salary.toFixed(2)}</NettoInBusta>\n`;
+    xml += '    </PeriodoNelMese>\n';
+    
+    xml += '  </DenunciaIndividuale>\n';
+  });
+  
+  // Riepilogo contributivo
+  const totalGross = payrollRecords.reduce((sum, r) => sum + r.gross_total, 0);
+  const totalINPS = payrollRecords.reduce((sum, r) => sum + r.inps_contribution, 0);
+  const totalIRPEF = payrollRecords.reduce((sum, r) => sum + r.irpef_tax, 0);
+  const employerINPS = totalINPS * 2.1;
+  
+  xml += '  <RiepilogoContributivo>\n';
+  xml += `    <NumeroDipendenti>${payrollRecords.length}</NumeroDipendenti>\n`;
+  xml += `    <TotaleImponibilePrevidenziale>${totalGross.toFixed(2)}</TotaleImponibilePrevidenziale>\n`;
+  xml += `    <TotaleContributiDipendenti>${totalINPS.toFixed(2)}</TotaleContributiDipendenti>\n`;
+  xml += `    <TotaleContributiDatoreLavoro>${employerINPS.toFixed(2)}</TotaleContributiDatoreLavoro>\n`;
+  xml += `    <TotaleContributiINPS>${(totalINPS + employerINPS).toFixed(2)}</TotaleContributiINPS>\n`;
+  xml += `    <TotaleRitenuteIRPEF>${totalIRPEF.toFixed(2)}</TotaleRitenuteIRPEF>\n`;
+  xml += '  </RiepilogoContributivo>\n';
+  
+  xml += '</ListaPosPA>';
+  
+  // Download XML
+  const blob = new Blob([xml], { type: 'application/xml' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `UNIEMENS_${year}${monthNum}.xml`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+// Helper function for XML escaping
+const escapeXML = (str: string): string => {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+};
+
 export const generateUNIEMENS = (
   month: string,
   companyCode: string,
   payrollRecords: PayrollData[],
   companyData: CompanyData
 ) => {
+  // Generate both PDF and XML
+  generateUNIEMENSXML(month, companyCode, payrollRecords, companyData);
+  
   const doc = new jsPDF();
   const [year, monthNum] = month.split("-");
   
@@ -143,6 +225,8 @@ export const generateUNIEMENS = (
     "a quello di riferimento.",
     "",
     `Data elaborazione: ${new Date().toLocaleDateString("it-IT")}`,
+    "",
+    "NOTA: È stato generato anche il file XML corrispondente per l'invio telematico.",
   ];
   
   notes.forEach((note) => {
@@ -213,30 +297,186 @@ export const generateModello770 = (
 ) => {
   const doc = new jsPDF();
   
-  doc.setFontSize(18);
-  doc.text("MODELLO 770", 105, 20, { align: "center" });
+  // === FRONTESPIZIO ===
+  doc.setFontSize(20);
+  doc.setFont("helvetica", "bold");
+  doc.text("MODELLO 770/" + year, 105, 20, { align: "center" });
+  doc.setFontSize(12);
+  doc.text(simplified ? "DICHIARAZIONE SEMPLIFICATA" : "DICHIARAZIONE ORDINARIA", 105, 28, { align: "center" });
+  
   doc.setFontSize(10);
-  doc.text(simplified ? "(Modello Semplificato)" : "(Modello Ordinario)", 105, 28, { align: "center" });
+  doc.setFont("helvetica", "normal");
+  doc.text("Dichiarazione del sostituto d'imposta", 105, 35, { align: "center" });
   
-  doc.text(`Anno d'imposta: ${year}`, 20, 40);
-  doc.text(`Azienda: ${companyData.name}`, 20, 47);
-  doc.text(`P.IVA: ${companyData.vat_number || "N/A"}`, 20, 54);
+  // Dati del sostituto d'imposta
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("DATI DEL SOSTITUTO D'IMPOSTA", 20, 50);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.text(`Denominazione: ${companyData.name}`, 20, 58);
+  doc.text(`Codice Fiscale / P.IVA: ${companyData.vat_number || "N/A"}`, 20, 65);
+  doc.text(`Indirizzo: ${companyData.address || "N/A"}`, 20, 72);
+  doc.text(`Anno d'imposta: ${year}`, 20, 79);
   
+  // Calcoli
+  const totalGross = payrollRecords.reduce((sum, r) => sum + r.gross_total, 0);
   const totalIRPEF = payrollRecords.reduce((sum, r) => sum + r.irpef_tax, 0);
+  const totalINPS = payrollRecords.reduce((sum, r) => sum + r.inps_contribution, 0);
+  const totalNet = payrollRecords.reduce((sum, r) => sum + r.net_salary, 0);
   const totalEmployees = payrollRecords.length;
   
+  // === QUADRO ST - RITENUTE OPERATE ===
+  doc.addPage();
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.text("QUADRO ST - RITENUTE ALLA FONTE OPERATE", 20, 20);
+  
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.text("Redditi di lavoro dipendente e assimilati", 20, 30);
+  
   autoTable(doc, {
-    startY: 70,
-    head: [["Descrizione", "Valore"]],
+    startY: 38,
+    head: [["Descrizione", "Importo (€)"]],
     body: [
-      ["Numero dipendenti", totalEmployees.toString()],
-      ["Totale ritenute IRPEF operate", `€ ${totalIRPEF.toFixed(2)}`],
-      ["Tipo modello", simplified ? "Semplificato" : "Ordinario"],
+      ["Numero percettori", totalEmployees.toString()],
+      ["Ammontare complessivo delle somme erogate", totalGross.toFixed(2)],
+      ["Ammontare imponibile", totalGross.toFixed(2)],
+      ["Ritenute IRPEF operate nell'anno", totalIRPEF.toFixed(2)],
+      ["Ritenute sospese", "0.00"],
+      ["Ritenute versate", totalIRPEF.toFixed(2)],
     ],
     theme: "grid",
+    headStyles: { fillColor: [41, 128, 185] },
   });
   
-  doc.save(`Modello770_${year}.pdf`);
+  // === QUADRO SX - RIEPILOGO CERTIFICAZIONI ===
+  doc.addPage();
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.text("QUADRO SX - RIEPILOGO CERTIFICAZIONI", 20, 20);
+  
+  const employeeData = payrollRecords.map((record) => [
+    record.employee_full_name,
+    record.gross_total.toFixed(2),
+    record.inps_contribution.toFixed(2),
+    record.irpef_tax.toFixed(2),
+    record.net_salary.toFixed(2),
+  ]);
+  
+  autoTable(doc, {
+    startY: 30,
+    head: [["Dipendente", "Lordo", "Contributi", "IRPEF", "Netto"]],
+    body: employeeData,
+    theme: "striped",
+    headStyles: { fillColor: [41, 128, 185] },
+    columnStyles: {
+      0: { cellWidth: 60 },
+      1: { cellWidth: 30, halign: 'right' },
+      2: { cellWidth: 30, halign: 'right' },
+      3: { cellWidth: 30, halign: 'right' },
+      4: { cellWidth: 30, halign: 'right' },
+    },
+  });
+  
+  // === QUADRO SY - DATI CONTRIBUTIVI ===
+  doc.addPage();
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.text("QUADRO SY - DATI CONTRIBUTIVI", 20, 20);
+  
+  autoTable(doc, {
+    startY: 30,
+    head: [["Descrizione", "Importo (€)"]],
+    body: [
+      ["Totale contributi previdenziali dipendenti", totalINPS.toFixed(2)],
+      ["Contributi INPS versati", totalINPS.toFixed(2)],
+      ["Base imponibile contributiva", totalGross.toFixed(2)],
+    ],
+    theme: "grid",
+    headStyles: { fillColor: [41, 128, 185] },
+  });
+  
+  // === QUADRO SZ - PROSPETTO RIEPILOGATIVO ===
+  doc.addPage();
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.text("QUADRO SZ - PROSPETTO RIEPILOGATIVO", 20, 20);
+  
+  autoTable(doc, {
+    startY: 30,
+    head: [["Voce", "Importo (€)"]],
+    body: [
+      ["Totale redditi erogati", totalGross.toFixed(2)],
+      ["Totale ritenute IRPEF operate", totalIRPEF.toFixed(2)],
+      ["Totale ritenute versate", totalIRPEF.toFixed(2)],
+      ["Totale contributi previdenziali", totalINPS.toFixed(2)],
+      ["Numero totale dipendenti", totalEmployees.toString()],
+      ["Netti complessivamente erogati", totalNet.toFixed(2)],
+    ],
+    theme: "striped",
+    headStyles: { fillColor: [41, 128, 185] },
+    footStyles: { fillColor: [52, 73, 94], textColor: [255, 255, 255] },
+    foot: [["TOTALE DA DICHIARARE", totalIRPEF.toFixed(2)]],
+  });
+  
+  // === NOTE FINALI ===
+  doc.addPage();
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.text("NOTE E INFORMAZIONI", 20, 20);
+  
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  let yPos = 35;
+  
+  const notes = [
+    "Il Modello 770 è la dichiarazione dei sostituti d'imposta.",
+    "",
+    "Contenuto della dichiarazione:",
+    "- Quadro ST: Ritenute operate su redditi da lavoro dipendente",
+    "- Quadro SX: Riepilogo delle certificazioni rilasciate (CU)",
+    "- Quadro SY: Dati contributivi e previdenziali",
+    "- Quadro SZ: Prospetto riepilogativo generale",
+    "",
+    "Termini di presentazione:",
+    simplified 
+      ? "- Modello Semplificato: entro il 31 ottobre dell'anno successivo"
+      : "- Modello Ordinario: entro il 31 ottobre dell'anno successivo",
+    "",
+    "Modalità di invio: Esclusivamente in via telematica",
+    "",
+    `Data elaborazione: ${new Date().toLocaleDateString("it-IT")}`,
+    "",
+    "ATTENZIONE: Questo documento è stato generato automaticamente",
+    "e deve essere verificato prima dell'invio all'Agenzia delle Entrate.",
+  ];
+  
+  notes.forEach((note) => {
+    if (yPos > 270) {
+      doc.addPage();
+      yPos = 20;
+    }
+    doc.text(note, 20, yPos);
+    yPos += 6;
+  });
+  
+  // Footer su tutte le pagine
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "italic");
+    doc.text(
+      `Modello 770/${year} - ${companyData.name} - Pag. ${i}/${pageCount}`,
+      105,
+      285,
+      { align: "center" }
+    );
+  }
+  
+  doc.save(`Modello770_${year}_${simplified ? 'Semplificato' : 'Ordinario'}.pdf`);
 };
 
 export const generateCertificazioneUnica = (
