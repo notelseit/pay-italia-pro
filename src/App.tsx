@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Employees from "./pages/Employees";
 import Presence from "./pages/Presence";
 import Payroll from "./pages/Payroll";
+import Compliance from "./pages/Compliance";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -45,6 +46,11 @@ const App = () => (
             <Route path="/payroll" element={
               <ProtectedRoute requireRole={['admin', 'hr_manager']}>
                 <Payroll />
+              </ProtectedRoute>
+            } />
+            <Route path="/compliance" element={
+              <ProtectedRoute requireRole={['admin', 'hr_manager']}>
+                <Compliance />
               </ProtectedRoute>
             } />
             <Route path="/reports" element={

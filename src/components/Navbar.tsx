@@ -23,6 +23,7 @@ const Navbar = () => {
     { path: "/employees", label: "Dipendenti" },
     { path: "/presence", label: "Presenze" },
     { path: "/payroll", label: "Cedolini" },
+    { path: "/compliance", label: "Adempimenti Fiscali" },
     { path: "/reports", label: "Report" },
   ];
 
