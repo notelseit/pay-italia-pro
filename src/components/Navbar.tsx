@@ -12,20 +12,25 @@ import { useAuth } from "@/hooks/useAuth";
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut } = useAuth();
+  const { signOut, hasRole } = useAuth();
 
   const handleLogout = async () => {
     await signOut();
   };
 
   const navItems = [
-    { path: "/dashboard", label: "Dashboard" },
-    { path: "/employees", label: "Dipendenti" },
-    { path: "/presence", label: "Presenze" },
-    { path: "/payroll", label: "Cedolini" },
-    { path: "/compliance", label: "Adempimenti Fiscali" },
-    { path: "/reports", label: "Report" },
+    { path: "/dashboard", label: "Dashboard", roles: ["admin", "hr_manager", "employee"] },
+    { path: "/employees", label: "Dipendenti", roles: ["admin", "hr_manager", "employee"] },
+    { path: "/presence", label: "Presenze", roles: ["admin", "hr_manager", "employee"] },
+    { path: "/payroll", label: "Cedolini", roles: ["admin", "hr_manager", "employee"] },
+    { path: "/compliance", label: "Adempimenti Fiscali", roles: ["admin", "hr_manager"] },
+    { path: "/documents", label: "Documenti", roles: ["admin", "hr_manager"] },
+    { path: "/reports", label: "Report", roles: ["admin", "hr_manager"] },
   ];
+
+  const visibleNavItems = navItems.filter(item => 
+    item.roles.some(role => hasRole(role))
+  );
 
   return (
     <nav className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
@@ -41,7 +46,7 @@ const Navbar = () => {
             </div>
             
             <div className="hidden md:flex items-center gap-1">
-              {navItems.map((item) => (
+              {visibleNavItems.map((item) => (
                 <Button
                   key={item.path}
                   variant={location.pathname === item.path ? "secondary" : "ghost"}
