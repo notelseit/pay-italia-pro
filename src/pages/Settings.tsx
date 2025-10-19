@@ -88,7 +88,7 @@ const Settings = () => {
       matricola_inps: formData.get("matricola-inps") as string,
       posizione_inail: formData.get("posizione-inail") as string,
       voce_inail: formData.get("voce-inail") as string,
-      default_ccnl_contract_id: defaultCCNL || null,
+      default_ccnl_contract_id: defaultCCNL && defaultCCNL !== "none" ? defaultCCNL : null,
     };
 
     const { error } = await supabase
@@ -269,12 +269,12 @@ const Settings = () => {
 
                     <div className="space-y-2">
                       <Label htmlFor="default-ccnl">Contratto CCNL di Default</Label>
-                      <Select value={defaultCCNL} onValueChange={setDefaultCCNL}>
+                      <Select value={defaultCCNL || "none"} onValueChange={setDefaultCCNL}>
                         <SelectTrigger id="default-ccnl">
                           <SelectValue placeholder="Seleziona contratto di default" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Nessun contratto di default</SelectItem>
+                          <SelectItem value="none">Nessun contratto di default</SelectItem>
                           {contracts && contracts.map((contract) => (
                             <SelectItem key={contract.id} value={contract.id}>
                               {contract.name}
