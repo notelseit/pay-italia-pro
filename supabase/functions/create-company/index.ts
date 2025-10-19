@@ -78,21 +78,20 @@ serve(async (req) => {
     }
     console.log('User created successfully:', newUser.user.id);
 
-    // Create profile for the new user
+    // Update profile for the new user (profile was created by trigger)
     const { error: profileError } = await supabaseClient
       .from('profiles')
-      .insert({
-        id: newUser.user.id,
+      .update({
         full_name: adminFullName,
-        email: adminEmail,
         company_id: company.id,
-      });
+      })
+      .eq('id', newUser.user.id);
 
     if (profileError) {
-      console.error('Profile creation error:', profileError);
+      console.error('Profile update error:', profileError);
       throw profileError;
     }
-    console.log('Profile created successfully');
+    console.log('Profile updated successfully');
 
     // Assign admin role to the new user
     const { error: roleError } = await supabaseClient
