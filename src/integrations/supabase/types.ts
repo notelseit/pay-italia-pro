@@ -393,6 +393,54 @@ export type Database = {
           },
         ]
       }
+      payroll_settings: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          deduction_per_child: number
+          id: string
+          inail_rate: number
+          inps_employee_rate: number
+          inps_employer_rate: number
+          irpef_brackets: Json
+          municipal_tax_rate: number
+          regional_tax_rate: number
+          tfr_rate: number
+          updated_at: string | null
+          work_deductions: Json
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          deduction_per_child?: number
+          id?: string
+          inail_rate?: number
+          inps_employee_rate?: number
+          inps_employer_rate?: number
+          irpef_brackets?: Json
+          municipal_tax_rate?: number
+          regional_tax_rate?: number
+          tfr_rate?: number
+          updated_at?: string | null
+          work_deductions?: Json
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          deduction_per_child?: number
+          id?: string
+          inail_rate?: number
+          inps_employee_rate?: number
+          inps_employer_rate?: number
+          irpef_brackets?: Json
+          municipal_tax_rate?: number
+          regional_tax_rate?: number
+          tfr_rate?: number
+          updated_at?: string | null
+          work_deductions?: Json
+        }
+        Relationships: []
+      }
       presence_records: {
         Row: {
           company_id: string

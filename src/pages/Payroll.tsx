@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, Send, CheckCircle, Calculator, Plus, Eye, Edit } from "lucide-react";
+import { Download, Send, CheckCircle, Calculator, Plus, Eye, Edit, Settings } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -19,6 +19,7 @@ import { useEmployees } from "@/hooks/useEmployees";
 import { PayrollDialog } from "@/components/payroll/PayrollDialog";
 import { PayrollDetailDialog } from "@/components/payroll/PayrollDetailDialog";
 import { PayrollEditDialog } from "@/components/payroll/PayrollEditDialog";
+import { PayrollSettingsDialog } from "@/components/payroll/PayrollSettingsDialog";
 import { formatCurrency } from "@/lib/payrollCalculations";
 import { supabase } from "@/integrations/supabase/client";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -33,6 +34,7 @@ const Payroll = () => {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [sendDialogOpen, setSendDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [selectedPayrollId, setSelectedPayrollId] = useState<string>("");
   const [selectedPayroll, setSelectedPayroll] = useState<any>(null);
 
@@ -217,6 +219,10 @@ const Payroll = () => {
                 <Button variant="hero" onClick={() => setDialogOpen(true)}>
                   <Plus className="mr-2 h-4 w-4" />
                   Genera Cedolino
+                </Button>
+                <Button variant="outline" onClick={() => setSettingsDialogOpen(true)}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Configurazione Calcoli
                 </Button>
               </div>
             </div>
@@ -404,6 +410,12 @@ const Payroll = () => {
           open={detailDialogOpen}
           onOpenChange={setDetailDialogOpen}
           payroll={selectedPayroll}
+        />
+
+        <PayrollSettingsDialog
+          open={settingsDialogOpen}
+          onOpenChange={setSettingsDialogOpen}
+          companyId={companyId}
         />
 
         <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
