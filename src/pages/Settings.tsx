@@ -305,8 +305,138 @@ const Settings = () => {
                     Gestisci password e impostazioni di sicurezza
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">Funzionalità in sviluppo</p>
+                <CardContent className="space-y-6">
+                  {/* Change Password Section */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Cambio Password</h3>
+                    <form 
+                      onSubmit={async (e) => {
+                        e.preventDefault();
+                        const formData = new FormData(e.currentTarget);
+                        const currentPassword = formData.get("current-password") as string;
+                        const newPassword = formData.get("new-password") as string;
+                        const confirmPassword = formData.get("confirm-password") as string;
+
+                        if (newPassword !== confirmPassword) {
+                          toast({
+                            title: "Errore",
+                            description: "Le nuove password non corrispondono",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+
+                        if (newPassword.length < 8) {
+                          toast({
+                            title: "Errore",
+                            description: "La password deve essere di almeno 8 caratteri",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+
+                        const { error } = await supabase.auth.updateUser({
+                          password: newPassword
+                        });
+
+                        if (error) {
+                          toast({
+                            title: "Errore",
+                            description: "Impossibile cambiare la password. Verifica la password corrente.",
+                            variant: "destructive",
+                          });
+                        } else {
+                          toast({
+                            title: "Successo",
+                            description: "Password cambiata correttamente",
+                          });
+                          (e.target as HTMLFormElement).reset();
+                        }
+                      }} 
+                      className="space-y-4"
+                    >
+                      <div className="space-y-2">
+                        <Label htmlFor="current-password">Password Corrente</Label>
+                        <Input 
+                          id="current-password" 
+                          name="current-password" 
+                          type="password" 
+                          required 
+                          autoComplete="current-password"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="new-password">Nuova Password</Label>
+                        <Input 
+                          id="new-password" 
+                          name="new-password" 
+                          type="password" 
+                          required 
+                          minLength={8}
+                          autoComplete="new-password"
+                        />
+                        <p className="text-xs text-muted-foreground">Minimo 8 caratteri</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="confirm-password">Conferma Nuova Password</Label>
+                        <Input 
+                          id="confirm-password" 
+                          name="confirm-password" 
+                          type="password" 
+                          required 
+                          minLength={8}
+                          autoComplete="new-password"
+                        />
+                      </div>
+                      <Button type="submit" variant="hero">Cambia Password</Button>
+                    </form>
+                  </div>
+
+                  <Separator />
+
+                  {/* Security Settings */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Impostazioni di Sicurezza</h3>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label>Termina Tutte le Sessioni</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Disconnetti tutti i dispositivi tranne questo
+                          </p>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={async () => {
+                            const { error } = await supabase.auth.signOut({ scope: 'others' });
+                            if (error) {
+                              toast({
+                                title: "Errore",
+                                description: "Impossibile terminare le sessioni",
+                                variant: "destructive",
+                              });
+                            } else {
+                              toast({
+                                title: "Successo",
+                                description: "Tutte le altre sessioni sono state terminate",
+                              });
+                            }
+                          }}
+                        >
+                          Termina Sessioni
+                        </Button>
+                      </div>
+
+                      <div className="p-4 bg-muted/50 rounded-lg">
+                        <h4 className="font-medium mb-2">Informazioni Account</h4>
+                        <div className="space-y-1 text-sm text-muted-foreground">
+                          <p>Il tuo account è protetto con autenticazione sicura.</p>
+                          <p>Cambia regolarmente la tua password per mantenere il massimo livello di sicurezza.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             )}
