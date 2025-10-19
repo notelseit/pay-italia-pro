@@ -11,6 +11,7 @@ import { Upload, FileText, Loader2, FolderOpen, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const DOCUMENT_CATEGORIES = [
+  { value: "cedolini", label: "Cedolini" },
   { value: "curriculum", label: "Curriculum" },
   { value: "modelli", label: "Modelli" },
   { value: "uniemens", label: "UniEmens" },
@@ -54,9 +55,14 @@ export default function Documents() {
   const { data: company } = useQuery({
     queryKey: ["company"],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) return null;
+
       const { data: profile } = await supabase
         .from("profiles")
         .select("company_id")
+        .eq("id", user.id)
         .single();
 
       if (!profile?.company_id) return null;
