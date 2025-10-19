@@ -439,7 +439,15 @@ export type Database = {
           updated_at?: string | null
           work_deductions?: Json
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "payroll_settings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       presence_records: {
         Row: {

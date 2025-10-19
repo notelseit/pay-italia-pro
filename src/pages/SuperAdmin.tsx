@@ -5,10 +5,11 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Building2, Plus, Users, Edit, LogIn } from "lucide-react";
+import { Building2, Plus, Users, Edit, LogIn, Trash2 } from "lucide-react";
 import { z } from "zod";
 import Navbar from "@/components/Navbar";
 import { useNavigate } from "react-router-dom";
@@ -38,6 +39,7 @@ const SuperAdmin = () => {
   const navigate = useNavigate();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<any>(null);
   const [formData, setFormData] = useState({
     companyName: "",
@@ -187,6 +189,46 @@ const SuperAdmin = () => {
     },
   });
 
+  // Delete company mutation
+  const deleteCompanyMutation = useMutation({
+    mutationFn: async (companyId: string) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Non autenticato');
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-company`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ companyId }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Errore nella cancellazione dell\'azienda');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Azienda eliminata",
+        description: "L'azienda e tutti i dati associati sono stati eliminati con successo",
+      });
+      setIsDeleteDialogOpen(false);
+      setSelectedCompany(null);
+      queryClient.invalidateQueries({ queryKey: ['superadmin-companies'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Errore",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -237,6 +279,17 @@ const SuperAdmin = () => {
   const handleImpersonate = (companyId: string) => {
     if (confirm('Vuoi accedere come amministratore di questa azienda?')) {
       impersonateMutation.mutate(companyId);
+    }
+  };
+
+  const handleDeleteClick = (company: any) => {
+    setSelectedCompany(company);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (selectedCompany) {
+      deleteCompanyMutation.mutate(selectedCompany.id);
     }
   };
 
@@ -393,6 +446,15 @@ const SuperAdmin = () => {
                           >
                             <LogIn className="h-4 w-4" />
                           </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteClick(company)}
+                            disabled={deleteCompanyMutation.isPending}
+                            title="Elimina azienda"
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -504,6 +566,37 @@ const SuperAdmin = () => {
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Delete Company Alert Dialog */}
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Sei sicuro?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Questa azione eliminerà permanentemente l'azienda "{selectedCompany?.name}" e tutti i dati associati:
+                <ul className="list-disc list-inside mt-2 space-y-1">
+                  <li>Tutti gli utenti dell'azienda</li>
+                  <li>Tutti i dipendenti e i loro dati</li>
+                  <li>Tutte le presenze e buste paga</li>
+                  <li>Tutti i documenti caricati</li>
+                </ul>
+                <p className="mt-2 font-semibold text-destructive">
+                  Questa operazione non può essere annullata.
+                </p>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annulla</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleConfirmDelete}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                disabled={deleteCompanyMutation.isPending}
+              >
+                {deleteCompanyMutation.isPending ? "Eliminazione..." : "Elimina"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
