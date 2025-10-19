@@ -14,12 +14,85 @@ export type Database = {
   }
   public: {
     Tables: {
+      ccnl_contracts: {
+        Row: {
+          base_salary: number | null
+          company_id: string
+          created_at: string | null
+          description: string | null
+          fourteenth_salary: boolean | null
+          id: string
+          inail_rate: number | null
+          inps_rate: number | null
+          is_active: boolean | null
+          meal_voucher_amount: number | null
+          meal_vouchers: boolean | null
+          name: string
+          notes: string | null
+          notice_period_days: number | null
+          other_contributions: Json | null
+          sick_leave_days: number | null
+          thirteenth_salary: boolean | null
+          trial_period_days: number | null
+          updated_at: string | null
+          vacation_days: number | null
+          work_hours: number | null
+        }
+        Insert: {
+          base_salary?: number | null
+          company_id: string
+          created_at?: string | null
+          description?: string | null
+          fourteenth_salary?: boolean | null
+          id?: string
+          inail_rate?: number | null
+          inps_rate?: number | null
+          is_active?: boolean | null
+          meal_voucher_amount?: number | null
+          meal_vouchers?: boolean | null
+          name: string
+          notes?: string | null
+          notice_period_days?: number | null
+          other_contributions?: Json | null
+          sick_leave_days?: number | null
+          thirteenth_salary?: boolean | null
+          trial_period_days?: number | null
+          updated_at?: string | null
+          vacation_days?: number | null
+          work_hours?: number | null
+        }
+        Update: {
+          base_salary?: number | null
+          company_id?: string
+          created_at?: string | null
+          description?: string | null
+          fourteenth_salary?: boolean | null
+          id?: string
+          inail_rate?: number | null
+          inps_rate?: number | null
+          is_active?: boolean | null
+          meal_voucher_amount?: number | null
+          meal_vouchers?: boolean | null
+          name?: string
+          notes?: string | null
+          notice_period_days?: number | null
+          other_contributions?: Json | null
+          sick_leave_days?: number | null
+          thirteenth_salary?: boolean | null
+          trial_period_days?: number | null
+          updated_at?: string | null
+          vacation_days?: number | null
+          work_hours?: number | null
+        }
+        Relationships: []
+      }
       companies: {
         Row: {
           address: string | null
           city: string | null
           country: string | null
           created_at: string | null
+          default_ccnl_contract_id: string | null
           email: string | null
           id: string
           matricola_inps: string | null
@@ -38,6 +111,7 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string | null
+          default_ccnl_contract_id?: string | null
           email?: string | null
           id?: string
           matricola_inps?: string | null
@@ -56,6 +130,7 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string | null
+          default_ccnl_contract_id?: string | null
           email?: string | null
           id?: string
           matricola_inps?: string | null
@@ -69,7 +144,15 @@ export type Database = {
           vat_number?: string | null
           voce_inail?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "companies_default_ccnl_contract_id_fkey"
+            columns: ["default_ccnl_contract_id"]
+            isOneToOne: false
+            referencedRelation: "ccnl_contracts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       documents: {
         Row: {
@@ -175,6 +258,7 @@ export type Database = {
       employees: {
         Row: {
           base_salary: number
+          ccnl_contract_id: string | null
           company_id: string
           contract_type: Database["public"]["Enums"]["contract_type"]
           created_at: string | null
@@ -219,6 +303,7 @@ export type Database = {
         }
         Insert: {
           base_salary: number
+          ccnl_contract_id?: string | null
           company_id: string
           contract_type: Database["public"]["Enums"]["contract_type"]
           created_at?: string | null
@@ -263,6 +348,7 @@ export type Database = {
         }
         Update: {
           base_salary?: number
+          ccnl_contract_id?: string | null
           company_id?: string
           contract_type?: Database["public"]["Enums"]["contract_type"]
           created_at?: string | null
@@ -306,6 +392,13 @@ export type Database = {
           working_hours?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "employees_ccnl_contract_id_fkey"
+            columns: ["ccnl_contract_id"]
+            isOneToOne: false
+            referencedRelation: "ccnl_contracts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "employees_company_id_fkey"
             columns: ["company_id"]

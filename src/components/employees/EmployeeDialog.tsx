@@ -10,6 +10,7 @@ import { BasicInfoTab } from "./tabs/BasicInfoTab";
 import { CitizenshipTab } from "./tabs/CitizenshipTab";
 import { EducationTab } from "./tabs/EducationTab";
 import { PayrollTab } from "./tabs/PayrollTab";
+import { CCNLTab } from "./tabs/CCNLTab";
 import { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
 
@@ -50,6 +51,7 @@ const employeeSchema = z.object({
   visa_expiry_date: z.string().optional(),
   cv_url: z.string().optional(),
   password: z.string().optional(),
+  ccnl_contract_id: z.string().optional(),
 });
 
 type EmployeeFormData = z.infer<typeof employeeSchema>;
@@ -142,8 +144,9 @@ export const EmployeeDialog = ({ open, onOpenChange, employee, companyId, onSave
             });
           })} className="space-y-6">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="basic">Dati Base</TabsTrigger>
+                <TabsTrigger value="ccnl">Contratto CCNL</TabsTrigger>
                 <TabsTrigger value="citizenship">Cittadinanza</TabsTrigger>
                 <TabsTrigger value="education">Formazione</TabsTrigger>
                 <TabsTrigger value="payroll">Libro Paga</TabsTrigger>
@@ -151,6 +154,10 @@ export const EmployeeDialog = ({ open, onOpenChange, employee, companyId, onSave
 
               <TabsContent value="basic" className="mt-6">
                 <BasicInfoTab form={form} isNewEmployee={!employee} />
+              </TabsContent>
+
+              <TabsContent value="ccnl" className="mt-6">
+                <CCNLTab form={form} companyId={companyId} />
               </TabsContent>
 
               <TabsContent value="citizenship" className="mt-6">

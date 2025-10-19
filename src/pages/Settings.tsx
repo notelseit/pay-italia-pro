@@ -4,16 +4,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import Navbar from "@/components/Navbar";
-import { Building2, Users, Bell, Shield, FileText } from "lucide-react";
+import { Building2, Users, Bell, Shield, FileText, Briefcase } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { UserRolesManagement } from "@/components/settings/UserRolesManagement";
+import { CCNLManagement } from "@/components/settings/CCNLManagement";
+import { useCCNLContracts } from "@/hooks/useCCNLContracts";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Settings = () => {
   const [activeSection, setActiveSection] = useState("company");
+  const [defaultCCNL, setDefaultCCNL] = useState<string>("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -41,6 +51,14 @@ const Settings = () => {
       return data;
     },
   });
+
+  const { contracts } = useCCNLContracts(company?.id);
+
+  useEffect(() => {
+    if (company?.default_ccnl_contract_id) {
+      setDefaultCCNL(company.default_ccnl_contract_id);
+    }
+  }, [company]);
 
   const handleSaveCompany = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -70,6 +88,7 @@ const Settings = () => {
       matricola_inps: formData.get("matricola-inps") as string,
       posizione_inail: formData.get("posizione-inail") as string,
       voce_inail: formData.get("voce-inail") as string,
+      default_ccnl_contract_id: defaultCCNL || null,
     };
 
     const { error } = await supabase
@@ -125,6 +144,14 @@ const Settings = () => {
                   >
                     <Users className="mr-2 h-4 w-4" />
                     Utenti e Ruoli
+                  </Button>
+                  <Button 
+                    variant={activeSection === "ccnl" ? "secondary" : "ghost"} 
+                    className="w-full justify-start"
+                    onClick={() => setActiveSection("ccnl")}
+                  >
+                    <Briefcase className="mr-2 h-4 w-4" />
+                    Contratti CCNL
                   </Button>
                   <Button 
                     variant={activeSection === "notifications" ? "secondary" : "ghost"} 
@@ -240,6 +267,26 @@ const Settings = () => {
                       </div>
                     </div>
 
+                    <div className="space-y-2">
+                      <Label htmlFor="default-ccnl">Contratto CCNL di Default</Label>
+                      <Select value={defaultCCNL} onValueChange={setDefaultCCNL}>
+                        <SelectTrigger id="default-ccnl">
+                          <SelectValue placeholder="Seleziona contratto di default" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">Nessun contratto di default</SelectItem>
+                          {contracts && contracts.map((contract) => (
+                            <SelectItem key={contract.id} value={contract.id}>
+                              {contract.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">
+                        Verrà assegnato automaticamente ai nuovi dipendenti
+                      </p>
+                    </div>
+
                     <Separator className="my-4" />
 
                     <Button type="submit" variant="hero">Salva Modifiche</Button>
@@ -259,6 +306,21 @@ const Settings = () => {
                 </CardHeader>
                 <CardContent>
                   <UserRolesManagement />
+                </CardContent>
+              </Card>
+            )}
+
+            {/* CCNL Contracts */}
+            {activeSection === "ccnl" && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Contratti CCNL</CardTitle>
+                  <CardDescription>
+                    Gestisci i contratti collettivi nazionali di lavoro disponibili
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <CCNLManagement />
                 </CardContent>
               </Card>
             )}
