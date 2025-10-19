@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import Navbar from "@/components/Navbar";
-import { Building2, Users, Bell, Shield, FileText, Briefcase } from "lucide-react";
+import { Building2, Users, Bell, Shield, FileText, Briefcase, Mail } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -12,6 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { UserRolesManagement } from "@/components/settings/UserRolesManagement";
 import { CCNLManagement } from "@/components/settings/CCNLManagement";
+import { EmailTemplates } from "@/components/settings/EmailTemplates";
+import { EmailSettingsManagement } from "@/components/settings/EmailSettingsManagement";
 import { useCCNLContracts } from "@/hooks/useCCNLContracts";
 import {
   Select,
@@ -24,6 +26,7 @@ import {
 const Settings = () => {
   const [activeSection, setActiveSection] = useState("company");
   const [defaultCCNL, setDefaultCCNL] = useState<string>("");
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -59,6 +62,24 @@ const Settings = () => {
       setDefaultCCNL(company.default_ccnl_contract_id);
     }
   }, [company]);
+
+  useEffect(() => {
+    const checkSuperAdmin = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "superadmin")
+        .is("company_id", null);
+
+      setIsSuperAdmin(roles && roles.length > 0);
+    };
+
+    checkSuperAdmin();
+  }, []);
 
   const handleSaveCompany = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -168,6 +189,14 @@ const Settings = () => {
                   >
                     <Shield className="mr-2 h-4 w-4" />
                     Sicurezza
+                  </Button>
+                  <Button 
+                    variant={activeSection === "email" ? "secondary" : "ghost"} 
+                    className="w-full justify-start"
+                    onClick={() => setActiveSection("email")}
+                  >
+                    <Mail className="mr-2 h-4 w-4" />
+                    Template Email
                   </Button>
                   <Button 
                     variant={activeSection === "documents" ? "secondary" : "ghost"} 
@@ -515,6 +544,19 @@ const Settings = () => {
                   </div>
                 </CardContent>
               </Card>
+            )}
+
+            {/* Email Templates */}
+            {activeSection === "email" && (
+              <>
+                {company?.id && <EmailTemplates companyId={company.id} />}
+                
+                {isSuperAdmin && (
+                  <div className="mt-8">
+                    <EmailSettingsManagement />
+                  </div>
+                )}
+              </>
             )}
 
             {/* Documents */}

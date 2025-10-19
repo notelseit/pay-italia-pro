@@ -255,6 +255,98 @@ export type Database = {
           },
         ]
       }
+      email_settings: {
+        Row: {
+          created_at: string | null
+          from_email: string
+          from_name: string
+          id: string
+          smtp_host: string
+          smtp_port: number
+          smtp_secure: boolean | null
+          smtp_user: string
+          updated_at: string | null
+          use_custom_smtp: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          from_email: string
+          from_name?: string
+          id?: string
+          smtp_host: string
+          smtp_port: number
+          smtp_secure?: boolean | null
+          smtp_user: string
+          updated_at?: string | null
+          use_custom_smtp?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          from_email?: string
+          from_name?: string
+          id?: string
+          smtp_host?: string
+          smtp_port?: number
+          smtp_secure?: boolean | null
+          smtp_user?: string
+          updated_at?: string | null
+          use_custom_smtp?: boolean | null
+        }
+        Relationships: []
+      }
+      email_templates: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          html_body: string
+          id: string
+          is_active: boolean | null
+          name: string
+          sender_email: string | null
+          sender_name: string
+          subject: string
+          template_type: Database["public"]["Enums"]["email_template_type"]
+          text_body: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          html_body: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          sender_email?: string | null
+          sender_name?: string
+          subject: string
+          template_type: Database["public"]["Enums"]["email_template_type"]
+          text_body?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          html_body?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          sender_email?: string | null
+          sender_name?: string
+          subject?: string
+          template_type?: Database["public"]["Enums"]["email_template_type"]
+          text_body?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_templates_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           base_salary: number
@@ -745,6 +837,12 @@ export type Database = {
         | "determinato"
         | "part_time"
         | "consulente"
+      email_template_type:
+        | "reset_password"
+        | "payroll_delivery"
+        | "general_communication"
+        | "welcome"
+        | "notification"
       payroll_status: "bozza" | "generato" | "inviato" | "confermato"
       user_role: "admin" | "hr_manager" | "employee" | "superadmin"
     }
@@ -880,6 +978,13 @@ export const Constants = {
         "determinato",
         "part_time",
         "consulente",
+      ],
+      email_template_type: [
+        "reset_password",
+        "payroll_delivery",
+        "general_communication",
+        "welcome",
+        "notification",
       ],
       payroll_status: ["bozza", "generato", "inviato", "confermato"],
       user_role: ["admin", "hr_manager", "employee", "superadmin"],
