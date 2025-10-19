@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
-import { FileText, LogOut, Settings } from "lucide-react";
+import { FileText, LogOut, Settings, Shield } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,7 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signOut, hasRole } = useAuth();
+  const { signOut, hasRole, isSuperAdmin } = useAuth();
 
   const handleLogout = async () => {
     await signOut();
@@ -67,6 +67,12 @@ const Navbar = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                {isSuperAdmin && (
+                  <DropdownMenuItem onClick={() => navigate("/superadmin")}>
+                    <Shield className="mr-2 h-4 w-4" />
+                    Pannello SuperAdmin
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={() => navigate("/settings")}>
                   Impostazioni
                 </DropdownMenuItem>
