@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Shield, UserCog, UserPlus, Trash2 } from "lucide-react";
+import { Loader2, Shield, UserCog, UserPlus, Trash2, Pencil } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -64,6 +64,9 @@ export function UserRolesManagement() {
   const [inviteFullName, setInviteFullName] = useState("");
   const [inviteRole, setInviteRole] = useState<UserRole>("employee");
   const [userToDelete, setUserToDelete] = useState<UserWithRole | null>(null);
+  const [userToEdit, setUserToEdit] = useState<UserWithRole | null>(null);
+  const [editEmail, setEditEmail] = useState("");
+  const [editPassword, setEditPassword] = useState("");
 
   const isAdmin = hasRole("admin");
 
@@ -251,6 +254,59 @@ export function UserRolesManagement() {
         variant: "destructive",
       });
       setUserToDelete(null);
+    },
+  });
+
+  const updateUserMutation = useMutation({
+    mutationFn: async ({
+      userId,
+      email,
+      password,
+    }: {
+      userId: string;
+      email?: string;
+      password?: string;
+    }) => {
+      if (!companyId) throw new Error("No company");
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Non autenticato");
+
+      const response = await supabase.functions.invoke("update-user", {
+        body: {
+          userId,
+          companyId,
+          email,
+          password,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || "Errore nell'aggiornamento dell'utente");
+      }
+
+      if (response.data?.error) {
+        throw new Error(response.data.error);
+      }
+
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["company-users", companyId] });
+      toast({
+        title: "Successo",
+        description: "Utente aggiornato correttamente",
+      });
+      setUserToEdit(null);
+      setEditEmail("");
+      setEditPassword("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Errore",
+        description: error.message || "Impossibile aggiornare l'utente",
+        variant: "destructive",
+      });
     },
   });
 
@@ -479,6 +535,17 @@ export function UserRolesManagement() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        onClick={() => {
+                          setUserToEdit(user);
+                          setEditEmail(user.email);
+                          setEditPassword("");
+                        }}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => setUserToDelete(user)}
                         disabled={deleteUserMutation.isPending}
                       >
@@ -498,6 +565,99 @@ export function UserRolesManagement() {
           Solo gli amministratori possono modificare i ruoli degli utenti
         </p>
       )}
+
+      <Dialog open={!!userToEdit} onOpenChange={(open) => !open && setUserToEdit(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifica Utente</DialogTitle>
+            <DialogDescription>
+              Modifica email e/o password per <strong>{userToEdit?.full_name}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!userToEdit) return;
+
+              const updates: { userId: string; email?: string; password?: string } = {
+                userId: userToEdit.id,
+              };
+
+              if (editEmail && editEmail !== userToEdit.email) {
+                updates.email = editEmail;
+              }
+
+              if (editPassword.trim()) {
+                if (editPassword.length < 6) {
+                  toast({
+                    title: "Errore",
+                    description: "La password deve essere di almeno 6 caratteri",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                updates.password = editPassword;
+              }
+
+              if (!updates.email && !updates.password) {
+                toast({
+                  title: "Errore",
+                  description: "Nessuna modifica da salvare",
+                  variant: "destructive",
+                });
+                return;
+              }
+
+              updateUserMutation.mutate(updates);
+            }}
+          >
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-email">Email</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  placeholder="nuova.email@esempio.com"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Lascia invariato per non modificare
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-password">Nuova Password</Label>
+                <Input
+                  id="edit-password"
+                  type="password"
+                  value={editPassword}
+                  onChange={(e) => setEditPassword(e.target.value)}
+                  placeholder="Lascia vuoto per non modificare"
+                  minLength={6}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Minimo 6 caratteri. Lascia vuoto per non modificare.
+                </p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setUserToEdit(null)}
+              >
+                Annulla
+              </Button>
+              <Button type="submit" disabled={updateUserMutation.isPending}>
+                {updateUserMutation.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Salva Modifiche
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
         <AlertDialogContent>
