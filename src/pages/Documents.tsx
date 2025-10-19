@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
@@ -94,6 +94,22 @@ export default function Documents() {
     enabled: !!company?.id,
   });
 
+  // Auto-sync FTP every 5 minutes
+  useEffect(() => {
+    if (!company?.id) return;
+
+    // Initial sync
+    syncToFtpMutation.mutate(company.id);
+
+    // Set up interval for auto-sync every 5 minutes
+    const intervalId = setInterval(() => {
+      syncToFtpMutation.mutate(company.id);
+    }, 5 * 60 * 1000); // 5 minutes
+
+    // Cleanup interval on unmount
+    return () => clearInterval(intervalId);
+  }, [company?.id]);
+
   // Filter documents based on selected category
   const filteredDocuments = filterCategory 
     ? documents?.filter(doc => doc.category === filterCategory) 
@@ -187,36 +203,6 @@ export default function Documents() {
           </p>
         </div>
 
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Sincronizzazione FTP</span>
-              <Button
-                onClick={() => company?.id && syncToFtpMutation.mutate(company.id)}
-                disabled={!company?.id || syncToFtpMutation.isPending}
-                variant="outline"
-              >
-                {syncToFtpMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Sincronizzazione...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Sincronizza con FTP
-                  </>
-                )}
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Trasferisce tutti i documenti da Supabase Storage al server FTP esterno.
-              I file verranno organizzati nelle rispettive cartelle per categoria.
-            </p>
-          </CardContent>
-        </Card>
 
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
