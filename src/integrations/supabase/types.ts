@@ -18,8 +18,10 @@ export type Database = {
         Row: {
           base_salary: number | null
           company_id: string
+          contractual_entities: Json | null
           created_at: string | null
           description: string | null
+          fixed_term_allowed: boolean | null
           fourteenth_salary: boolean | null
           id: string
           inail_rate: number | null
@@ -31,9 +33,15 @@ export type Database = {
           notes: string | null
           notice_period_days: number | null
           other_contributions: Json | null
+          overtime_rules: Json | null
+          part_time_allowed: boolean | null
+          permits: Json | null
+          salary_table: Json | null
           sick_leave_days: number | null
+          sick_leave_rules: Json | null
           thirteenth_salary: boolean | null
           trial_period_days: number | null
+          trial_periods: Json | null
           updated_at: string | null
           vacation_days: number | null
           work_hours: number | null
@@ -41,8 +49,10 @@ export type Database = {
         Insert: {
           base_salary?: number | null
           company_id: string
+          contractual_entities?: Json | null
           created_at?: string | null
           description?: string | null
+          fixed_term_allowed?: boolean | null
           fourteenth_salary?: boolean | null
           id?: string
           inail_rate?: number | null
@@ -54,9 +64,15 @@ export type Database = {
           notes?: string | null
           notice_period_days?: number | null
           other_contributions?: Json | null
+          overtime_rules?: Json | null
+          part_time_allowed?: boolean | null
+          permits?: Json | null
+          salary_table?: Json | null
           sick_leave_days?: number | null
+          sick_leave_rules?: Json | null
           thirteenth_salary?: boolean | null
           trial_period_days?: number | null
+          trial_periods?: Json | null
           updated_at?: string | null
           vacation_days?: number | null
           work_hours?: number | null
@@ -64,8 +80,10 @@ export type Database = {
         Update: {
           base_salary?: number | null
           company_id?: string
+          contractual_entities?: Json | null
           created_at?: string | null
           description?: string | null
+          fixed_term_allowed?: boolean | null
           fourteenth_salary?: boolean | null
           id?: string
           inail_rate?: number | null
@@ -77,9 +95,15 @@ export type Database = {
           notes?: string | null
           notice_period_days?: number | null
           other_contributions?: Json | null
+          overtime_rules?: Json | null
+          part_time_allowed?: boolean | null
+          permits?: Json | null
+          salary_table?: Json | null
           sick_leave_days?: number | null
+          sick_leave_rules?: Json | null
           thirteenth_salary?: boolean | null
           trial_period_days?: number | null
+          trial_periods?: Json | null
           updated_at?: string | null
           vacation_days?: number | null
           work_hours?: number | null
