@@ -11,6 +11,7 @@ import { CitizenshipTab } from "./tabs/CitizenshipTab";
 import { EducationTab } from "./tabs/EducationTab";
 import { PayrollTab } from "./tabs/PayrollTab";
 import { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import { useToast } from "@/hooks/use-toast";
 
 const employeeSchema = z.object({
   first_name: z.string().min(1, "Nome obbligatorio"),
@@ -63,6 +64,7 @@ interface EmployeeDialogProps {
 
 export const EmployeeDialog = ({ open, onOpenChange, employee, companyId, onSave }: EmployeeDialogProps) => {
   const [activeTab, setActiveTab] = useState("basic");
+  const { toast } = useToast();
 
   const form = useForm<EmployeeFormData>({
     resolver: zodResolver(employeeSchema),
@@ -131,7 +133,14 @@ export const EmployeeDialog = ({ open, onOpenChange, employee, companyId, onSave
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit, (errors) => {
+            console.error("Validation errors:", errors);
+            toast({
+              title: "Errore di validazione",
+              description: "Controlla i campi obbligatori e riprova",
+              variant: "destructive",
+            });
+          })} className="space-y-6">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="basic">Dati Base</TabsTrigger>

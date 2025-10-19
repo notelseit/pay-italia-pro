@@ -36,6 +36,7 @@ interface EducationRecord {
   type: string;
   grade: string;
   date: string;
+  document_url?: string;
 }
 
 const EDUCATION_TYPES = [
@@ -54,7 +55,9 @@ export const EducationTab = ({ form, employeeId, companyId }: EducationTabProps)
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const educationFileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingEducationDoc, setIsUploadingEducationDoc] = useState(false);
   const [showEducationDialog, setShowEducationDialog] = useState(false);
   const [editingEducation, setEditingEducation] = useState<EducationRecord | null>(null);
   const [educationForm, setEducationForm] = useState<EducationRecord>({
@@ -62,6 +65,7 @@ export const EducationTab = ({ form, employeeId, companyId }: EducationTabProps)
     type: "",
     grade: "",
     date: "",
+    document_url: "",
   });
 
   // Query for education records
@@ -95,6 +99,7 @@ export const EducationTab = ({ form, employeeId, companyId }: EducationTabProps)
             type: record.type,
             grade: record.grade,
             date: record.date,
+            document_url: record.document_url,
           })
           .eq("id", record.id);
 
@@ -109,6 +114,7 @@ export const EducationTab = ({ form, employeeId, companyId }: EducationTabProps)
             type: record.type,
             grade: record.grade,
             date: record.date,
+            document_url: record.document_url,
           });
 
         if (error) throw error;
@@ -121,7 +127,7 @@ export const EducationTab = ({ form, employeeId, companyId }: EducationTabProps)
         description: "Titolo di studio salvato",
       });
       setShowEducationDialog(false);
-      setEducationForm({ name: "", type: "", grade: "", date: "" });
+      setEducationForm({ name: "", type: "", grade: "", date: "", document_url: "" });
       setEditingEducation(null);
     },
     onError: (error: Error) => {
@@ -229,7 +235,7 @@ export const EducationTab = ({ form, employeeId, companyId }: EducationTabProps)
 
   const handleAddEducation = () => {
     setEditingEducation(null);
-    setEducationForm({ name: "", type: "", grade: "", date: "" });
+    setEducationForm({ name: "", type: "", grade: "", date: "", document_url: "" });
     setShowEducationDialog(true);
   };
 
@@ -241,8 +247,68 @@ export const EducationTab = ({ form, employeeId, companyId }: EducationTabProps)
       type: record.type,
       grade: record.grade || "",
       date: record.date || "",
+      document_url: record.document_url || "",
     });
     setShowEducationDialog(true);
+  };
+
+  const handleEducationFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !employeeId) return;
+
+    setIsUploadingEducationDoc(true);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
+      const fileExt = file.name.split(".").pop();
+      const filePath = `${companyId}/education/${employeeId}-${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("documents")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = await supabase.storage
+        .from("documents")
+        .createSignedUrl(filePath, 31536000); // 1 year
+
+      if (data?.signedUrl) {
+        setEducationForm({ ...educationForm, document_url: data.signedUrl });
+        
+        await supabase.from("documents").insert({
+          company_id: companyId,
+          category: "education",
+          file_name: file.name,
+          file_path: filePath,
+          file_size: file.size,
+          mime_type: file.type,
+          uploaded_by: user.id,
+        });
+
+        toast({
+          title: "Successo",
+          description: "Documento caricato con successo",
+        });
+      }
+    } catch (error) {
+      console.error("Error uploading document:", error);
+      toast({
+        title: "Errore",
+        description: "Errore nel caricamento del documento",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingEducationDoc(false);
+      if (educationFileInputRef.current) {
+        educationFileInputRef.current.value = "";
+      }
+    }
   };
 
   const handleSaveEducation = () => {
@@ -269,47 +335,71 @@ export const EducationTab = ({ form, employeeId, companyId }: EducationTabProps)
             <FormField
               control={form.control}
               name="cv_url"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Carica CV</FormLabel>
-                  <FormControl>
-                    <div className="flex items-center gap-2">
-                      <Input {...field} placeholder="URL del CV" readOnly />
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept=".pdf,.doc,.docx"
-                        onChange={handleFileUpload}
-                        className="hidden"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={isUploading || !employeeId}
-                      >
-                        {isUploading ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
+              render={({ field }) => {
+                const fileName = field.value ? field.value.split('/').pop()?.split('-cv-')[0] + '.pdf' : null;
+                return (
+                  <FormItem>
+                    <FormLabel>Carica CV</FormLabel>
+                    <FormControl>
+                      <div className="space-y-2">
+                        {field.value ? (
+                          <div className="flex items-center gap-2 p-3 border rounded-lg bg-muted/50">
+                            <FileText className="h-5 w-5 text-muted-foreground" />
+                            <span className="flex-1 text-sm truncate">{fileName}</span>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={handleDownloadCV}
+                            >
+                              <Download className="h-4 w-4 mr-2" />
+                              Visualizza
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={handleDownloadCV}
+                            >
+                              <Download className="h-4 w-4 mr-2" />
+                              Download
+                            </Button>
+                          </div>
                         ) : (
-                          <Upload className="h-4 w-4" />
+                          <p className="text-sm text-muted-foreground">Nessun CV caricato</p>
                         )}
-                      </Button>
-                      {field.value && (
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept=".pdf,.doc,.docx"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                        />
                         <Button
                           type="button"
                           variant="outline"
-                          size="icon"
-                          onClick={handleDownloadCV}
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={isUploading || !employeeId}
+                          className="w-full"
                         >
-                          <Download className="h-4 w-4" />
+                          {isUploading ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Caricamento...
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="h-4 w-4 mr-2" />
+                              {field.value ? "Sostituisci CV" : "Carica CV"}
+                            </>
+                          )}
                         </Button>
-                      )}
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
             {!employeeId && (
               <p className="text-sm text-muted-foreground">
@@ -462,6 +552,53 @@ export const EducationTab = ({ form, employeeId, companyId }: EducationTabProps)
                   setEducationForm({ ...educationForm, date: e.target.value })
                 }
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edu-document">Documento</Label>
+              {educationForm.document_url ? (
+                <div className="flex items-center gap-2 p-3 border rounded-lg bg-muted/50">
+                  <FileText className="h-5 w-5 text-muted-foreground" />
+                  <span className="flex-1 text-sm truncate">Documento caricato</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(educationForm.document_url, "_blank")}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Visualizza
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">Nessun documento caricato</p>
+              )}
+              <input
+                ref={educationFileInputRef}
+                type="file"
+                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                onChange={handleEducationFileUpload}
+                className="hidden"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => educationFileInputRef.current?.click()}
+                disabled={isUploadingEducationDoc || !employeeId}
+                className="w-full"
+              >
+                {isUploadingEducationDoc ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Caricamento...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4 mr-2" />
+                    {educationForm.document_url ? "Sostituisci Documento" : "Carica Documento"}
+                  </>
+                )}
+              </Button>
             </div>
           </div>
 

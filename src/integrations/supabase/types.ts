@@ -123,6 +123,7 @@ export type Database = {
           company_id: string
           created_at: string | null
           date: string | null
+          document_url: string | null
           employee_id: string
           grade: string | null
           id: string
@@ -134,6 +135,7 @@ export type Database = {
           company_id: string
           created_at?: string | null
           date?: string | null
+          document_url?: string | null
           employee_id: string
           grade?: string | null
           id?: string
@@ -145,6 +147,7 @@ export type Database = {
           company_id?: string
           created_at?: string | null
           date?: string | null
+          document_url?: string | null
           employee_id?: string
           grade?: string | null
           id?: string
