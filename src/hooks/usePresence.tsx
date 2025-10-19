@@ -15,6 +15,14 @@ export interface PresenceRecord {
   overtime_hours: number;
   exclude_weekends: boolean;
   night_holiday_hours: number;
+  mandatory_maternity_days: number;
+  maternity_code_ma1: boolean;
+  parental_leave_pg4_days: number;
+  parental_leave_pg5_days: number;
+  wage_integration: number;
+  allowances: number;
+  deductions: number;
+  bilateral_entity_amount: number;
   is_validated: boolean;
   validated_at?: string;
   validated_by?: string;

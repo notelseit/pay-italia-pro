@@ -122,6 +122,14 @@ const Presence = () => {
           overtime_hours: parseFloat(row["Ore Straordinarie"]) || 0,
           exclude_weekends: false,
           night_holiday_hours: 0,
+          mandatory_maternity_days: 0,
+          maternity_code_ma1: false,
+          parental_leave_pg4_days: 0,
+          parental_leave_pg5_days: 0,
+          wage_integration: 0,
+          allowances: 0,
+          deductions: 0,
+          bilateral_entity_amount: 0,
           is_validated: false,
         });
       }

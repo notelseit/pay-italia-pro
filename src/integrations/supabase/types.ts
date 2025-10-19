@@ -451,59 +451,83 @@ export type Database = {
       }
       presence_records: {
         Row: {
+          allowances: number | null
+          bilateral_entity_amount: number | null
           company_id: string
           created_at: string | null
+          deductions: number | null
           employee_id: string
           exclude_weekends: boolean | null
           id: string
           is_validated: boolean | null
+          mandatory_maternity_days: number | null
+          maternity_code_ma1: boolean | null
           month: number
           night_holiday_hours: number | null
           other_absences: number | null
           overtime_hours: number | null
+          parental_leave_pg4_days: number | null
+          parental_leave_pg5_days: number | null
           sick_days: number | null
           updated_at: string | null
           vacation_days: number | null
           validated_at: string | null
           validated_by: string | null
+          wage_integration: number | null
           working_days: number | null
           year: number
         }
         Insert: {
+          allowances?: number | null
+          bilateral_entity_amount?: number | null
           company_id: string
           created_at?: string | null
+          deductions?: number | null
           employee_id: string
           exclude_weekends?: boolean | null
           id?: string
           is_validated?: boolean | null
+          mandatory_maternity_days?: number | null
+          maternity_code_ma1?: boolean | null
           month: number
           night_holiday_hours?: number | null
           other_absences?: number | null
           overtime_hours?: number | null
+          parental_leave_pg4_days?: number | null
+          parental_leave_pg5_days?: number | null
           sick_days?: number | null
           updated_at?: string | null
           vacation_days?: number | null
           validated_at?: string | null
           validated_by?: string | null
+          wage_integration?: number | null
           working_days?: number | null
           year: number
         }
         Update: {
+          allowances?: number | null
+          bilateral_entity_amount?: number | null
           company_id?: string
           created_at?: string | null
+          deductions?: number | null
           employee_id?: string
           exclude_weekends?: boolean | null
           id?: string
           is_validated?: boolean | null
+          mandatory_maternity_days?: number | null
+          maternity_code_ma1?: boolean | null
           month?: number
           night_holiday_hours?: number | null
           other_absences?: number | null
           overtime_hours?: number | null
+          parental_leave_pg4_days?: number | null
+          parental_leave_pg5_days?: number | null
           sick_days?: number | null
           updated_at?: string | null
           vacation_days?: number | null
           validated_at?: string | null
           validated_by?: string | null
+          wage_integration?: number | null
           working_days?: number | null
           year?: number
         }
