@@ -149,7 +149,7 @@ export const EmployeeDialog = ({ open, onOpenChange, employee, companyId, onSave
               </TabsContent>
 
               <TabsContent value="education" className="mt-6">
-                <EducationTab form={form} />
+                <EducationTab form={form} employeeId={employee?.id} companyId={companyId} />
               </TabsContent>
 
               <TabsContent value="payroll" className="mt-6">
