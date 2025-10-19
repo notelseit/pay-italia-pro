@@ -404,6 +404,7 @@ const Payroll = () => {
           onOpenChange={setEditDialogOpen}
           onSubmit={handleUpdate}
           payroll={selectedPayroll}
+          companyId={companyId}
         />
 
         <PayrollDetailDialog

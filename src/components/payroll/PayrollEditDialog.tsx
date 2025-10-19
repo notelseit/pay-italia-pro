@@ -6,12 +6,16 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { calculatePayroll, formatCurrency } from "@/lib/payrollCalculations";
 import { Separator } from "@/components/ui/separator";
+import { useCCNLContracts } from "@/hooks/useCCNLContracts";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 interface PayrollEditDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: any) => void;
   payroll: any;
+  companyId: string;
 }
 
 export const PayrollEditDialog = ({
@@ -19,7 +23,25 @@ export const PayrollEditDialog = ({
   onOpenChange,
   onSubmit,
   payroll,
+  companyId,
 }: PayrollEditDialogProps) => {
+  const { contracts } = useCCNLContracts(companyId);
+  
+  // Recupera il dipendente associato al cedolino
+  const { data: employee } = useQuery({
+    queryKey: ["employee", payroll?.employee_id],
+    queryFn: async () => {
+      if (!payroll?.employee_id) return null;
+      const { data } = await supabase
+        .from("employees")
+        .select("*")
+        .eq("id", payroll.employee_id)
+        .single();
+      return data;
+    },
+    enabled: !!payroll?.employee_id,
+  });
+  
   const [formData, setFormData] = useState({
     baseSalary: 0,
     bonuses: 0,
@@ -44,16 +66,27 @@ export const PayrollEditDialog = ({
 
   useEffect(() => {
     if (formData.baseSalary > 0) {
+      const ccnlContract = contracts?.find(c => c.id === employee?.ccnl_contract_id);
+      
       const result = calculatePayroll({
         baseSalary: formData.baseSalary,
         bonuses: formData.bonuses,
         overtimePay: formData.overtimePay,
         dependentsCount: formData.dependentsCount,
         taxDeductions: formData.taxDeductions,
+        ccnlContract: ccnlContract ? {
+          inps_rate: ccnlContract.inps_rate,
+          inail_rate: ccnlContract.inail_rate,
+          thirteenth_salary: ccnlContract.thirteenth_salary,
+          fourteenth_salary: ccnlContract.fourteenth_salary,
+          meal_voucher_amount: ccnlContract.meal_voucher_amount,
+          permits: ccnlContract.permits,
+          overtime_rules: ccnlContract.overtime_rules,
+        } : undefined
       });
       setCalculation(result);
     }
-  }, [formData]);
+  }, [formData, employee, contracts]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

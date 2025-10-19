@@ -91,6 +91,19 @@ export function calculateINPSContributions(grossSalary: number) {
 }
 
 /**
+ * Interfaccia per i dati del contratto CCNL
+ */
+export interface CCNLContractData {
+  inps_rate?: number | null;
+  inail_rate?: number | null;
+  thirteenth_salary?: boolean;
+  fourteenth_salary?: boolean;
+  meal_voucher_amount?: number | null;
+  permits?: any;
+  overtime_rules?: any;
+}
+
+/**
  * Interfaccia per i parametri del cedolino
  */
 export interface PayrollParams {
@@ -100,6 +113,7 @@ export interface PayrollParams {
   dependentsCount?: number;
   taxDeductions?: number;
   workingHours?: number;
+  ccnlContract?: CCNLContractData;
 }
 
 /**
@@ -129,34 +143,46 @@ export function calculatePayroll(params: PayrollParams): PayrollResult {
     bonuses = 0,
     overtimePay = 0,
     dependentsCount = 0,
-    taxDeductions = 0
+    taxDeductions = 0,
+    ccnlContract
   } = params;
 
+  // Usa aliquote INPS dal contratto CCNL se disponibili, altrimenti valori standard
+  const inpsEmployeeRate = ccnlContract?.inps_rate ? ccnlContract.inps_rate / 100 : INPS_RATES.employee;
+  const inailRate = ccnlContract?.inail_rate ? ccnlContract.inail_rate / 100 : INAIL_RATE;
+  
+  // Aggiungi buoni pasto se previsti dal contratto
+  const mealVoucherBonus = ccnlContract?.meal_voucher_amount || 0;
+  
   // Calcolo lordo mensile
-  const grossSalary = baseSalary + bonuses + overtimePay;
+  const grossSalary = baseSalary + bonuses + overtimePay + mealVoucherBonus;
+  
+  // Calcola mensilità in base al contratto (13a e 14a)
+  const hasThirteenth = ccnlContract?.thirteenth_salary ?? true;
+  const hasFourteenth = ccnlContract?.fourteenth_salary ?? false;
+  const monthlyCount = 12 + (hasThirteenth ? 1 : 0) + (hasFourteenth ? 1 : 0);
   
   // Calcolo annuale per IRPEF
-  const annualGross = grossSalary * 13; // 13 mensilità
+  const annualGross = (grossSalary * monthlyCount);
   
-  // Contributi INPS
-  const inpsContributions = calculateINPSContributions(grossSalary);
-  const inpsEmployee = inpsContributions.employee;
-  const inpsEmployer = inpsContributions.employer;
+  // Contributi INPS con aliquote personalizzate
+  const inpsEmployee = grossSalary * inpsEmployeeRate;
+  const inpsEmployer = grossSalary * INPS_RATES.employer;
   
   // Imponibile fiscale (lordo - INPS dipendente)
   const taxableIncome = grossSalary - inpsEmployee;
-  const annualTaxableIncome = taxableIncome * 13;
+  const annualTaxableIncome = taxableIncome * monthlyCount;
   
   // IRPEF lorda annuale e mensile
   const annualIRPEF = calculateIRPEF(annualTaxableIncome);
-  const monthlyIRPEF = annualIRPEF / 13;
+  const monthlyIRPEF = annualIRPEF / monthlyCount;
   
   // Detrazioni
   const annualWorkDeductions = calculateWorkDeductions(annualGross);
-  const monthlyWorkDeductions = annualWorkDeductions / 13;
+  const monthlyWorkDeductions = annualWorkDeductions / monthlyCount;
   
   const annualFamilyDeductions = calculateFamilyDeductions(dependentsCount);
-  const monthlyFamilyDeductions = annualFamilyDeductions / 13;
+  const monthlyFamilyDeductions = annualFamilyDeductions / monthlyCount;
   
   const totalMonthlyDeductions = monthlyWorkDeductions + monthlyFamilyDeductions + taxDeductions;
   
@@ -165,10 +191,10 @@ export function calculatePayroll(params: PayrollParams): PayrollResult {
   
   // Addizionali
   const annualRegionalTax = calculateRegionalTax(annualTaxableIncome);
-  const monthlyRegionalTax = annualRegionalTax / 13;
+  const monthlyRegionalTax = annualRegionalTax / monthlyCount;
   
   const annualMunicipalTax = calculateMunicipalTax(annualTaxableIncome);
-  const monthlyMunicipalTax = annualMunicipalTax / 13;
+  const monthlyMunicipalTax = annualMunicipalTax / monthlyCount;
   
   // Totale trattenute
   const totalDeductions = inpsEmployee + netIRPEF + monthlyRegionalTax + monthlyMunicipalTax;

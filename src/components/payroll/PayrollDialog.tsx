@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEmployees } from "@/hooks/useEmployees";
+import { useCCNLContracts } from "@/hooks/useCCNLContracts";
 import { calculatePayroll, formatCurrency, PayrollResult } from "@/lib/payrollCalculations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -27,6 +28,7 @@ export const PayrollDialog = ({
   companyId 
 }: PayrollDialogProps) => {
   const { employees = [], isLoading: loadingEmployees } = useEmployees(companyId);
+  const { contracts } = useCCNLContracts(companyId);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [formData, setFormData] = useState({
     baseSalary: 0,
@@ -53,10 +55,24 @@ export const PayrollDialog = ({
 
   useEffect(() => {
     if (formData.baseSalary > 0) {
-      const result = calculatePayroll(formData);
+      const employee = employees.find(e => e.id === selectedEmployee);
+      const ccnlContract = contracts?.find(c => c.id === employee?.ccnl_contract_id);
+      
+      const result = calculatePayroll({
+        ...formData,
+        ccnlContract: ccnlContract ? {
+          inps_rate: ccnlContract.inps_rate,
+          inail_rate: ccnlContract.inail_rate,
+          thirteenth_salary: ccnlContract.thirteenth_salary,
+          fourteenth_salary: ccnlContract.fourteenth_salary,
+          meal_voucher_amount: ccnlContract.meal_voucher_amount,
+          permits: ccnlContract.permits,
+          overtime_rules: ccnlContract.overtime_rules,
+        } : undefined
+      });
       setCalculation(result);
     }
-  }, [formData]);
+  }, [formData, selectedEmployee, employees, contracts]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
