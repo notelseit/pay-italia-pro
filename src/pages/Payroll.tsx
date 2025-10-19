@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, Send, CheckCircle, Calculator, Plus, Eye } from "lucide-react";
+import { Download, Send, CheckCircle, Calculator, Plus, Eye, Edit } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -18,6 +18,7 @@ import { usePayroll } from "@/hooks/usePayroll";
 import { useEmployees } from "@/hooks/useEmployees";
 import { PayrollDialog } from "@/components/payroll/PayrollDialog";
 import { PayrollDetailDialog } from "@/components/payroll/PayrollDetailDialog";
+import { PayrollEditDialog } from "@/components/payroll/PayrollEditDialog";
 import { formatCurrency } from "@/lib/payrollCalculations";
 import { supabase } from "@/integrations/supabase/client";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -28,6 +29,7 @@ const Payroll = () => {
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
   const [companyId, setCompanyId] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [sendDialogOpen, setSendDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
@@ -38,6 +40,7 @@ const Payroll = () => {
     payrollRecords, 
     isLoading, 
     createPayrollRecord,
+    updatePayrollRecord,
     confirmPayroll,
     sendPayroll
   } = usePayroll(selectedMonth, selectedYear, companyId);
@@ -114,6 +117,15 @@ const Payroll = () => {
   const handleView = (record: any) => {
     setSelectedPayroll(record);
     setDetailDialogOpen(true);
+  };
+
+  const handleEdit = (record: any) => {
+    setSelectedPayroll(record);
+    setEditDialogOpen(true);
+  };
+
+  const handleUpdate = (data: any) => {
+    updatePayrollRecord.mutate(data);
   };
 
   const confirmConfirm = () => {
@@ -327,14 +339,25 @@ const Payroll = () => {
                             Visualizza
                           </Button>
                           {record.status === "bozza" && (
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleConfirm(record.id)}
-                            >
-                              <CheckCircle className="mr-1 h-3 w-3" />
-                              Conferma
-                            </Button>
+                            <>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleEdit(record)}
+                                title="Modifica cedolino"
+                              >
+                                <Edit className="mr-1 h-3 w-3" />
+                                Modifica
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleConfirm(record.id)}
+                              >
+                                <CheckCircle className="mr-1 h-3 w-3" />
+                                Conferma
+                              </Button>
+                            </>
                           )}
                           {record.status === "confermato" && (
                             <Button 
@@ -368,6 +391,13 @@ const Payroll = () => {
           month={selectedMonth}
           year={selectedYear}
           companyId={companyId}
+        />
+
+        <PayrollEditDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          onSubmit={handleUpdate}
+          payroll={selectedPayroll}
         />
 
         <PayrollDetailDialog
