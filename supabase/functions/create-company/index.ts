@@ -42,6 +42,7 @@ serve(async (req) => {
     }
 
     const { adminEmail, adminPassword, adminFullName, companyName, companyEmail } = await req.json();
+    console.log('Creating company:', companyName, 'with admin:', adminEmail);
 
     // Create the company first
     const { data: company, error: companyError } = await supabaseClient
@@ -53,7 +54,11 @@ serve(async (req) => {
       .select()
       .single();
 
-    if (companyError) throw companyError;
+    if (companyError) {
+      console.error('Company creation error:', companyError);
+      throw companyError;
+    }
+    console.log('Company created successfully:', company.id);
 
     // Create the admin user using admin API
     const { data: newUser, error: userError } = await supabaseClient.auth.admin.createUser({
@@ -66,10 +71,12 @@ serve(async (req) => {
     });
 
     if (userError) {
+      console.error('User creation error:', userError);
       // Rollback company creation if user creation fails
       await supabaseClient.from('companies').delete().eq('id', company.id);
       throw userError;
     }
+    console.log('User created successfully:', newUser.user.id);
 
     // Create profile for the new user
     const { error: profileError } = await supabaseClient
@@ -81,7 +88,11 @@ serve(async (req) => {
         company_id: company.id,
       });
 
-    if (profileError) throw profileError;
+    if (profileError) {
+      console.error('Profile creation error:', profileError);
+      throw profileError;
+    }
+    console.log('Profile created successfully');
 
     // Assign admin role to the new user
     const { error: roleError } = await supabaseClient
@@ -92,7 +103,11 @@ serve(async (req) => {
         role: 'admin',
       });
 
-    if (roleError) throw roleError;
+    if (roleError) {
+      console.error('Role assignment error:', roleError);
+      throw roleError;
+    }
+    console.log('Admin role assigned successfully');
 
     return new Response(
       JSON.stringify({ 
@@ -107,7 +122,15 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    console.error('Create company error:', error);
+    let errorMessage = 'Unknown error occurred';
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === 'object' && error !== null) {
+      errorMessage = JSON.stringify(error);
+    }
+    
     return new Response(
       JSON.stringify({ error: errorMessage }),
       { 
