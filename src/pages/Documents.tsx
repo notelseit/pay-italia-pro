@@ -25,6 +25,7 @@ export default function Documents() {
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [filterCategory, setFilterCategory] = useState<string | null>(null);
 
   const syncToFtpMutation = useMutation({
     mutationFn: async (companyId: string) => {
@@ -86,6 +87,16 @@ export default function Documents() {
     },
     enabled: !!company?.id,
   });
+
+  // Filter documents based on selected category
+  const filteredDocuments = filterCategory 
+    ? documents?.filter(doc => doc.category === filterCategory) 
+    : documents;
+
+  // Count documents per category
+  const getCategoryCount = (categoryValue: string) => {
+    return documents?.filter(doc => doc.category === categoryValue).length || 0;
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -263,10 +274,14 @@ export default function Documents() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FolderOpen className="h-5 w-5" />
-                Documenti Caricati
+                {filterCategory 
+                  ? DOCUMENT_CATEGORIES.find(c => c.value === filterCategory)?.label 
+                  : 'Documenti Caricati'}
               </CardTitle>
               <CardDescription>
-                Elenco dei documenti presenti sul server
+                {filterCategory 
+                  ? `Documenti nella categoria ${DOCUMENT_CATEGORIES.find(c => c.value === filterCategory)?.label}`
+                  : 'Elenco dei documenti presenti sul server'}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -274,9 +289,9 @@ export default function Documents() {
                 <div className="flex items-center justify-center p-8">
                   <Loader2 className="h-8 w-8 animate-spin" />
                 </div>
-              ) : documents && documents.length > 0 ? (
+              ) : filteredDocuments && filteredDocuments.length > 0 ? (
                 <div className="space-y-2">
-                  {documents.map((doc: any) => (
+                  {filteredDocuments.map((doc: any) => (
                     <div
                       key={doc.id}
                       className="flex items-center justify-between gap-2 p-3 border rounded-lg hover:bg-accent transition-colors"
@@ -310,7 +325,9 @@ export default function Documents() {
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-8">
-                  Nessun documento caricato
+                  {filterCategory 
+                    ? `Nessun documento nella categoria ${DOCUMENT_CATEGORIES.find(c => c.value === filterCategory)?.label}`
+                    : 'Nessun documento caricato'}
                 </p>
               )}
             </CardContent>
@@ -326,15 +343,42 @@ export default function Documents() {
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {DOCUMENT_CATEGORIES.map((category) => (
-                <div
-                  key={category.value}
-                  className="flex items-center gap-2 p-3 border rounded-lg"
-                >
-                  <FolderOpen className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium">{category.label}</span>
+              <button
+                onClick={() => setFilterCategory(null)}
+                className={`flex items-center justify-between gap-2 p-3 border rounded-lg transition-colors hover:bg-accent text-left ${
+                  filterCategory === null ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <FolderOpen className="h-4 w-4" />
+                  <span className="text-sm font-medium">Tutti i documenti</span>
                 </div>
-              ))}
+                <span className="text-xs bg-background/20 px-2 py-0.5 rounded-full">
+                  {documents?.length || 0}
+                </span>
+              </button>
+              {DOCUMENT_CATEGORIES.map((category) => {
+                const count = getCategoryCount(category.value);
+                return (
+                  <button
+                    key={category.value}
+                    onClick={() => setFilterCategory(category.value)}
+                    className={`flex items-center justify-between gap-2 p-3 border rounded-lg transition-colors hover:bg-accent text-left ${
+                      filterCategory === category.value ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <FolderOpen className="h-4 w-4" />
+                      <span className="text-sm font-medium">{category.label}</span>
+                    </div>
+                    {count > 0 && (
+                      <span className="text-xs bg-background/20 px-2 py-0.5 rounded-full">
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
