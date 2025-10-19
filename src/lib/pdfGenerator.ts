@@ -1,5 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { uploadDocumentToStorageAndFTP } from "./documentUpload";
 import { Tables } from "@/integrations/supabase/types";
 
 type PayrollRecord = Tables<"payroll_records"> & {
@@ -15,7 +16,7 @@ type PayrollRecord = Tables<"payroll_records"> & {
   };
 };
 
-export const generatePayrollPDF = (payroll: PayrollRecord) => {
+export const generatePayrollPDF = async (payroll: PayrollRecord) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   let yPos = 20;
@@ -261,6 +262,20 @@ export const generatePayrollPDF = (payroll: PayrollRecord) => {
   // Save PDF
   const fileName = `Cedolino_${payroll.employees?.full_name || "Dipendente"}_${getMonthName(payroll.month)}_${payroll.year}.pdf`;
   doc.save(fileName);
+
+  // Upload to storage and FTP
+  if (payroll.company_id) {
+    try {
+      await uploadDocumentToStorageAndFTP({
+        fileName,
+        category: "cedolini",
+        companyId: payroll.company_id,
+        pdfDoc: doc,
+      });
+    } catch (error) {
+      console.error("Error uploading to storage:", error);
+    }
+  }
 };
 
 const getMonthName = (month: number): string => {

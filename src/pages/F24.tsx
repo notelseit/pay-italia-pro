@@ -68,7 +68,7 @@ const F24 = () => {
       inps_contribution: r.inps_contribution,
     }));
 
-    generateF24(month, paymentType, mappedRecords, company);
+    await generateF24(month, paymentType, mappedRecords, company);
     toast.success("Modello F24 generato con successo");
   };
 

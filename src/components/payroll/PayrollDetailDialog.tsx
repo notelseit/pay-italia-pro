@@ -87,8 +87,8 @@ export function PayrollDetailDialog({
   
   const totalDeductions = Number(payroll.inps_contribution) + Number(payroll.irpef_tax);
 
-  const handleDownloadPDF = () => {
-    generatePayrollPDF(payroll);
+  const handleDownloadPDF = async () => {
+    await generatePayrollPDF(payroll);
   };
 
   return (

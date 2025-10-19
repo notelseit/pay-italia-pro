@@ -81,7 +81,7 @@ const Compliance = () => {
       inps_contribution: r.inps_contribution,
     }));
 
-    generateUNIEMENS(uniemensMonth, uniemensCode, mappedRecords, company);
+    await generateUNIEMENS(uniemensMonth, uniemensCode, mappedRecords, company);
     toast.success("UNIEMENS generato con successo");
   };
 
@@ -113,7 +113,7 @@ const Compliance = () => {
       inps_contribution: r.inps_contribution,
     }));
 
-    generateModello770(parseInt(m770Year), m770Simplified, mappedRecords, company);
+    await generateModello770(parseInt(m770Year), m770Simplified, mappedRecords, company);
     toast.success("Modello 770 generato con successo");
   };
 
@@ -145,7 +145,7 @@ const Compliance = () => {
       inps_contribution: r.inps_contribution,
     }));
 
-    generateCertificazioneUnica(parseInt(cuYear), mappedRecords, company);
+    await generateCertificazioneUnica(parseInt(cuYear), mappedRecords, company);
     toast.success("Certificazione Unica generata con successo");
   };
 
@@ -158,7 +158,7 @@ const Compliance = () => {
     const company = await fetchCompanyData();
     if (!company) return;
 
-    generateAutoliquidazioneINAIL(
+    await generateAutoliquidazioneINAIL(
       parseInt(inailYear),
       inailCode,
       parseFloat(inailRetrib),

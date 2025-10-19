@@ -1,5 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { uploadDocumentToStorageAndFTP } from "./documentUpload";
 
 interface PayrollData {
   employee_full_name: string;
@@ -10,6 +11,7 @@ interface PayrollData {
 }
 
 interface CompanyData {
+  id: string;
   name: string;
   vat_number: string;
   address: string;
@@ -94,7 +96,7 @@ const escapeXML = (str: string): string => {
     .replace(/'/g, '&apos;');
 };
 
-export const generateUNIEMENS = (
+export const generateUNIEMENS = async (
   month: string,
   companyCode: string,
   payrollRecords: PayrollData[],
@@ -249,9 +251,22 @@ export const generateUNIEMENS = (
   }
   
   doc.save(`UNIEMENS_ListaPosPA_${monthNum}_${year}.pdf`);
+
+  // Upload to storage and FTP
+  const fileName = `UNIEMENS_ListaPosPA_${monthNum}_${year}.pdf`;
+  try {
+    await uploadDocumentToStorageAndFTP({
+      fileName,
+      category: "uniemens",
+      companyId: companyData.id,
+      pdfDoc: doc,
+    });
+  } catch (error) {
+    console.error("Error uploading to storage:", error);
+  }
 };
 
-export const generateF24 = (
+export const generateF24 = async (
   month: string,
   paymentType: string,
   payrollRecords: PayrollData[],
@@ -668,9 +683,22 @@ export const generateF24 = (
   doc.text(`${companyData.name} - F24 ${monthNum}/${year}`, 105, 290, { align: "center" });
   
   doc.save(`F24_${monthNum}_${year}.pdf`);
+
+  // Upload to storage and FTP
+  const fileName = `F24_${monthNum}_${year}.pdf`;
+  try {
+    await uploadDocumentToStorageAndFTP({
+      fileName,
+      category: "f24",
+      companyId: companyData.id,
+      pdfDoc: doc,
+    });
+  } catch (error) {
+    console.error("Error uploading to storage:", error);
+  }
 };
 
-export const generateModello770 = (
+export const generateModello770 = async (
   year: number,
   simplified: boolean,
   payrollRecords: PayrollData[],
@@ -858,9 +886,22 @@ export const generateModello770 = (
   }
   
   doc.save(`Modello770_${year}_${simplified ? 'Semplificato' : 'Ordinario'}.pdf`);
+
+  // Upload to storage and FTP
+  const fileName = `Modello770_${year}_${simplified ? 'Semplificato' : 'Ordinario'}.pdf`;
+  try {
+    await uploadDocumentToStorageAndFTP({
+      fileName,
+      category: "modello_770",
+      companyId: companyData.id,
+      pdfDoc: doc,
+    });
+  } catch (error) {
+    console.error("Error uploading to storage:", error);
+  }
 };
 
-export const generateCertificazioneUnica = (
+export const generateCertificazioneUnica = async (
   year: number,
   payrollRecords: PayrollData[],
   companyData: CompanyData
@@ -890,9 +931,22 @@ export const generateCertificazioneUnica = (
   });
   
   doc.save(`CU_${year}.pdf`);
+
+  // Upload to storage and FTP
+  const fileName = `CU_${year}.pdf`;
+  try {
+    await uploadDocumentToStorageAndFTP({
+      fileName,
+      category: "certificazione_unica",
+      companyId: companyData.id,
+      pdfDoc: doc,
+    });
+  } catch (error) {
+    console.error("Error uploading to storage:", error);
+  }
 };
 
-export const generateAutoliquidazioneINAIL = (
+export const generateAutoliquidazioneINAIL = async (
   year: number,
   companyCode: string,
   totalWages: number,
@@ -924,4 +978,17 @@ export const generateAutoliquidazioneINAIL = (
   });
   
   doc.save(`Autoliquidazione_INAIL_${year}.pdf`);
+
+  // Upload to storage and FTP
+  const fileName = `Autoliquidazione_INAIL_${year}.pdf`;
+  try {
+    await uploadDocumentToStorageAndFTP({
+      fileName,
+      category: "autoliquidazione_inail",
+      companyId: companyData.id,
+      pdfDoc: doc,
+    });
+  } catch (error) {
+    console.error("Error uploading to storage:", error);
+  }
 };
