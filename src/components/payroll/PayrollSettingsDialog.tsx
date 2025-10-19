@@ -114,12 +114,12 @@ export function PayrollSettingsDialog({ open, onOpenChange, companyId }: Payroll
         </DialogHeader>
 
         <Tabs defaultValue="irpef" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="irpef">IRPEF</TabsTrigger>
-            <TabsTrigger value="inps">INPS</TabsTrigger>
-            <TabsTrigger value="detrazioni">Detrazioni</TabsTrigger>
-            <TabsTrigger value="addizionali">Addizionali</TabsTrigger>
-            <TabsTrigger value="tfr">TFR/INAIL</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-5 h-auto">
+            <TabsTrigger value="irpef" className="text-xs sm:text-sm">IRPEF</TabsTrigger>
+            <TabsTrigger value="inps" className="text-xs sm:text-sm">INPS</TabsTrigger>
+            <TabsTrigger value="detrazioni" className="text-xs sm:text-sm">Detrazioni</TabsTrigger>
+            <TabsTrigger value="addizionali" className="text-xs sm:text-sm">Addizionali</TabsTrigger>
+            <TabsTrigger value="tfr" className="text-xs sm:text-sm">TFR/INAIL</TabsTrigger>
           </TabsList>
 
           <TabsContent value="irpef" className="space-y-4">
