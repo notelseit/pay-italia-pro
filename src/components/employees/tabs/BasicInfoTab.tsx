@@ -82,6 +82,20 @@ export const BasicInfoTab = ({ form, isNewEmployee }: BasicInfoTabProps) => {
         )}
       />
 
+      <FormField
+        control={form.control}
+        name="phone"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Telefono</FormLabel>
+            <FormControl>
+              <Input {...field} type="tel" placeholder="+39 123 456 7890" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
       {isNewEmployee && (
         <FormField
           control={form.control}
