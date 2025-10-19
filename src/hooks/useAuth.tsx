@@ -13,6 +13,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   hasRole: (role: string) => boolean;
+  isSuperAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,6 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [roles, setRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,11 +38,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           authService.getCurrentUser().then((authUser) => {
             setCompanyId(authUser.companyId);
             setRoles(authUser.roles);
+            setIsSuperAdmin(authUser.roles.includes('superadmin'));
           });
         }, 0);
       } else {
         setCompanyId(null);
         setRoles([]);
+        setIsSuperAdmin(false);
       }
     });
 
@@ -50,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(authUser.session);
       setCompanyId(authUser.companyId);
       setRoles(authUser.roles);
+      setIsSuperAdmin(authUser.roles.includes('superadmin'));
       setLoading(false);
     });
 
@@ -63,6 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const authUser = await authService.getCurrentUser();
       setCompanyId(authUser.companyId);
       setRoles(authUser.roles);
+      setIsSuperAdmin(authUser.roles.includes('superadmin'));
       navigate("/dashboard");
     } catch (error: any) {
       throw new Error(error.message || "Errore durante la registrazione");
@@ -76,7 +82,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const authUser = await authService.getCurrentUser();
       setCompanyId(authUser.companyId);
       setRoles(authUser.roles);
-      navigate("/dashboard");
+      setIsSuperAdmin(authUser.roles.includes('superadmin'));
+      
+      // Redirect superadmin to superadmin panel
+      if (authUser.roles.includes('superadmin')) {
+        navigate("/superadmin");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (error: any) {
       throw new Error(error.message || "Credenziali non valide");
     }
@@ -105,6 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signOut,
         hasRole,
+        isSuperAdmin,
       }}
     >
       {children}

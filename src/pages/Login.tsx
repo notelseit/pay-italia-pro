@@ -153,9 +153,8 @@ const Login = () => {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="login">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsList className="grid w-full grid-cols-1 mb-6">
                 <TabsTrigger value="login">Accedi</TabsTrigger>
-                <TabsTrigger value="register">Registrati</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login">

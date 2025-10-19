@@ -608,6 +608,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_superadmin: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       absence_type: "ferie" | "malattia" | "permesso" | "congedo_parentale"
@@ -617,7 +621,7 @@ export type Database = {
         | "part_time"
         | "consulente"
       payroll_status: "bozza" | "generato" | "inviato" | "confermato"
-      user_role: "admin" | "hr_manager" | "employee"
+      user_role: "admin" | "hr_manager" | "employee" | "superadmin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -753,7 +757,7 @@ export const Constants = {
         "consulente",
       ],
       payroll_status: ["bozza", "generato", "inviato", "confermato"],
-      user_role: ["admin", "hr_manager", "employee"],
+      user_role: ["admin", "hr_manager", "employee", "superadmin"],
     },
   },
 } as const
