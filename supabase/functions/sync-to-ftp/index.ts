@@ -161,7 +161,7 @@ serve(async (req) => {
       port: parseInt(Deno.env.get("FTP_PORT") || "5541"),
       username: Deno.env.get("FTP_USERNAME") || "",
       password: Deno.env.get("FTP_PASSWORD") || "",
-      basePath: "/www/wwwroot/crm.unilabgroup.it/docs",
+      basePath: "/",
     };
 
     console.log("FTP Config:", {
