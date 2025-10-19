@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, FileText, Loader2, FolderOpen } from "lucide-react";
+import { Upload, FileText, Loader2, FolderOpen, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const DOCUMENT_CATEGORIES = [
@@ -25,6 +25,30 @@ export default function Documents() {
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+
+  const syncToFtpMutation = useMutation({
+    mutationFn: async (companyId: string) => {
+      const { data, error } = await supabase.functions.invoke("sync-to-ftp", {
+        body: { companyId },
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Sincronizzazione completata",
+        description: `${data.results.successful} file trasferiti con successo, ${data.results.failed} falliti`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Errore sincronizzazione",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   const { data: company } = useQuery({
     queryKey: ["company"],
@@ -145,6 +169,37 @@ export default function Documents() {
             Carica e gestisci i documenti aziendali
           </p>
         </div>
+
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>Sincronizzazione FTP</span>
+              <Button
+                onClick={() => company?.id && syncToFtpMutation.mutate(company.id)}
+                disabled={!company?.id || syncToFtpMutation.isPending}
+                variant="outline"
+              >
+                {syncToFtpMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Sincronizzazione...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Sincronizza con FTP
+                  </>
+                )}
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Trasferisce tutti i documenti da Supabase Storage al server FTP esterno.
+              I file verranno organizzati nelle rispettive cartelle per categoria.
+            </p>
+          </CardContent>
+        </Card>
 
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
