@@ -4,10 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 
 const loginSchema = z.object({
@@ -31,6 +33,8 @@ const Login = () => {
   const { toast } = useToast();
   const { signIn, signUp, user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [registerData, setRegisterData] = useState({
     fullName: "",
@@ -95,6 +99,43 @@ const Login = () => {
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!resetEmail || !z.string().email().safeParse(resetEmail).success) {
+      toast({
+        title: "Errore",
+        description: "Inserisci un'email valida",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Email inviata",
+        description: "Controlla la tua casella di posta per il link di reset",
+      });
+      setIsResetDialogOpen(false);
+      setResetEmail("");
+    } catch (error: any) {
+      toast({
+        title: "Errore",
+        description: error.message || "Impossibile inviare l'email di reset",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-accent/20 to-background flex items-center justify-center px-4">
       <div className="w-full max-w-md">
@@ -148,6 +189,45 @@ const Login = () => {
                   >
                     {isLoading ? "Accesso in corso..." : "Accedi"}
                   </Button>
+                  
+                  <div className="text-center mt-4">
+                    <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="link" className="text-sm">
+                          Password dimenticata?
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Recupera Password</DialogTitle>
+                          <DialogDescription>
+                            Inserisci la tua email e ti invieremo un link per reimpostare la password
+                          </DialogDescription>
+                        </DialogHeader>
+                        <form onSubmit={handleForgotPassword} className="space-y-4 mt-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="reset-email">Email</Label>
+                            <Input 
+                              id="reset-email" 
+                              type="email" 
+                              placeholder="hr@azienda.it"
+                              value={resetEmail}
+                              onChange={(e) => setResetEmail(e.target.value)}
+                              required 
+                            />
+                          </div>
+                          <Button 
+                            type="submit" 
+                            className="w-full" 
+                            variant="hero"
+                            disabled={isLoading}
+                          >
+                            {isLoading ? "Invio in corso..." : "Invia Link di Reset"}
+                          </Button>
+                        </form>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </form>
               </TabsContent>
 
