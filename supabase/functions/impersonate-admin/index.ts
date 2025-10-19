@@ -48,33 +48,57 @@ serve(async (req) => {
     }
 
     // Get the admin user for this company
+    console.log('Looking for admin user for company:', companyId);
+    
     const { data: adminRole, error: roleError } = await supabaseClient
       .from('user_roles')
-      .select('user_id, profiles!inner(email, full_name)')
+      .select('user_id, company_id, role')
       .eq('company_id', companyId)
       .eq('role', 'admin')
       .limit(1)
       .single();
 
+    console.log('Admin role query result:', { adminRole, roleError });
+
     if (roleError || !adminRole) {
+      console.error('Admin role not found. Error:', roleError);
       throw new Error('Admin user not found for this company');
     }
 
+    // Get the profile for this admin user
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('email, full_name')
+      .eq('id', adminRole.user_id)
+      .single();
+
+    console.log('Profile query result:', { profile, profileError });
+
+    if (profileError || !profile) {
+      console.error('Profile not found for admin user:', adminRole.user_id);
+      throw new Error('Admin profile not found');
+    }
+
     // Generate a session token for the admin user
+    console.log('Generating magic link for:', profile.email);
+    
     const { data: sessionData, error: sessionError } = await supabaseClient.auth.admin.generateLink({
       type: 'magiclink',
-      email: (adminRole.profiles as any).email,
+      email: profile.email,
     });
 
-    if (sessionError) throw sessionError;
+    if (sessionError) {
+      console.error('Magic link generation error:', sessionError);
+      throw sessionError;
+    }
 
-    console.log(`SuperAdmin ${user.email} impersonating admin ${(adminRole.profiles as any).email} for company ${companyId}`);
+    console.log(`SuperAdmin ${user.email} impersonating admin ${profile.email} for company ${companyId}`);
 
     return new Response(
       JSON.stringify({ 
         success: true,
         redirectUrl: sessionData.properties.action_link,
-        adminEmail: (adminRole.profiles as any).email,
+        adminEmail: profile.email,
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
