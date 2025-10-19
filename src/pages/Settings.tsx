@@ -7,7 +7,7 @@ import Navbar from "@/components/Navbar";
 import { Building2, Users, Bell, Shield, FileText } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { UserRolesManagement } from "@/components/settings/UserRolesManagement";
@@ -15,6 +15,7 @@ import { UserRolesManagement } from "@/components/settings/UserRolesManagement";
 const Settings = () => {
   const [activeSection, setActiveSection] = useState("company");
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: company } = useQuery({
     queryKey: ["company"],
@@ -43,6 +44,16 @@ const Settings = () => {
 
   const handleSaveCompany = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    if (!company?.id) {
+      toast({
+        title: "Errore",
+        description: "Dati azienda non disponibili",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const formData = new FormData(e.currentTarget);
     
     const updates = {
@@ -64,15 +75,18 @@ const Settings = () => {
     const { error } = await supabase
       .from("companies")
       .update(updates)
-      .eq("id", company?.id);
+      .eq("id", company.id);
 
     if (error) {
+      console.error("Error updating company:", error);
       toast({
         title: "Errore",
         description: "Impossibile salvare le modifiche",
         variant: "destructive",
       });
     } else {
+      // Invalida la query per ricaricare i dati aggiornati
+      await queryClient.invalidateQueries({ queryKey: ["company"] });
       toast({
         title: "Successo",
         description: "Modifiche salvate correttamente",
