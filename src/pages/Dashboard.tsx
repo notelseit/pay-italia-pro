@@ -1,50 +1,69 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Users, Calendar, FileText, AlertTriangle, TrendingUp, DollarSign } from "lucide-react";
+import { Users, Calendar, FileText, AlertTriangle, TrendingUp } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import { useAuth } from "@/hooks/useAuth";
+import { useDashboard } from "@/hooks/useDashboard";
+import { format } from "date-fns";
+import { it } from "date-fns/locale";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { companyId } = useAuth();
+  const {
+    employeesCount,
+    unvalidatedPresence,
+    payrollStats,
+    recentActivity,
+    newEmployeesThisMonth,
+  } = useDashboard(companyId || undefined);
+
+  const currentMonth = format(new Date(), "MMMM yyyy", { locale: it });
 
   const stats = [
     {
       title: "Dipendenti Attivi",
-      value: "142",
+      value: employeesCount.toString(),
       icon: <Users className="h-6 w-6 text-primary" />,
-      trend: "+8 questo mese"
+      trend: newEmployeesThisMonth > 0 ? `+${newEmployeesThisMonth} questo mese` : "Nessun nuovo dipendente"
     },
     {
       title: "Presenze da Validare",
-      value: "23",
+      value: unvalidatedPresence.toString(),
       icon: <Calendar className="h-6 w-6 text-primary" />,
-      trend: "Per novembre 2024"
+      trend: unvalidatedPresence > 0 ? "Da verificare" : "Tutto validato"
     },
     {
       title: "Cedolini Generati",
-      value: "138/142",
+      value: `${payrollStats.generated}/${payrollStats.total}`,
       icon: <FileText className="h-6 w-6 text-primary" />,
-      trend: "4 in sospeso"
+      trend: payrollStats.pending > 0 ? `${payrollStats.pending} in sospeso` : "Tutti completati"
     },
     {
-      title: "Alert Compliance",
-      value: "2",
-      icon: <AlertTriangle className="h-6 w-6 text-destructive" />,
-      trend: "Scadenze imminenti"
+      title: "Mese Corrente",
+      value: format(new Date(), "MMM yyyy", { locale: it }),
+      icon: <AlertTriangle className="h-6 w-6 text-primary" />,
+      trend: currentMonth
     }
   ];
 
-  const recentActivity = [
-    { action: "Cedolino generato", employee: "Mario Rossi", time: "2 ore fa" },
-    { action: "Assenza registrata", employee: "Laura Bianchi", time: "4 ore fa" },
-    { action: "Nuovo dipendente", employee: "Giuseppe Verdi", time: "Ieri" },
-    { action: "Contributi calcolati", employee: "Anna Neri", time: "Ieri" },
-  ];
-
   const upcomingTasks = [
-    { task: "Invio cedolini novembre", deadline: "30 Nov 2024", priority: "Alta" },
-    { task: "Pagamento INPS", deadline: "16 Dic 2024", priority: "Alta" },
-    { task: "Report costo lavoro Q4", deadline: "31 Dic 2024", priority: "Media" },
+    { 
+      task: `Invio cedolini ${format(new Date(), "MMMM", { locale: it })}`, 
+      deadline: format(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0), "d MMM yyyy", { locale: it }), 
+      priority: "Alta" 
+    },
+    { 
+      task: "Pagamento INPS", 
+      deadline: format(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 16), "d MMM yyyy", { locale: it }), 
+      priority: "Alta" 
+    },
+    { 
+      task: "Report costo lavoro", 
+      deadline: format(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0), "d MMM yyyy", { locale: it }), 
+      priority: "Media" 
+    },
   ];
 
   return (
