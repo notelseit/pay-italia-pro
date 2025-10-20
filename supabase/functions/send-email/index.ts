@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -96,29 +97,70 @@ serve(async (req) => {
       to: emailData.to,
     });
 
-    // Use nodemailer-compatible library for Deno
-    // Note: For production, you'd want to use a proper SMTP library
-    // This is a simplified example using direct SMTP protocol
-    
-    // For now, we'll return success. In production, implement actual SMTP sending
-    // using a library like npm:nodemailer or a Deno-compatible SMTP client
-    
-    console.log("Email would be sent:", emailData);
+    // Initialize SMTP client
+    const client = new SMTPClient({
+      connection: {
+        hostname: smtpHost,
+        port: parseInt(smtpPort),
+        tls: parseInt(smtpPort) === 465,
+        auth: {
+          username: smtpUser,
+          password: smtpPassword,
+        },
+      },
+    });
 
-    // Log the email send attempt
-    if (emailRequest.company_id) {
-      await supabaseClient.from("email_logs").insert({
-        company_id: emailRequest.company_id,
-        recipient_email: emailData.to,
+    try {
+      // Send email
+      await client.send({
+        from: emailData.from,
+        to: emailData.to,
         subject: emailData.subject,
-        status: "success",
-        template_type: emailRequest.template_type,
-        full_log: {
-          from: emailData.from,
-          html_length: finalHtml.length,
-          text_length: finalText?.length || 0,
-        }
+        content: emailData.text || "",
+        html: emailData.html,
       });
+
+      console.log("✓ Email sent successfully");
+
+      // Log successful email send
+      if (emailRequest.company_id) {
+        await supabaseClient.from("email_logs").insert({
+          company_id: emailRequest.company_id,
+          recipient_email: emailData.to,
+          subject: emailData.subject,
+          status: "success",
+          template_type: emailRequest.template_type,
+          full_log: {
+            from: emailData.from,
+            html_length: finalHtml.length,
+            text_length: finalText?.length || 0,
+            sent_at: new Date().toISOString(),
+          }
+        });
+      }
+
+      await client.close();
+    } catch (smtpError) {
+      await client.close();
+      console.error("SMTP error:", smtpError);
+      
+      // Log failed email
+      if (emailRequest.company_id) {
+        await supabaseClient.from("email_logs").insert({
+          company_id: emailRequest.company_id,
+          recipient_email: emailData.to,
+          subject: emailData.subject,
+          status: "failed",
+          error_message: (smtpError as Error).message,
+          template_type: emailRequest.template_type,
+          full_log: {
+            from: emailData.from,
+            error: (smtpError as Error).message,
+          }
+        });
+      }
+      
+      throw new Error(`SMTP Error: ${(smtpError as Error).message}`);
     }
 
     return new Response(

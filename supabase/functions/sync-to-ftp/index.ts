@@ -61,18 +61,40 @@ class FTPClient {
   async connect(): Promise<void> {
     console.log(`Connecting to FTP: ${this.config.host}:${this.config.port}`);
 
-    this.conn = await Deno.connect({
-      hostname: this.config.host,
-      port: this.config.port,
-    });
+    // Retry logic for FTP connection
+    let retries = 3;
+    let lastError: Error | null = null;
 
-    this.reader = this.conn.readable.getReader();
-    this.writer = this.conn.writable.getWriter();
+    while (retries > 0) {
+      try {
+        this.conn = await Deno.connect({
+          hostname: this.config.host,
+          port: this.config.port,
+        });
 
-    await this.readResponse(); // Welcome message
-    await this.sendCommand(`USER ${this.config.username}`);
-    await this.sendCommand(`PASS ${this.config.password}`);
-    await this.sendCommand("TYPE I"); // Binary mode
+        this.reader = this.conn.readable.getReader();
+        this.writer = this.conn.writable.getWriter();
+
+        await this.readResponse(); // Welcome message
+        await this.sendCommand(`USER ${this.config.username}`);
+        await this.sendCommand(`PASS ${this.config.password}`);
+        await this.sendCommand("TYPE I"); // Binary mode
+        
+        console.log("FTP connection successful");
+        return;
+      } catch (error) {
+        lastError = error as Error;
+        retries--;
+        console.error(`FTP connection failed (${3 - retries}/3):`, error);
+        
+        if (retries > 0) {
+          console.log(`Retrying in 2 seconds...`);
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+      }
+    }
+
+    throw new Error(`Failed to connect to FTP after 3 attempts: ${lastError?.message}`);
   }
 
   async createDirectory(dirPath: string): Promise<boolean> {
@@ -233,6 +255,34 @@ serve(async (req) => {
               upload_status: "success",
               file_size: uint8Array.length,
             });
+
+            // Delete file from Supabase Storage after successful FTP upload
+            try {
+              console.log(`Deleting from storage: ${doc.file_path}`);
+              const { error: deleteError } = await supabaseClient.storage
+                .from("documents")
+                .remove([doc.file_path]);
+
+              if (deleteError) {
+                console.error(`Error deleting file from storage:`, deleteError);
+              } else {
+                console.log(`✓ Deleted from storage: ${doc.file_name}`);
+                
+                // Delete document record from database
+                const { error: dbDeleteError } = await supabaseClient
+                  .from("documents")
+                  .delete()
+                  .eq("id", doc.id);
+
+                if (dbDeleteError) {
+                  console.error(`Error deleting document record:`, dbDeleteError);
+                } else {
+                  console.log(`✓ Deleted document record: ${doc.file_name}`);
+                }
+              }
+            } catch (deleteErr) {
+              console.error(`Exception deleting file:`, deleteErr);
+            }
           } else {
             results.failed++;
             results.errors.push(`Failed to upload: ${doc.file_name}`);
