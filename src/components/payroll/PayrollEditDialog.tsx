@@ -48,8 +48,8 @@ export const PayrollEditDialog = ({
     overtimePay: 0,
     dependentsCount: 0,
     taxDeductions: 0,
-    inpsRate: 0.0919,
-    inailRate: 0.015,
+    inpsRate: 9.19,
+    inailRate: 1.5,
     thirteenthSalary: true,
     fourteenthSalary: false,
     mealVoucherAmount: 0,
@@ -67,8 +67,8 @@ export const PayrollEditDialog = ({
         overtimePay: Number(payroll.overtime_pay),
         dependentsCount: employee.dependents_count || 0,
         taxDeductions: Number(employee.tax_deductions) || 0,
-        inpsRate: ccnlContract?.inps_rate ? Number(ccnlContract.inps_rate) : 0.0919,
-        inailRate: ccnlContract?.inail_rate ? Number(ccnlContract.inail_rate) : 0.015,
+        inpsRate: ccnlContract?.inps_rate ? Number(ccnlContract.inps_rate) : 9.19,
+        inailRate: ccnlContract?.inail_rate ? Number(ccnlContract.inail_rate) : 1.5,
         thirteenthSalary: ccnlContract?.thirteenth_salary ?? true,
         fourteenthSalary: ccnlContract?.fourteenth_salary ?? false,
         mealVoucherAmount: ccnlContract?.meal_voucher_amount ? Number(ccnlContract.meal_voucher_amount) : 0,
@@ -85,8 +85,8 @@ export const PayrollEditDialog = ({
         dependentsCount: formData.dependentsCount,
         taxDeductions: formData.taxDeductions,
         ccnlContract: {
-          inps_rate: formData.inpsRate,
-          inail_rate: formData.inailRate,
+          inps_rate: formData.inpsRate / 100,
+          inail_rate: formData.inailRate / 100,
           thirteenth_salary: formData.thirteenthSalary,
           fourteenth_salary: formData.fourteenthSalary,
           meal_voucher_amount: formData.mealVoucherAmount,
@@ -195,9 +195,9 @@ export const PayrollEditDialog = ({
                   min="0"
                   max="100"
                   step="0.01"
-                  value={(formData.inpsRate * 100).toFixed(2)}
+                  value={formData.inpsRate}
                   onChange={(e) =>
-                    setFormData({ ...formData, inpsRate: parseFloat(e.target.value) / 100 || 0 })
+                    setFormData({ ...formData, inpsRate: parseFloat(e.target.value) || 0 })
                   }
                 />
               </div>
@@ -210,9 +210,9 @@ export const PayrollEditDialog = ({
                   min="0"
                   max="100"
                   step="0.01"
-                  value={(formData.inailRate * 100).toFixed(2)}
+                  value={formData.inailRate}
                   onChange={(e) =>
-                    setFormData({ ...formData, inailRate: parseFloat(e.target.value) / 100 || 0 })
+                    setFormData({ ...formData, inailRate: parseFloat(e.target.value) || 0 })
                   }
                 />
               </div>
