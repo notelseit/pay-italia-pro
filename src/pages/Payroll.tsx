@@ -81,6 +81,12 @@ const Payroll = () => {
     setSelectedYear(parseInt(yearStr));
   };
 
+  const handleDownload = (pdfUrl: string | null) => {
+    if (pdfUrl) {
+      window.open(pdfUrl, '_blank');
+    }
+  };
+
   const payrollStats = useMemo(() => {
     const totalGross = payrollRecords.reduce((sum, record) => sum + Number(record.gross_total), 0);
     const totalNet = payrollRecords.reduce((sum, record) => sum + Number(record.net_salary), 0);
@@ -386,7 +392,12 @@ const Payroll = () => {
                             </Button>
                           )}
                           {record.status === "inviato" && (
-                            <Button variant="ghost" size="icon" title="Scarica PDF">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              title="Scarica PDF"
+                              onClick={() => handleDownload(record.pdf_url)}
+                            >
                               <Download className="h-4 w-4" />
                             </Button>
                           )}
