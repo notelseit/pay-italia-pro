@@ -185,14 +185,14 @@ const Settings = () => {
                     <Mail className="mr-2 h-4 w-4" />
                     Template Email
                   </Button>
-                  <Button
+                  {/*  <Button
                     variant={activeSection === "documents" ? "secondary" : "ghost"}
                     className="w-full justify-start"
                     onClick={() => setActiveSection("documents")}
                   >
                     <FileText className="mr-2 h-4 w-4" />
                     Documenti
-                  </Button>
+                  </Button>  */}
                 </nav>
               </CardContent>
             </Card>
