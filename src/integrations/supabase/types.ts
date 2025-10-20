@@ -521,6 +521,47 @@ export type Database = {
           },
         ]
       }
+      ftp_upload_logs: {
+        Row: {
+          company_id: string
+          error_message: string | null
+          file_category: string
+          file_name: string
+          file_size: number | null
+          id: string
+          upload_status: string
+          uploaded_at: string
+        }
+        Insert: {
+          company_id: string
+          error_message?: string | null
+          file_category: string
+          file_name: string
+          file_size?: number | null
+          id?: string
+          upload_status: string
+          uploaded_at?: string
+        }
+        Update: {
+          company_id?: string
+          error_message?: string | null
+          file_category?: string
+          file_name?: string
+          file_size?: number | null
+          id?: string
+          upload_status?: string
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ftp_upload_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payroll_records: {
         Row: {
           base_salary: number
@@ -650,6 +691,47 @@ export type Database = {
             foreignKeyName: "payroll_settings_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platform_access_logs: {
+        Row: {
+          accessed_at: string
+          company_id: string | null
+          company_name: string
+          id: string
+          ip_address: string
+          user_agent: string | null
+          user_id: string | null
+          user_name: string
+        }
+        Insert: {
+          accessed_at?: string
+          company_id?: string | null
+          company_name: string
+          id?: string
+          ip_address: string
+          user_agent?: string | null
+          user_id?: string | null
+          user_name: string
+        }
+        Update: {
+          accessed_at?: string
+          company_id?: string | null
+          company_name?: string
+          id?: string
+          ip_address?: string
+          user_agent?: string | null
+          user_id?: string | null
+          user_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_access_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
           },

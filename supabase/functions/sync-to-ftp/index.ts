@@ -224,15 +224,43 @@ serve(async (req) => {
           if (uploaded) {
             results.successful++;
             console.log(`✓ Synced: ${doc.file_name}`);
+            
+            // Log successful upload
+            await supabaseClient.from("ftp_upload_logs").insert({
+              company_id: companyId,
+              file_name: doc.file_name,
+              file_category: doc.category,
+              upload_status: "success",
+              file_size: uint8Array.length,
+            });
           } else {
             results.failed++;
             results.errors.push(`Failed to upload: ${doc.file_name}`);
+            
+            // Log failed upload
+            await supabaseClient.from("ftp_upload_logs").insert({
+              company_id: companyId,
+              file_name: doc.file_name,
+              file_category: doc.category,
+              upload_status: "failed",
+              error_message: "Upload failed",
+              file_size: uint8Array.length,
+            });
           }
         } catch (error) {
           results.failed++;
           const errorMsg = `Error syncing ${doc.file_name}: ${(error as Error).message}`;
           console.error(errorMsg);
           results.errors.push(errorMsg);
+          
+          // Log error
+          await supabaseClient.from("ftp_upload_logs").insert({
+            company_id: companyId,
+            file_name: doc.file_name,
+            file_category: doc.category,
+            upload_status: "failed",
+            error_message: (error as Error).message,
+          });
         }
       }
     }

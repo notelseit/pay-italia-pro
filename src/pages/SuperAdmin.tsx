@@ -6,13 +6,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Building2, Plus, Users, Edit, LogIn, Trash2 } from "lucide-react";
+import { Building2, Plus, Users, Edit, LogIn, Trash2, FileText } from "lucide-react";
 import { z } from "zod";
 import Navbar from "@/components/Navbar";
 import { useNavigate } from "react-router-dom";
+import { LogsTab } from "@/components/superadmin/LogsTab";
 
 const createCompanySchema = z.object({
   companyName: z.string().min(2, "Nome azienda richiesto"),
@@ -388,86 +390,105 @@ const SuperAdmin = () => {
           </Dialog>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Aziende Registrate</CardTitle>
-            <CardDescription>
-              Lista di tutte le aziende nel sistema
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="text-center py-8 text-muted-foreground">Caricamento...</div>
-            ) : companies && companies.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>P.IVA</TableHead>
-                    <TableHead>Città</TableHead>
-                    <TableHead className="text-center">Utenti</TableHead>
-                    <TableHead>Data Creazione</TableHead>
-                    <TableHead className="text-right">Azioni</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {companies.map((company: any) => (
-                    <TableRow key={company.id}>
-                      <TableCell className="font-medium">{company.name}</TableCell>
-                      <TableCell>{company.email}</TableCell>
-                      <TableCell>{company.vat_number || '-'}</TableCell>
-                      <TableCell>{company.city || '-'}</TableCell>
-                      <TableCell className="text-center">
-                        <span className="inline-flex items-center gap-1">
-                          <Users className="h-4 w-4" />
-                          {company.profiles?.[0]?.count || 0}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(company.created_at).toLocaleDateString('it-IT')}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEditClick(company)}
-                            title="Modifica azienda"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleImpersonate(company.id)}
-                            disabled={impersonateMutation.isPending}
-                            title="Accedi come admin"
-                          >
-                            <LogIn className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteClick(company)}
-                            disabled={deleteCompanyMutation.isPending}
-                            title="Elimina azienda"
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                Nessuna azienda registrata
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <Tabs defaultValue="companies" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="companies" className="gap-2">
+              <Building2 className="h-4 w-4" />
+              Aziende
+            </TabsTrigger>
+            <TabsTrigger value="logs" className="gap-2">
+              <FileText className="h-4 w-4" />
+              Log di Sistema
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="companies">
+            <Card>
+              <CardHeader>
+                <CardTitle>Aziende Registrate</CardTitle>
+                <CardDescription>
+                  Lista di tutte le aziende nel sistema
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="text-center py-8 text-muted-foreground">Caricamento...</div>
+                ) : companies && companies.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Nome</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>P.IVA</TableHead>
+                        <TableHead>Città</TableHead>
+                        <TableHead className="text-center">Utenti</TableHead>
+                        <TableHead>Data Creazione</TableHead>
+                        <TableHead className="text-right">Azioni</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {companies.map((company: any) => (
+                        <TableRow key={company.id}>
+                          <TableCell className="font-medium">{company.name}</TableCell>
+                          <TableCell>{company.email}</TableCell>
+                          <TableCell>{company.vat_number || '-'}</TableCell>
+                          <TableCell>{company.city || '-'}</TableCell>
+                          <TableCell className="text-center">
+                            <span className="inline-flex items-center gap-1">
+                              <Users className="h-4 w-4" />
+                              {company.profiles?.[0]?.count || 0}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            {new Date(company.created_at).toLocaleDateString('it-IT')}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleEditClick(company)}
+                                title="Modifica azienda"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleImpersonate(company.id)}
+                                disabled={impersonateMutation.isPending}
+                                title="Accedi come admin"
+                              >
+                                <LogIn className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteClick(company)}
+                                disabled={deleteCompanyMutation.isPending}
+                                title="Elimina azienda"
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Nessuna azienda registrata
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="logs">
+            <LogsTab />
+          </TabsContent>
+        </Tabs>
 
         {/* Edit Company Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
