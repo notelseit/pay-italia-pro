@@ -15,14 +15,6 @@ const contractTypes = [
   { value: "consulente", label: "Consulente" },
 ];
 
-const ccnlTypes = [
-  "CCNL Commercio",
-  "CCNL Metalmeccanico",
-  "CCNL Edilizia",
-  "CCNL Turismo",
-  "CCNL Telecomunicazioni",
-];
-
 export const BasicInfoTab = ({ form, isNewEmployee }: BasicInfoTabProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -121,31 +113,6 @@ export const BasicInfoTab = ({ form, isNewEmployee }: BasicInfoTabProps) => {
             <FormControl>
               <Input {...field} type="date" />
             </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="national_contract_type"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Contratto (CCNL) *</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona CCNL" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {ccnlTypes.map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {type}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
             <FormMessage />
           </FormItem>
         )}

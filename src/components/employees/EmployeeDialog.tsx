@@ -23,7 +23,6 @@ const employeeSchema = z.object({
   hire_date: z.string().min(1, "Data assunzione obbligatoria"),
   contract_type: z.enum(["indeterminato", "determinato", "part_time", "consulente"]),
   base_salary: z.number().min(0, "Retribuzione deve essere positiva"),
-  national_contract_type: z.string().optional(),
   dependents_count: z.number().optional(),
   iban: z.string().optional(),
   inps_position: z.string().optional(),

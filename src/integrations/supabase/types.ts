@@ -396,7 +396,6 @@ export type Database = {
           is_active: boolean | null
           last_name: string | null
           marital_status: string | null
-          national_contract_type: string | null
           nationality: string | null
           passport_expiry_date: string | null
           passport_issue_date: string | null
@@ -441,7 +440,6 @@ export type Database = {
           is_active?: boolean | null
           last_name?: string | null
           marital_status?: string | null
-          national_contract_type?: string | null
           nationality?: string | null
           passport_expiry_date?: string | null
           passport_issue_date?: string | null
@@ -486,7 +484,6 @@ export type Database = {
           is_active?: boolean | null
           last_name?: string | null
           marital_status?: string | null
-          national_contract_type?: string | null
           nationality?: string | null
           passport_expiry_date?: string | null
           passport_issue_date?: string | null
