@@ -31,6 +31,7 @@ export const PayrollDialog = ({
   const { employees = [], isLoading: loadingEmployees } = useEmployees(companyId);
   const { contracts } = useCCNLContracts(companyId);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
+  const [isGeneratingAll, setIsGeneratingAll] = useState(false);
   const [formData, setFormData] = useState({
     baseSalary: 0,
     bonuses: 0,
@@ -46,7 +47,7 @@ export const PayrollDialog = ({
   const [calculation, setCalculation] = useState<PayrollResult | null>(null);
 
   useEffect(() => {
-    if (selectedEmployee) {
+    if (selectedEmployee && selectedEmployee !== "ALL") {
       const employee = employees.find(e => e.id === selectedEmployee);
       const ccnlContract = contracts?.find(c => c.id === employee?.ccnl_contract_id);
       
@@ -63,6 +64,20 @@ export const PayrollDialog = ({
           mealVoucherAmount: ccnlContract?.meal_voucher_amount ? Number(ccnlContract.meal_voucher_amount) : 0,
         }));
       }
+    } else if (selectedEmployee === "ALL") {
+      // Reset form for "All" selection
+      setFormData({
+        baseSalary: 0,
+        bonuses: 0,
+        overtimePay: 0,
+        dependentsCount: 0,
+        taxDeductions: 0,
+        inpsRate: 9.19,
+        inailRate: 1.5,
+        thirteenthSalary: true,
+        fourteenthSalary: false,
+        mealVoucherAmount: 0,
+      });
     }
   }, [selectedEmployee, employees, contracts]);
 
@@ -86,24 +101,80 @@ export const PayrollDialog = ({
     }
   }, [formData]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!calculation) return;
+    
+    if (selectedEmployee === "ALL") {
+      // Generate payroll for all employees
+      setIsGeneratingAll(true);
+      
+      for (const employee of employees) {
+        const ccnlContract = contracts?.find(c => c.id === employee.ccnl_contract_id);
+        
+        const employeeFormData = {
+          baseSalary: Number(employee.base_salary) || 0,
+          bonuses: formData.bonuses,
+          overtimePay: formData.overtimePay,
+          dependentsCount: employee.dependents_count || 0,
+          taxDeductions: Number(employee.tax_deductions) || 0,
+          inpsRate: ccnlContract?.inps_rate ? Number(ccnlContract.inps_rate) : 9.19,
+          inailRate: ccnlContract?.inail_rate ? Number(ccnlContract.inail_rate) : 1.5,
+          thirteenthSalary: ccnlContract?.thirteenth_salary ?? true,
+          fourteenthSalary: ccnlContract?.fourteenth_salary ?? false,
+          mealVoucherAmount: ccnlContract?.meal_voucher_amount ? Number(ccnlContract.meal_voucher_amount) : 0,
+        };
+        
+        const result = calculatePayroll({
+          baseSalary: employeeFormData.baseSalary,
+          bonuses: employeeFormData.bonuses,
+          overtimePay: employeeFormData.overtimePay,
+          dependentsCount: employeeFormData.dependentsCount,
+          taxDeductions: employeeFormData.taxDeductions,
+          ccnlContract: {
+            inps_rate: employeeFormData.inpsRate / 100,
+            inail_rate: employeeFormData.inailRate / 100,
+            thirteenth_salary: employeeFormData.thirteenthSalary,
+            fourteenth_salary: employeeFormData.fourteenthSalary,
+            meal_voucher_amount: employeeFormData.mealVoucherAmount,
+          }
+        });
+        
+        await onSubmit({
+          employee_id: employee.id,
+          company_id: companyId,
+          month,
+          year,
+          base_salary: employeeFormData.baseSalary,
+          bonuses: employeeFormData.bonuses,
+          overtime_pay: employeeFormData.overtimePay,
+          gross_total: result.grossSalary,
+          inps_contribution: result.inpsEmployee,
+          irpef_tax: result.irpefGross,
+          net_salary: result.netSalary,
+          status: "bozza",
+        });
+      }
+      
+      setIsGeneratingAll(false);
+    } else {
+      // Generate payroll for single employee
+      if (!calculation) return;
 
-    onSubmit({
-      employee_id: selectedEmployee,
-      company_id: companyId,
-      month,
-      year,
-      base_salary: formData.baseSalary,
-      bonuses: formData.bonuses,
-      overtime_pay: formData.overtimePay,
-      gross_total: calculation.grossSalary,
-      inps_contribution: calculation.inpsEmployee,
-      irpef_tax: calculation.irpefGross,
-      net_salary: calculation.netSalary,
-      status: "bozza",
-    });
+      onSubmit({
+        employee_id: selectedEmployee,
+        company_id: companyId,
+        month,
+        year,
+        base_salary: formData.baseSalary,
+        bonuses: formData.bonuses,
+        overtime_pay: formData.overtimePay,
+        gross_total: calculation.grossSalary,
+        inps_contribution: calculation.inpsEmployee,
+        irpef_tax: calculation.irpefGross,
+        net_salary: calculation.netSalary,
+        status: "bozza",
+      });
+    }
     
     onOpenChange(false);
     setSelectedEmployee("");
@@ -143,6 +214,9 @@ export const PayrollDialog = ({
                   <SelectValue placeholder={loadingEmployees ? "Caricamento..." : "Seleziona dipendente"} />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="ALL">
+                    <span className="font-semibold">✓ Tutti i Dipendenti</span>
+                  </SelectItem>
                   {employees.length === 0 && !loadingEmployees ? (
                     <div className="p-2 text-sm text-muted-foreground text-center">
                       Nessun dipendente disponibile
@@ -158,6 +232,15 @@ export const PayrollDialog = ({
               </Select>
             </div>
 
+            {selectedEmployee === "ALL" && (
+              <div className="col-span-2 p-4 bg-primary/10 rounded-lg border border-primary/20">
+                <p className="text-sm font-medium text-primary">
+                  ℹ️ Verranno generati {employees.length} cedolini per tutti i dipendenti.
+                  Premi/Bonus e Straordinari saranno applicati a tutti.
+                </p>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="baseSalary">Stipendio Base (RAL/13) *</Label>
               <Input
@@ -169,7 +252,9 @@ export const PayrollDialog = ({
                 onChange={(e) =>
                   setFormData({ ...formData, baseSalary: parseFloat(e.target.value) || 0 })
                 }
-                required
+                required={selectedEmployee !== "ALL"}
+                disabled={selectedEmployee === "ALL"}
+                placeholder={selectedEmployee === "ALL" ? "Calcolato per ogni dipendente" : ""}
               />
             </div>
 
@@ -211,6 +296,8 @@ export const PayrollDialog = ({
                 onChange={(e) =>
                   setFormData({ ...formData, dependentsCount: parseInt(e.target.value) || 0 })
                 }
+                disabled={selectedEmployee === "ALL"}
+                placeholder={selectedEmployee === "ALL" ? "Calcolato per ogni dipendente" : ""}
               />
             </div>
 
@@ -225,12 +312,15 @@ export const PayrollDialog = ({
                 onChange={(e) =>
                   setFormData({ ...formData, taxDeductions: parseFloat(e.target.value) || 0 })
                 }
+                disabled={selectedEmployee === "ALL"}
+                placeholder={selectedEmployee === "ALL" ? "Calcolato per ogni dipendente" : ""}
               />
             </div>
           </div>
 
-          {/* CCNL Data Section */}
-          <Card className="bg-muted/30">
+          {/* CCNL Data Section - Hidden when ALL is selected */}
+          {selectedEmployee !== "ALL" && (
+            <Card className="bg-muted/30">
             <CardHeader>
               <CardTitle className="text-base">Dati CCNL (Modificabili)</CardTitle>
             </CardHeader>
@@ -305,8 +395,9 @@ export const PayrollDialog = ({
               </div>
             </CardContent>
           </Card>
+          )}
 
-          {calculation && (
+          {calculation && selectedEmployee !== "ALL" && (
             <Card>
               <CardHeader>
                 <CardTitle>Riepilogo Calcolo Cedolino</CardTitle>
@@ -390,8 +481,8 @@ export const PayrollDialog = ({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annulla
             </Button>
-            <Button type="submit" disabled={!selectedEmployee || !calculation}>
-              Genera Cedolino
+            <Button type="submit" disabled={!selectedEmployee || (selectedEmployee !== "ALL" && !calculation) || isGeneratingAll}>
+              {isGeneratingAll ? "Generazione in corso..." : selectedEmployee === "ALL" ? `Genera ${employees.length} Cedolini` : "Genera Cedolino"}
             </Button>
           </div>
         </form>
