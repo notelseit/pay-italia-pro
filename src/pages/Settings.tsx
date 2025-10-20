@@ -15,13 +15,7 @@ import { CCNLManagement } from "@/components/settings/CCNLManagement";
 import { EmailTemplates } from "@/components/settings/EmailTemplates";
 import { EmailSettingsManagement } from "@/components/settings/EmailSettingsManagement";
 import { useCCNLContracts } from "@/hooks/useCCNLContracts";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const Settings = () => {
   const [activeSection, setActiveSection] = useState("company");
@@ -33,22 +27,16 @@ const Settings = () => {
   const { data: company } = useQuery({
     queryKey: ["company"],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("company_id")
-        .eq("id", user.id)
-        .single();
+      const { data: profile } = await supabase.from("profiles").select("company_id").eq("id", user.id).single();
 
       if (!profile?.company_id) return null;
 
-      const { data, error } = await supabase
-        .from("companies")
-        .select("*")
-        .eq("id", profile.company_id)
-        .single();
+      const { data, error } = await supabase.from("companies").select("*").eq("id", profile.company_id).single();
 
       if (error) throw error;
       return data;
@@ -65,7 +53,9 @@ const Settings = () => {
 
   useEffect(() => {
     const checkSuperAdmin = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data: roles } = await supabase
@@ -83,7 +73,7 @@ const Settings = () => {
 
   const handleSaveCompany = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     if (!company?.id) {
       toast({
         title: "Errore",
@@ -94,7 +84,7 @@ const Settings = () => {
     }
 
     const formData = new FormData(e.currentTarget);
-    
+
     const updates = {
       name: formData.get("company-name") as string,
       vat_number: formData.get("vat") as string,
@@ -112,10 +102,7 @@ const Settings = () => {
       default_ccnl_contract_id: defaultCCNL && defaultCCNL !== "none" ? defaultCCNL : null,
     };
 
-    const { error } = await supabase
-      .from("companies")
-      .update(updates)
-      .eq("id", company.id);
+    const { error } = await supabase.from("companies").update(updates).eq("id", company.id);
 
     if (error) {
       console.error("Error updating company:", error);
@@ -137,7 +124,7 @@ const Settings = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
+
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2 text-foreground">Impostazioni</h1>
@@ -150,56 +137,56 @@ const Settings = () => {
             <Card>
               <CardContent className="pt-6">
                 <nav className="space-y-2">
-                  <Button 
-                    variant={activeSection === "company" ? "secondary" : "ghost"} 
+                  <Button
+                    variant={activeSection === "company" ? "secondary" : "ghost"}
                     className="w-full justify-start"
                     onClick={() => setActiveSection("company")}
                   >
                     <Building2 className="mr-2 h-4 w-4" />
                     Dati Azienda
                   </Button>
-                  <Button 
-                    variant={activeSection === "users" ? "secondary" : "ghost"} 
+                  <Button
+                    variant={activeSection === "users" ? "secondary" : "ghost"}
                     className="w-full justify-start"
                     onClick={() => setActiveSection("users")}
                   >
                     <Users className="mr-2 h-4 w-4" />
                     Utenti e Ruoli
                   </Button>
-                  <Button 
-                    variant={activeSection === "ccnl" ? "secondary" : "ghost"} 
+                  <Button
+                    variant={activeSection === "ccnl" ? "secondary" : "ghost"}
                     className="w-full justify-start"
                     onClick={() => setActiveSection("ccnl")}
                   >
                     <Briefcase className="mr-2 h-4 w-4" />
                     Contratti CCNL
                   </Button>
-                  <Button 
-                    variant={activeSection === "notifications" ? "secondary" : "ghost"} 
+                  <Button
+                    variant={activeSection === "notifications" ? "secondary" : "ghost"}
                     className="w-full justify-start"
                     onClick={() => setActiveSection("notifications")}
                   >
                     <Bell className="mr-2 h-4 w-4" />
                     Notifiche
                   </Button>
-                  <Button 
-                    variant={activeSection === "security" ? "secondary" : "ghost"} 
+                  <Button
+                    variant={activeSection === "security" ? "secondary" : "ghost"}
                     className="w-full justify-start"
                     onClick={() => setActiveSection("security")}
                   >
                     <Shield className="mr-2 h-4 w-4" />
                     Sicurezza
                   </Button>
-                  <Button 
-                    variant={activeSection === "email" ? "secondary" : "ghost"} 
+                  <Button
+                    variant={activeSection === "email" ? "secondary" : "ghost"}
                     className="w-full justify-start"
                     onClick={() => setActiveSection("email")}
                   >
                     <Mail className="mr-2 h-4 w-4" />
                     Template Email
                   </Button>
-                  <Button 
-                    variant={activeSection === "documents" ? "secondary" : "ghost"} 
+                  <Button
+                    variant={activeSection === "documents" ? "secondary" : "ghost"}
                     className="w-full justify-start"
                     onClick={() => setActiveSection("documents")}
                   >
@@ -218,9 +205,7 @@ const Settings = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>Informazioni Azienda</CardTitle>
-                  <CardDescription>
-                    Dati anagrafici e informazioni fiscali
-                  </CardDescription>
+                  <CardDescription>Dati anagrafici e informazioni fiscali</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleSaveCompany} className="space-y-4">
@@ -234,7 +219,7 @@ const Settings = () => {
                         <Input id="vat" name="vat" defaultValue={company?.vat_number || ""} />
                       </div>
                     </div>
-                    
+
                     <div className="grid md:grid-cols-4 gap-4">
                       <div className="md:col-span-3 space-y-2">
                         <Label htmlFor="address">Indirizzo Sede Legale</Label>
@@ -288,7 +273,11 @@ const Settings = () => {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="posizione-inail">Posizione INAIL</Label>
-                        <Input id="posizione-inail" name="posizione-inail" defaultValue={company?.posizione_inail || ""} />
+                        <Input
+                          id="posizione-inail"
+                          name="posizione-inail"
+                          defaultValue={company?.posizione_inail || ""}
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="voce-inail">Voce INAIL</Label>
@@ -304,11 +293,12 @@ const Settings = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">Nessun contratto di default</SelectItem>
-                          {contracts && contracts.map((contract) => (
-                            <SelectItem key={contract.id} value={contract.id}>
-                              {contract.name}
-                            </SelectItem>
-                          ))}
+                          {contracts &&
+                            contracts.map((contract) => (
+                              <SelectItem key={contract.id} value={contract.id}>
+                                {contract.name}
+                              </SelectItem>
+                            ))}
                         </SelectContent>
                       </Select>
                       <p className="text-xs text-muted-foreground">
@@ -318,7 +308,9 @@ const Settings = () => {
 
                     <Separator className="my-4" />
 
-                    <Button type="submit" variant="hero">Salva Modifiche</Button>
+                    <Button type="submit" variant="hero">
+                      Salva Modifiche
+                    </Button>
                   </form>
                 </CardContent>
               </Card>
@@ -329,9 +321,7 @@ const Settings = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>Utenti e Ruoli</CardTitle>
-                  <CardDescription>
-                    Gestisci gli utenti della tua azienda e i loro permessi di accesso
-                  </CardDescription>
+                  <CardDescription>Gestisci gli utenti della tua azienda e i loro permessi di accesso</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <UserRolesManagement />
@@ -344,9 +334,7 @@ const Settings = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>Contratti CCNL</CardTitle>
-                  <CardDescription>
-                    Gestisci i contratti collettivi nazionali di lavoro disponibili
-                  </CardDescription>
+                  <CardDescription>Gestisci i contratti collettivi nazionali di lavoro disponibili</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <CCNLManagement />
@@ -359,17 +347,13 @@ const Settings = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>Preferenze Notifiche</CardTitle>
-                  <CardDescription>
-                    Gestisci le notifiche email e in-app
-                  </CardDescription>
+                  <CardDescription>Gestisci le notifiche email e in-app</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <Label htmlFor="notif-payroll">Cedolini Generati</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Notifica quando i cedolini sono pronti
-                      </p>
+                      <p className="text-sm text-muted-foreground">Notifica quando i cedolini sono pronti</p>
                     </div>
                     <Switch id="notif-payroll" defaultChecked />
                   </div>
@@ -377,9 +361,7 @@ const Settings = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <Label htmlFor="notif-deadlines">Scadenze Fiscali</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Promemoria per pagamenti INPS e IRPEF
-                      </p>
+                      <p className="text-sm text-muted-foreground">Promemoria per pagamenti INPS e IRPEF</p>
                     </div>
                     <Switch id="notif-deadlines" defaultChecked />
                   </div>
@@ -387,9 +369,7 @@ const Settings = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <Label htmlFor="notif-compliance">Alert Compliance</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Avvisi per documenti in scadenza
-                      </p>
+                      <p className="text-sm text-muted-foreground">Avvisi per documenti in scadenza</p>
                     </div>
                     <Switch id="notif-compliance" defaultChecked />
                   </div>
@@ -406,15 +386,13 @@ const Settings = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>Sicurezza</CardTitle>
-                  <CardDescription>
-                    Gestisci password e impostazioni di sicurezza
-                  </CardDescription>
+                  <CardDescription>Gestisci password e impostazioni di sicurezza</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Change Password Section */}
                   <div>
                     <h3 className="text-lg font-semibold mb-4">Cambio Password</h3>
-                    <form 
+                    <form
                       onSubmit={async (e) => {
                         e.preventDefault();
                         const formData = new FormData(e.currentTarget);
@@ -441,7 +419,7 @@ const Settings = () => {
                         }
 
                         const { error } = await supabase.auth.updateUser({
-                          password: newPassword
+                          password: newPassword,
                         });
 
                         if (error) {
@@ -457,26 +435,26 @@ const Settings = () => {
                           });
                           (e.target as HTMLFormElement).reset();
                         }
-                      }} 
+                      }}
                       className="space-y-4"
                     >
                       <div className="space-y-2">
                         <Label htmlFor="current-password">Password Corrente</Label>
-                        <Input 
-                          id="current-password" 
-                          name="current-password" 
-                          type="password" 
-                          required 
+                        <Input
+                          id="current-password"
+                          name="current-password"
+                          type="password"
+                          required
                           autoComplete="current-password"
                         />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="new-password">Nuova Password</Label>
-                        <Input 
-                          id="new-password" 
-                          name="new-password" 
-                          type="password" 
-                          required 
+                        <Input
+                          id="new-password"
+                          name="new-password"
+                          type="password"
+                          required
                           minLength={8}
                           autoComplete="new-password"
                         />
@@ -484,16 +462,18 @@ const Settings = () => {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="confirm-password">Conferma Nuova Password</Label>
-                        <Input 
-                          id="confirm-password" 
-                          name="confirm-password" 
-                          type="password" 
-                          required 
+                        <Input
+                          id="confirm-password"
+                          name="confirm-password"
+                          type="password"
+                          required
                           minLength={8}
                           autoComplete="new-password"
                         />
                       </div>
-                      <Button type="submit" variant="hero">Cambia Password</Button>
+                      <Button type="submit" variant="hero">
+                        Cambia Password
+                      </Button>
                     </form>
                   </div>
 
@@ -506,15 +486,13 @@ const Settings = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <Label>Termina Tutte le Sessioni</Label>
-                          <p className="text-sm text-muted-foreground">
-                            Disconnetti tutti i dispositivi tranne questo
-                          </p>
+                          <p className="text-sm text-muted-foreground">Disconnetti tutti i dispositivi tranne questo</p>
                         </div>
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="sm"
                           onClick={async () => {
-                            const { error } = await supabase.auth.signOut({ scope: 'others' });
+                            const { error } = await supabase.auth.signOut({ scope: "others" });
                             if (error) {
                               toast({
                                 title: "Errore",
@@ -550,7 +528,7 @@ const Settings = () => {
             {activeSection === "email" && (
               <>
                 {company?.id && <EmailTemplates companyId={company.id} />}
-                
+
                 {isSuperAdmin && (
                   <div className="mt-8">
                     <EmailSettingsManagement />
@@ -560,7 +538,7 @@ const Settings = () => {
             )}
 
             {/* Documents */}
-            {activeSection === "documents" && (
+            {/*    {activeSection === "documents" && (
               <Card>
                 <CardHeader>
                   <CardTitle>Documenti</CardTitle>
@@ -572,7 +550,7 @@ const Settings = () => {
                   <p className="text-muted-foreground">Funzionalità in sviluppo</p>
                 </CardContent>
               </Card>
-            )}
+            )}   */}
           </div>
         </div>
       </main>
