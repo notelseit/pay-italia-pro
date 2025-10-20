@@ -105,6 +105,22 @@ serve(async (req) => {
     
     console.log("Email would be sent:", emailData);
 
+    // Log the email send attempt
+    if (emailRequest.company_id) {
+      await supabaseClient.from("email_logs").insert({
+        company_id: emailRequest.company_id,
+        recipient_email: emailData.to,
+        subject: emailData.subject,
+        status: "success",
+        template_type: emailRequest.template_type,
+        full_log: {
+          from: emailData.from,
+          html_length: finalHtml.length,
+          text_length: finalText?.length || 0,
+        }
+      });
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
@@ -123,6 +139,33 @@ serve(async (req) => {
   } catch (error) {
     console.error("Error in send-email function:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    
+    // Log the failed email attempt
+    try {
+      const emailRequest: EmailRequest = await req.clone().json();
+      if (emailRequest.company_id) {
+        const supabaseClient = createClient(
+          Deno.env.get("SUPABASE_URL") ?? "",
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+        );
+        
+        await supabaseClient.from("email_logs").insert({
+          company_id: emailRequest.company_id,
+          recipient_email: Array.isArray(emailRequest.to) ? emailRequest.to.join(", ") : emailRequest.to,
+          subject: emailRequest.subject,
+          status: "failed",
+          error_message: errorMessage,
+          template_type: emailRequest.template_type,
+          full_log: {
+            error: errorMessage,
+            stack: error instanceof Error ? error.stack : undefined,
+          }
+        });
+      }
+    } catch (logError) {
+      console.error("Failed to log email error:", logError);
+    }
+    
     return new Response(
       JSON.stringify({ 
         error: errorMessage,

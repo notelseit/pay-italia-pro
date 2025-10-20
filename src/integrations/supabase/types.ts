@@ -279,6 +279,50 @@ export type Database = {
           },
         ]
       }
+      email_logs: {
+        Row: {
+          company_id: string
+          error_message: string | null
+          full_log: Json | null
+          id: string
+          recipient_email: string
+          sent_at: string
+          status: string
+          subject: string
+          template_type: string | null
+        }
+        Insert: {
+          company_id: string
+          error_message?: string | null
+          full_log?: Json | null
+          id?: string
+          recipient_email: string
+          sent_at?: string
+          status: string
+          subject: string
+          template_type?: string | null
+        }
+        Update: {
+          company_id?: string
+          error_message?: string | null
+          full_log?: Json | null
+          id?: string
+          recipient_email?: string
+          sent_at?: string
+          status?: string
+          subject?: string
+          template_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_settings: {
         Row: {
           created_at: string | null
