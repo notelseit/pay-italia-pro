@@ -151,6 +151,72 @@ export const usePayroll = (month: number, year: number, companyId?: string) => {
 
   const sendPayroll = useMutation({
     mutationFn: async (id: string) => {
+      // Get payroll record with employee details
+      const { data: payrollRecord, error: fetchError } = await supabase
+        .from("payroll_records")
+        .select(`
+          *,
+          employees (
+            full_name,
+            email,
+            tax_code
+          )
+        `)
+        .eq("id", id)
+        .single();
+
+      if (fetchError) throw fetchError;
+      if (!payrollRecord) throw new Error("Cedolino non trovato");
+
+      const employee = payrollRecord.employees as any;
+      if (!employee?.email) {
+        throw new Error("Email del dipendente non trovata");
+      }
+
+      // Send email via edge function
+      const { error: emailError } = await supabase.functions.invoke("send-email", {
+        body: {
+          to: employee.email,
+          subject: `Cedolino ${getMonthName(payrollRecord.month)} ${payrollRecord.year} - ${employee.full_name}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2>Cedolino Paga</h2>
+              <p>Gentile ${employee.full_name},</p>
+              <p>Il cedolino per il mese di <strong>${getMonthName(payrollRecord.month)} ${payrollRecord.year}</strong> è disponibile.</p>
+              <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                <tr style="background: #f5f5f5;">
+                  <td style="padding: 10px; border: 1px solid #ddd;"><strong>Lordo Totale</strong></td>
+                  <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">€ ${Number(payrollRecord.gross_total).toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; border: 1px solid #ddd;"><strong>Contributi INPS</strong></td>
+                  <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">€ ${Number(payrollRecord.inps_contribution).toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; border: 1px solid #ddd;"><strong>IRPEF</strong></td>
+                  <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">€ ${Number(payrollRecord.irpef_tax).toFixed(2)}</td>
+                </tr>
+                <tr style="background: #f5f5f5; font-size: 1.2em;">
+                  <td style="padding: 10px; border: 1px solid #ddd;"><strong>Netto</strong></td>
+                  <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>€ ${Number(payrollRecord.net_salary).toFixed(2)}</strong></td>
+                </tr>
+              </table>
+              ${payrollRecord.pdf_url ? `<p><a href="${payrollRecord.pdf_url}" style="display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">Scarica PDF</a></p>` : ''}
+              <p>Cordiali saluti</p>
+            </div>
+          `,
+          text: `Cedolino ${getMonthName(payrollRecord.month)} ${payrollRecord.year}\n\nGentile ${employee.full_name},\n\nLordo: € ${Number(payrollRecord.gross_total).toFixed(2)}\nContributi INPS: € ${Number(payrollRecord.inps_contribution).toFixed(2)}\nIRPEF: € ${Number(payrollRecord.irpef_tax).toFixed(2)}\nNetto: € ${Number(payrollRecord.net_salary).toFixed(2)}`,
+          template_type: "payroll",
+          company_id: payrollRecord.company_id,
+        },
+      });
+
+      if (emailError) {
+        console.error("Error sending email:", emailError);
+        throw new Error("Errore nell'invio dell'email");
+      }
+
+      // Update payroll status
       const { data, error } = await supabase
         .from("payroll_records")
         .update({
@@ -168,7 +234,7 @@ export const usePayroll = (month: number, year: number, companyId?: string) => {
       queryClient.invalidateQueries({ queryKey: ["payroll"] });
       toast({
         title: "Cedolino inviato",
-        description: "Il cedolino è stato inviato al dipendente.",
+        description: "Il cedolino è stato inviato al dipendente via email.",
       });
     },
     onError: (error: Error) => {
@@ -179,6 +245,15 @@ export const usePayroll = (month: number, year: number, companyId?: string) => {
       });
     },
   });
+
+  // Helper function to get month name
+  const getMonthName = (month: number): string => {
+    const months = [
+      "Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno",
+      "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"
+    ];
+    return months[month - 1];
+  };
 
   const deletePayrollRecord = useMutation({
     mutationFn: async (id: string) => {
