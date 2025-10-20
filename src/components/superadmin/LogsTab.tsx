@@ -1,14 +1,17 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { FileUp, LogIn, Calendar, Building2, User, Globe } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { FileUp, LogIn, Calendar, Building2, User, Globe, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
 export const LogsTab = () => {
+  const [selectedError, setSelectedError] = useState<string | null>(null);
   // Fetch FTP upload logs
   const { data: ftpLogs, isLoading: ftpLoading } = useQuery({
     queryKey: ['ftp-logs'],
@@ -201,7 +204,12 @@ export const LogsTab = () => {
                                 Successo
                               </Badge>
                             ) : (
-                              <Badge variant="destructive">
+                              <Badge 
+                                variant="destructive" 
+                                className="cursor-pointer hover:bg-destructive/80 transition-colors"
+                                onClick={() => setSelectedError(log.error_message || "Errore sconosciuto")}
+                              >
+                                <AlertCircle className="h-3 w-3 mr-1" />
                                 Fallito
                               </Badge>
                             )}
@@ -220,6 +228,24 @@ export const LogsTab = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Error Detail Dialog */}
+      <Dialog open={!!selectedError} onOpenChange={() => setSelectedError(null)}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="h-5 w-5" />
+              Dettaglio Errore FTP
+            </DialogTitle>
+            <DialogDescription>
+              Dettagli dell'errore durante il caricamento del file
+            </DialogDescription>
+          </DialogHeader>
+          <div className="bg-muted p-4 rounded-lg">
+            <p className="text-sm font-mono break-words">{selectedError}</p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
