@@ -2,9 +2,13 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UseFormReturn } from "react-hook-form";
+import { useCCNLContracts } from "@/hooks/useCCNLContracts";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 interface PayrollTabProps {
   form: UseFormReturn<any>;
+  companyId?: string;
 }
 
 const contractTypes = [
@@ -27,9 +31,97 @@ const paymentCategories = [
   "Settimanale",
 ];
 
-export const PayrollTab = ({ form }: PayrollTabProps) => {
+export const PayrollTab = ({ form, companyId }: PayrollTabProps) => {
+  const { contracts, isLoading } = useCCNLContracts(companyId);
+  const selectedContractId = form.watch("ccnl_contract_id");
+  const selectedContract = contracts?.find(c => c.id === selectedContractId);
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Contratto CCNL</CardTitle>
+          <CardDescription>Seleziona il contratto collettivo nazionale di lavoro applicabile</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <FormField
+            control={form.control}
+            name="ccnl_contract_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Contratto CCNL</FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  value={field.value}
+                  disabled={isLoading}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder={isLoading ? "Caricamento..." : "Seleziona contratto CCNL"} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {contracts?.map((contract) => (
+                      <SelectItem key={contract.id} value={contract.id}>
+                        {contract.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {selectedContract && (
+            <div className="mt-4 space-y-2 p-4 bg-muted rounded-lg">
+              <h4 className="font-semibold text-sm">Dettagli Contratto</h4>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                {selectedContract.base_salary && (
+                  <div>
+                    <span className="text-muted-foreground">Retribuzione base:</span>{" "}
+                    <span className="font-medium">€{selectedContract.base_salary}</span>
+                  </div>
+                )}
+                {selectedContract.work_hours && (
+                  <div>
+                    <span className="text-muted-foreground">Ore settimanali:</span>{" "}
+                    <span className="font-medium">{selectedContract.work_hours}h</span>
+                  </div>
+                )}
+                {selectedContract.vacation_days && (
+                  <div>
+                    <span className="text-muted-foreground">Giorni ferie:</span>{" "}
+                    <span className="font-medium">{selectedContract.vacation_days}</span>
+                  </div>
+                )}
+                {selectedContract.thirteenth_salary && (
+                  <div>
+                    <span className="text-muted-foreground">13ª mensilità:</span>{" "}
+                    <span className="font-medium">Sì</span>
+                  </div>
+                )}
+                {selectedContract.fourteenth_salary && (
+                  <div>
+                    <span className="text-muted-foreground">14ª mensilità:</span>{" "}
+                    <span className="font-medium">Sì</span>
+                  </div>
+                )}
+              </div>
+              {selectedContract.notes && (
+                <div className="mt-2 text-sm">
+                  <span className="text-muted-foreground">Note:</span>
+                  <p className="mt-1">{selectedContract.notes}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Separator />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <FormField
         control={form.control}
         name="contract_type"
@@ -100,19 +192,6 @@ export const PayrollTab = ({ form }: PayrollTabProps) => {
         )}
       />
 
-      <FormField
-        control={form.control}
-        name="national_contract_type"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Contratto Nazionale (CCNL)</FormLabel>
-            <FormControl>
-              <Input {...field} placeholder="CCNL Commercio" />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
 
       <FormField
         control={form.control}
@@ -158,6 +237,7 @@ export const PayrollTab = ({ form }: PayrollTabProps) => {
           </FormItem>
         )}
       />
+      </div>
     </div>
   );
 };

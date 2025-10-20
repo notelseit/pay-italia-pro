@@ -10,21 +10,25 @@ import { BasicInfoTab } from "./tabs/BasicInfoTab";
 import { CitizenshipTab } from "./tabs/CitizenshipTab";
 import { EducationTab } from "./tabs/EducationTab";
 import { PayrollTab } from "./tabs/PayrollTab";
-import { CCNLTab } from "./tabs/CCNLTab";
 import { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
 
 const employeeSchema = z.object({
-  first_name: z.string().min(1, "Nome obbligatorio"),
-  last_name: z.string().min(1, "Cognome obbligatorio"),
-  tax_code: z.string().min(16, "Codice fiscale deve essere di 16 caratteri").max(16),
-  email: z.string().email("Email non valida"),
+  first_name: z.string().optional(),
+  last_name: z.string().optional(),
+  tax_code: z.string().optional(),
+  email: z.string().optional(),
   phone: z.string().optional(),
-  hire_date: z.string().min(1, "Data assunzione obbligatoria"),
+  birth_date: z.string().optional(),
+  city: z.string().optional(),
+  postal_code: z.string().optional(),
+  province: z.string().optional(),
+  country: z.string().optional(),
+  hire_date: z.string().optional(),
   contract_type: z.enum(["indeterminato", "determinato", "part_time", "consulente"]),
-  base_salary: z.number().min(0, "Retribuzione deve essere positiva"),
+  base_salary: z.number().optional(),
   dependents_count: z.number().optional(),
-  iban: z.string().optional(),
+  iban: z.string().min(1, "IBAN obbligatorio"),
   inps_position: z.string().optional(),
   inail_position: z.string().optional(),
   pension_fund: z.string().optional(),
@@ -143,9 +147,8 @@ export const EmployeeDialog = ({ open, onOpenChange, employee, companyId, onSave
             });
           })} className="space-y-6">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="basic">Dati Base</TabsTrigger>
-                <TabsTrigger value="ccnl">Contratto CCNL</TabsTrigger>
                 <TabsTrigger value="citizenship">Cittadinanza</TabsTrigger>
                 <TabsTrigger value="education">Formazione</TabsTrigger>
                 <TabsTrigger value="payroll">Libro Paga</TabsTrigger>
@@ -153,10 +156,6 @@ export const EmployeeDialog = ({ open, onOpenChange, employee, companyId, onSave
 
               <TabsContent value="basic" className="mt-6">
                 <BasicInfoTab form={form} isNewEmployee={!employee} />
-              </TabsContent>
-
-              <TabsContent value="ccnl" className="mt-6">
-                <CCNLTab form={form} companyId={companyId} />
               </TabsContent>
 
               <TabsContent value="citizenship" className="mt-6">
@@ -168,7 +167,7 @@ export const EmployeeDialog = ({ open, onOpenChange, employee, companyId, onSave
               </TabsContent>
 
               <TabsContent value="payroll" className="mt-6">
-                <PayrollTab form={form} />
+                <PayrollTab form={form} companyId={companyId} />
               </TabsContent>
             </Tabs>
 

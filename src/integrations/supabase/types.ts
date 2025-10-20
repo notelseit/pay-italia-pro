@@ -374,9 +374,12 @@ export type Database = {
       employees: {
         Row: {
           base_salary: number
+          birth_date: string | null
           ccnl_contract_id: string | null
+          city: string | null
           company_id: string
           contract_type: Database["public"]["Enums"]["contract_type"]
+          country: string | null
           created_at: string | null
           cv_url: string | null
           dependents_count: number | null
@@ -406,6 +409,8 @@ export type Database = {
           pension_fund: string | null
           phone: string | null
           police_station: string | null
+          postal_code: string | null
+          province: string | null
           tax_code: string
           tax_deductions: number | null
           updated_at: string | null
@@ -418,9 +423,12 @@ export type Database = {
         }
         Insert: {
           base_salary: number
+          birth_date?: string | null
           ccnl_contract_id?: string | null
+          city?: string | null
           company_id: string
           contract_type: Database["public"]["Enums"]["contract_type"]
+          country?: string | null
           created_at?: string | null
           cv_url?: string | null
           dependents_count?: number | null
@@ -450,6 +458,8 @@ export type Database = {
           pension_fund?: string | null
           phone?: string | null
           police_station?: string | null
+          postal_code?: string | null
+          province?: string | null
           tax_code: string
           tax_deductions?: number | null
           updated_at?: string | null
@@ -462,9 +472,12 @@ export type Database = {
         }
         Update: {
           base_salary?: number
+          birth_date?: string | null
           ccnl_contract_id?: string | null
+          city?: string | null
           company_id?: string
           contract_type?: Database["public"]["Enums"]["contract_type"]
+          country?: string | null
           created_at?: string | null
           cv_url?: string | null
           dependents_count?: number | null
@@ -494,6 +507,8 @@ export type Database = {
           pension_fund?: string | null
           phone?: string | null
           police_station?: string | null
+          postal_code?: string | null
+          province?: string | null
           tax_code?: string
           tax_deductions?: number | null
           updated_at?: string | null

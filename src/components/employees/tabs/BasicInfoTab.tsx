@@ -23,7 +23,7 @@ export const BasicInfoTab = ({ form, isNewEmployee }: BasicInfoTabProps) => {
         name="first_name"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Nome *</FormLabel>
+            <FormLabel>Nome</FormLabel>
             <FormControl>
               <Input {...field} placeholder="Nome" />
             </FormControl>
@@ -37,7 +37,7 @@ export const BasicInfoTab = ({ form, isNewEmployee }: BasicInfoTabProps) => {
         name="last_name"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Cognome *</FormLabel>
+            <FormLabel>Cognome</FormLabel>
             <FormControl>
               <Input {...field} placeholder="Cognome" />
             </FormControl>
@@ -51,9 +51,23 @@ export const BasicInfoTab = ({ form, isNewEmployee }: BasicInfoTabProps) => {
         name="tax_code"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Codice Fiscale *</FormLabel>
+            <FormLabel>Codice Fiscale</FormLabel>
             <FormControl>
               <Input {...field} placeholder="RSSMRA80A01H501U" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="birth_date"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Data di Nascita</FormLabel>
+            <FormControl>
+              <Input {...field} type="date" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -65,7 +79,7 @@ export const BasicInfoTab = ({ form, isNewEmployee }: BasicInfoTabProps) => {
         name="email"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Email *</FormLabel>
+            <FormLabel>Email</FormLabel>
             <FormControl>
               <Input {...field} type="email" placeholder="email@esempio.it" />
             </FormControl>
@@ -88,13 +102,69 @@ export const BasicInfoTab = ({ form, isNewEmployee }: BasicInfoTabProps) => {
         )}
       />
 
+      <FormField
+        control={form.control}
+        name="city"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Città</FormLabel>
+            <FormControl>
+              <Input {...field} placeholder="Roma" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="postal_code"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>CAP</FormLabel>
+            <FormControl>
+              <Input {...field} placeholder="00100" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="province"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Provincia</FormLabel>
+            <FormControl>
+              <Input {...field} placeholder="RM" maxLength={2} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="country"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Nazione</FormLabel>
+            <FormControl>
+              <Input {...field} placeholder="Italia" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
       {isNewEmployee && (
         <FormField
           control={form.control}
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password *</FormLabel>
+              <FormLabel>Password</FormLabel>
               <FormControl>
                 <Input {...field} type="password" placeholder="Password per l'accesso" />
               </FormControl>
@@ -109,7 +179,7 @@ export const BasicInfoTab = ({ form, isNewEmployee }: BasicInfoTabProps) => {
         name="hire_date"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Data Assunzione *</FormLabel>
+            <FormLabel>Data Assunzione</FormLabel>
             <FormControl>
               <Input {...field} type="date" />
             </FormControl>
@@ -123,7 +193,7 @@ export const BasicInfoTab = ({ form, isNewEmployee }: BasicInfoTabProps) => {
         name="base_salary"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Retribuzione Mensile (€) *</FormLabel>
+            <FormLabel>Retribuzione Mensile (€)</FormLabel>
             <FormControl>
               <Input
                 {...field}
@@ -162,7 +232,7 @@ export const BasicInfoTab = ({ form, isNewEmployee }: BasicInfoTabProps) => {
         name="iban"
         render={({ field }) => (
           <FormItem className="md:col-span-2">
-            <FormLabel>IBAN</FormLabel>
+            <FormLabel>IBAN *</FormLabel>
             <FormControl>
               <Input {...field} placeholder="IT60 X054 2811 1010 0000 0123 456" />
             </FormControl>
