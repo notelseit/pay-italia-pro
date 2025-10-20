@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
@@ -8,13 +8,20 @@ const corsHeaders = {
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Missing environment variables');
+    }
+
     const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      supabaseUrl,
+      supabaseServiceKey,
       {
         auth: {
           autoRefreshToken: false,
@@ -24,24 +31,38 @@ serve(async (req) => {
     );
 
     // Get the authorization header from the request
-    const authHeader = req.headers.get('Authorization')!;
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('Missing authorization header');
+    }
+    
     const token = authHeader.replace('Bearer ', '');
     
     // Verify the caller is authenticated
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
     if (authError || !user) {
+      console.error('Auth error:', authError);
       throw new Error('Unauthorized');
     }
 
     // Check if user is superadmin
-    const { data: isSuperAdmin } = await supabaseClient
+    const { data: isSuperAdmin, error: rpcError } = await supabaseClient
       .rpc('is_superadmin', { _user_id: user.id });
+
+    if (rpcError) {
+      console.error('RPC error:', rpcError);
+      throw new Error('Failed to verify superadmin status');
+    }
 
     if (!isSuperAdmin) {
       throw new Error('Only superadmins can delete companies');
     }
 
     const { companyId } = await req.json();
+    
+    if (!companyId) {
+      throw new Error('Company ID is required');
+    }
     console.log('Deleting company:', companyId);
 
     // Delete all documents from storage for this company
