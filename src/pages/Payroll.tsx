@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, Send, CheckCircle, Calculator, Plus, Eye, Edit, Settings } from "lucide-react";
+import { Download, Send, CheckCircle, Calculator, Plus, Eye, Edit, Settings, Trash2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -33,6 +33,7 @@ const Payroll = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [sendDialogOpen, setSendDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [selectedPayrollId, setSelectedPayrollId] = useState<string>("");
@@ -44,7 +45,8 @@ const Payroll = () => {
     createPayrollRecord,
     updatePayrollRecord,
     confirmPayroll,
-    sendPayroll
+    sendPayroll,
+    deletePayrollRecord
   } = usePayroll(selectedMonth, selectedYear, companyId);
 
   const { employees = [] } = useEmployees(companyId);
@@ -126,8 +128,18 @@ const Payroll = () => {
     setEditDialogOpen(true);
   };
 
+  const handleDelete = (id: string) => {
+    setSelectedPayrollId(id);
+    setDeleteDialogOpen(true);
+  };
+
   const handleUpdate = (data: any) => {
     updatePayrollRecord.mutate(data);
+  };
+
+  const confirmDelete = () => {
+    deletePayrollRecord.mutate(selectedPayrollId);
+    setDeleteDialogOpen(false);
   };
 
   const confirmConfirm = () => {
@@ -363,6 +375,14 @@ const Payroll = () => {
                                 <CheckCircle className="mr-1 h-3 w-3" />
                                 Conferma
                               </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleDelete(record.id)}
+                                title="Elimina cedolino"
+                              >
+                                <Trash2 className="h-3 w-3 text-destructive" />
+                              </Button>
                             </>
                           )}
                           {record.status === "confermato" && (
@@ -445,6 +465,23 @@ const Payroll = () => {
             <AlertDialogFooter>
               <AlertDialogCancel>Annulla</AlertDialogCancel>
               <AlertDialogAction onClick={confirmSend}>Invia</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Eliminare il cedolino?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Questa azione è irreversibile. Il cedolino verrà eliminato definitivamente.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annulla</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Elimina
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

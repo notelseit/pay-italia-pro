@@ -8,6 +8,7 @@ import { useEmployees } from "@/hooks/useEmployees";
 import { useCCNLContracts } from "@/hooks/useCCNLContracts";
 import { calculatePayroll, formatCurrency, PayrollResult } from "@/lib/payrollCalculations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 
 interface PayrollDialogProps {
@@ -36,43 +37,54 @@ export const PayrollDialog = ({
     overtimePay: 0,
     dependentsCount: 0,
     taxDeductions: 0,
+    inpsRate: 0.0919,
+    inailRate: 0.015,
+    thirteenthSalary: true,
+    fourteenthSalary: false,
+    mealVoucherAmount: 0,
   });
   const [calculation, setCalculation] = useState<PayrollResult | null>(null);
 
   useEffect(() => {
     if (selectedEmployee) {
       const employee = employees.find(e => e.id === selectedEmployee);
+      const ccnlContract = contracts?.find(c => c.id === employee?.ccnl_contract_id);
+      
       if (employee) {
         setFormData(prev => ({
           ...prev,
           baseSalary: Number(employee.base_salary) || 0,
           dependentsCount: employee.dependents_count || 0,
           taxDeductions: Number(employee.tax_deductions) || 0,
+          inpsRate: ccnlContract?.inps_rate ? Number(ccnlContract.inps_rate) : 0.0919,
+          inailRate: ccnlContract?.inail_rate ? Number(ccnlContract.inail_rate) : 0.015,
+          thirteenthSalary: ccnlContract?.thirteenth_salary ?? true,
+          fourteenthSalary: ccnlContract?.fourteenth_salary ?? false,
+          mealVoucherAmount: ccnlContract?.meal_voucher_amount ? Number(ccnlContract.meal_voucher_amount) : 0,
         }));
       }
     }
-  }, [selectedEmployee, employees]);
+  }, [selectedEmployee, employees, contracts]);
 
   useEffect(() => {
     if (formData.baseSalary > 0) {
-      const employee = employees.find(e => e.id === selectedEmployee);
-      const ccnlContract = contracts?.find(c => c.id === employee?.ccnl_contract_id);
-      
       const result = calculatePayroll({
-        ...formData,
-        ccnlContract: ccnlContract ? {
-          inps_rate: ccnlContract.inps_rate,
-          inail_rate: ccnlContract.inail_rate,
-          thirteenth_salary: ccnlContract.thirteenth_salary,
-          fourteenth_salary: ccnlContract.fourteenth_salary,
-          meal_voucher_amount: ccnlContract.meal_voucher_amount,
-          permits: ccnlContract.permits,
-          overtime_rules: ccnlContract.overtime_rules,
-        } : undefined
+        baseSalary: formData.baseSalary,
+        bonuses: formData.bonuses,
+        overtimePay: formData.overtimePay,
+        dependentsCount: formData.dependentsCount,
+        taxDeductions: formData.taxDeductions,
+        ccnlContract: {
+          inps_rate: formData.inpsRate,
+          inail_rate: formData.inailRate,
+          thirteenth_salary: formData.thirteenthSalary,
+          fourteenth_salary: formData.fourteenthSalary,
+          meal_voucher_amount: formData.mealVoucherAmount,
+        }
       });
       setCalculation(result);
     }
-  }, [formData, selectedEmployee, employees, contracts]);
+  }, [formData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,6 +113,11 @@ export const PayrollDialog = ({
       overtimePay: 0,
       dependentsCount: 0,
       taxDeductions: 0,
+      inpsRate: 0.0919,
+      inailRate: 0.015,
+      thirteenthSalary: true,
+      fourteenthSalary: false,
+      mealVoucherAmount: 0,
     });
     setCalculation(null);
   };
@@ -211,6 +228,83 @@ export const PayrollDialog = ({
               />
             </div>
           </div>
+
+          {/* CCNL Data Section */}
+          <Card className="bg-muted/30">
+            <CardHeader>
+              <CardTitle className="text-base">Dati CCNL (Modificabili)</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="inpsRate">Aliquota INPS (%)</Label>
+                <Input
+                  id="inpsRate"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  value={(formData.inpsRate * 100).toFixed(2)}
+                  onChange={(e) =>
+                    setFormData({ ...formData, inpsRate: parseFloat(e.target.value) / 100 || 0 })
+                  }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="inailRate">Aliquota INAIL (%)</Label>
+                <Input
+                  id="inailRate"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  value={(formData.inailRate * 100).toFixed(2)}
+                  onChange={(e) =>
+                    setFormData({ ...formData, inailRate: parseFloat(e.target.value) / 100 || 0 })
+                  }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="mealVoucherAmount">Buoni Pasto (€)</Label>
+                <Input
+                  id="mealVoucherAmount"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.mealVoucherAmount}
+                  onChange={(e) =>
+                    setFormData({ ...formData, mealVoucherAmount: parseFloat(e.target.value) || 0 })
+                  }
+                />
+              </div>
+
+              <div className="space-y-2 flex items-center gap-4 pt-6">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.thirteenthSalary}
+                    onChange={(e) =>
+                      setFormData({ ...formData, thirteenthSalary: e.target.checked })
+                    }
+                    className="h-4 w-4"
+                  />
+                  <span className="text-sm">Tredicesima</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.fourteenthSalary}
+                    onChange={(e) =>
+                      setFormData({ ...formData, fourteenthSalary: e.target.checked })
+                    }
+                    className="h-4 w-4"
+                  />
+                  <span className="text-sm">Quattordicesima</span>
+                </label>
+              </div>
+            </CardContent>
+          </Card>
 
           {calculation && (
             <Card>
