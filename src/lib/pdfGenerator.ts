@@ -9,10 +9,17 @@ type PayrollRecord = Tables<"payroll_records"> & {
     tax_code?: string;
     hire_date?: string;
     employee_type?: string;
-    national_contract_type?: string;
     working_hours?: number;
     inps_position?: string;
     inail_position?: string;
+    ccnl_contracts?: {
+      name: string;
+      inps_rate?: number;
+      inail_rate?: number;
+      thirteenth_salary?: boolean;
+      fourteenth_salary?: boolean;
+      meal_voucher_amount?: number;
+    };
   };
 };
 
@@ -47,9 +54,10 @@ export const generatePayrollPDF = async (payroll: PayrollRecord) => {
   yPos += 12;
 
   // Employee Data Table
+  const ccnlContract = payroll.employees?.ccnl_contracts;
   const employeeData = [
     ["Cognome e Nome", payroll.employees?.full_name || "N/A", "Data Assunzione", payroll.employees?.hire_date || "N/A"],
-    ["Codice Fiscale", payroll.employees?.tax_code || "N/A", "CCNL", payroll.employees?.national_contract_type || "N/A"],
+    ["Codice Fiscale", payroll.employees?.tax_code || "N/A", "CCNL", ccnlContract?.name || "N/A"],
     ["Qualifica", payroll.employees?.employee_type || "N/A", "Ore Sett.", payroll.employees?.working_hours?.toString() || "N/A"],
   ];
 
@@ -82,14 +90,25 @@ export const generatePayrollPDF = async (payroll: PayrollRecord) => {
     ["100", "Retribuzione Base", "1.00", formatCurrency(payroll.base_salary), ""],
     ["200", "Straordinari", payroll.overtime_pay > 0 ? "1.00" : "", formatCurrency(payroll.overtime_pay), ""],
     ["300", "Bonus", payroll.bonuses > 0 ? "1.00" : "", formatCurrency(payroll.bonuses), ""],
-    ["910", "INPS Dipendente", "", "", formatCurrency(payroll.inps_contribution)],
-    ["920", "IRPEF", "", "", formatCurrency(payroll.irpef_tax)],
-  ].filter(row => row[3] !== "€0.00" && row[4] !== "€0.00" || row[0] === "Codice");
+  ];
+
+  // Add meal vouchers if applicable
+  if (ccnlContract?.meal_voucher_amount && ccnlContract.meal_voucher_amount > 0) {
+    competenzeData.push(["310", "Buoni Pasto", "22.00", formatCurrency(ccnlContract.meal_voucher_amount * 22), ""]);
+  }
+
+  // Add deductions
+  competenzeData.push(
+    ["910", `INPS Dipendente (${ccnlContract?.inps_rate ? (ccnlContract.inps_rate).toFixed(2) : '9.19'}%)`, "", "", formatCurrency(payroll.inps_contribution)],
+    ["920", "IRPEF", "", "", formatCurrency(payroll.irpef_tax)]
+  );
+
+  const filteredCompetenzeData = competenzeData.filter(row => row[3] !== "€0.00" && row[4] !== "€0.00" || row[0] === "Codice");
 
   autoTable(doc, {
     startY: yPos,
-    head: [competenzeData[0]],
-    body: competenzeData.slice(1),
+    head: [filteredCompetenzeData[0]],
+    body: filteredCompetenzeData.slice(1),
     theme: "striped",
     styles: { fontSize: 8, cellPadding: 2 },
     headStyles: { fillColor: [100, 100, 100], textColor: 255 },
@@ -98,13 +117,16 @@ export const generatePayrollPDF = async (payroll: PayrollRecord) => {
   yPos = (doc as any).lastAutoTable.finalY + 3;
 
   // Contribution Summary
-  const totalContributions = payroll.inps_contribution;
-  const employerINPS = payroll.base_salary * 0.30; // 30% employer contribution
+  const inpsRate = ccnlContract?.inps_rate || 0.0919;
+  const inailRate = ccnlContract?.inail_rate || 0.015;
+  const employerINPS = payroll.base_salary * 0.3008; // 30.08% employer contribution
   const totalINPS = payroll.inps_contribution + employerINPS;
+  const inailContribution = payroll.base_salary * inailRate;
+  const totalContributions = payroll.inps_contribution + inailContribution;
 
   const contributionData = [
     ["Impon. Previdenz.", formatCurrency(payroll.base_salary), "Ctr. Previdenziale", formatCurrency(payroll.inps_contribution), "Tot. Ctr. Previd.", formatCurrency(totalINPS)],
-    ["Impon. INAIL", formatCurrency(payroll.base_salary), "Ctr. INAIL", formatCurrency(payroll.base_salary * 0.0125), "Tot. Contributi", formatCurrency(totalContributions)],
+    ["Impon. INAIL", formatCurrency(payroll.base_salary), `Ctr. INAIL (${(inailRate * 100).toFixed(2)}%)`, formatCurrency(inailContribution), "Tot. Contributi", formatCurrency(totalContributions)],
   ];
 
   autoTable(doc, {
@@ -154,6 +176,43 @@ export const generatePayrollPDF = async (payroll: PayrollRecord) => {
   });
 
   yPos = (doc as any).lastAutoTable.finalY + 10;
+
+  // CCNL Info Section
+  if (ccnlContract) {
+    doc.setFillColor(230, 230, 230);
+    doc.rect(14, yPos, pageWidth - 28, 8, "F");
+    doc.setFont("helvetica", "bold");
+    doc.text("DATI CONTRATTO CCNL", 16, yPos + 5);
+    
+    yPos += 12;
+
+    const ccnlInfoData = [
+      ["Contratto", ccnlContract.name],
+      ["Aliquota INPS", `${(inpsRate * 100).toFixed(2)}%`],
+      ["Aliquota INAIL", `${(inailRate * 100).toFixed(2)}%`],
+      ["Tredicesima", ccnlContract.thirteenth_salary ? "Sì" : "No"],
+    ];
+
+    if (ccnlContract.fourteenth_salary) {
+      ccnlInfoData.push(["Quattordicesima", "Sì"]);
+    }
+
+    if (ccnlContract.meal_voucher_amount && ccnlContract.meal_voucher_amount > 0) {
+      ccnlInfoData.push(["Buoni Pasto", `${formatCurrency(ccnlContract.meal_voucher_amount)} al giorno`]);
+    }
+
+    autoTable(doc, {
+      startY: yPos,
+      body: ccnlInfoData,
+      theme: "grid",
+      styles: { fontSize: 8, cellPadding: 2 },
+      columnStyles: {
+        0: { fontStyle: "bold", cellWidth: 50 },
+      },
+    });
+
+    yPos = (doc as any).lastAutoTable.finalY + 10;
+  }
 
   // TFR Section
   doc.setFillColor(230, 230, 230);

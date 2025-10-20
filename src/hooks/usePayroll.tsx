@@ -6,6 +6,20 @@ import { Tables } from "@/integrations/supabase/types";
 type PayrollRecord = Tables<"payroll_records"> & {
   employees?: {
     full_name: string;
+    tax_code?: string;
+    hire_date?: string;
+    employee_type?: string;
+    working_hours?: number;
+    inps_position?: string;
+    inail_position?: string;
+    ccnl_contracts?: {
+      name: string;
+      inps_rate?: number;
+      inail_rate?: number;
+      thirteenth_salary?: boolean;
+      fourteenth_salary?: boolean;
+      meal_voucher_amount?: number;
+    };
   };
 };
 
@@ -21,7 +35,21 @@ export const usePayroll = (month: number, year: number, companyId?: string) => {
         .select(`
           *,
           employees (
-            full_name
+            full_name,
+            tax_code,
+            hire_date,
+            employee_type,
+            working_hours,
+            inps_position,
+            inail_position,
+            ccnl_contracts:ccnl_contract_id (
+              name,
+              inps_rate,
+              inail_rate,
+              thirteenth_salary,
+              fourteenth_salary,
+              meal_voucher_amount
+            )
           )
         `)
         .eq("month", month)

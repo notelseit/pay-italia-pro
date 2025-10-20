@@ -356,34 +356,24 @@ const Payroll = () => {
                             <Eye className="mr-1 h-3 w-3" />
                             Visualizza
                           </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleEdit(record)}
+                            title="Modifica cedolino"
+                          >
+                            <Edit className="mr-1 h-3 w-3" />
+                            Modifica
+                          </Button>
                           {record.status === "bozza" && (
-                            <>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => handleEdit(record)}
-                                title="Modifica cedolino"
-                              >
-                                <Edit className="mr-1 h-3 w-3" />
-                                Modifica
-                              </Button>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => handleConfirm(record.id)}
-                              >
-                                <CheckCircle className="mr-1 h-3 w-3" />
-                                Conferma
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => handleDelete(record.id)}
-                                title="Elimina cedolino"
-                              >
-                                <Trash2 className="h-3 w-3 text-destructive" />
-                              </Button>
-                            </>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleConfirm(record.id)}
+                            >
+                              <CheckCircle className="mr-1 h-3 w-3" />
+                              Conferma
+                            </Button>
                           )}
                           {record.status === "confermato" && (
                             <Button 
@@ -400,6 +390,14 @@ const Payroll = () => {
                               <Download className="h-4 w-4" />
                             </Button>
                           )}
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleDelete(record.id)}
+                            title="Elimina cedolino"
+                          >
+                            <Trash2 className="h-3 w-3 text-destructive" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
