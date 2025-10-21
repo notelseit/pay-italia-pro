@@ -41,7 +41,7 @@ const Companies = () => {
       // Superadmins see all, admins see only their created companies
       const { data, error } = await supabase
         .from("companies")
-        .select("*, profiles:profiles!companies_created_by_fkey(count)")
+        .select("*")
         .order("created_at", { ascending: false });
       
       if (error) throw error;
