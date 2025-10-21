@@ -89,8 +89,8 @@ const Navbar = () => {
               {/* Gestione Aziende - per admin */}
               {hasRole("admin") && (
                 <Button
-                  variant={location.pathname === "/superadmin" ? "secondary" : "ghost"}
-                  onClick={() => navigate("#")}
+                  variant={location.pathname === "/companies" ? "secondary" : "ghost"}
+                  onClick={() => navigate("/companies")}
                   className="text-sm"
                 >
                   Gestione Aziende

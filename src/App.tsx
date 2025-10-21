@@ -73,7 +73,7 @@ const AppContent = () => {
         </ProtectedRoute>
       } />
       <Route path="/settings" element={
-        <ProtectedRoute requireRole={['admin', 'hr_manager', 'employee']}>
+        <ProtectedRoute requireRole={['admin', 'hr_manager']}>
           <Settings />
         </ProtectedRoute>
       } />
