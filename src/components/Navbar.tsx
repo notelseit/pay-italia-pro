@@ -35,6 +35,13 @@ const Navbar = () => {
     { path: "/payroll", label: "Cedolini", roles: ["admin", "hr_manager", "employee"] },
   ];
 
+  const navItems = [
+    { path: "/compliance", label: "Adempimenti Fiscali", roles: ["admin", "hr_manager"] },
+    { path: "/documents", label: "Documenti", roles: ["admin", "hr_manager"] },
+    { path: "/reports", label: "Report", roles: ["admin", "hr_manager"] },
+    { path: "/settings", label: "Impostazioni", roles: ["admin", "hr_manager"] },
+  ];
+
   const visibleNavItems = navItems.filter((item) => item.roles.some((role) => hasRole(role)));
 
   const visibleEmployeeMenuItems = employeeMenuItems.filter((item) => item.roles.some((role) => hasRole(role)));
