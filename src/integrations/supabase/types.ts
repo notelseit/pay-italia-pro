@@ -593,6 +593,86 @@ export type Database = {
           },
         ]
       }
+      employment_contracts: {
+        Row: {
+          additional_clauses: string | null
+          base_salary: number
+          benefits: string | null
+          company_id: string
+          contract_name: string
+          contract_type: string
+          created_at: string
+          created_by: string | null
+          employee_id: string | null
+          end_date: string | null
+          id: string
+          is_active: boolean | null
+          is_template: boolean | null
+          job_description: string | null
+          job_title: string | null
+          notice_period_days: number | null
+          start_date: string
+          trial_period_days: number | null
+          updated_at: string
+          work_location: string | null
+          working_hours: number
+        }
+        Insert: {
+          additional_clauses?: string | null
+          base_salary: number
+          benefits?: string | null
+          company_id: string
+          contract_name: string
+          contract_type: string
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_template?: boolean | null
+          job_description?: string | null
+          job_title?: string | null
+          notice_period_days?: number | null
+          start_date: string
+          trial_period_days?: number | null
+          updated_at?: string
+          work_location?: string | null
+          working_hours?: number
+        }
+        Update: {
+          additional_clauses?: string | null
+          base_salary?: number
+          benefits?: string | null
+          company_id?: string
+          contract_name?: string
+          contract_type?: string
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_template?: boolean | null
+          job_description?: string | null
+          job_title?: string | null
+          notice_period_days?: number | null
+          start_date?: string
+          trial_period_days?: number | null
+          updated_at?: string
+          work_location?: string | null
+          working_hours?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employment_contracts_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ftp_upload_logs: {
         Row: {
           company_id: string

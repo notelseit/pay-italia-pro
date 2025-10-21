@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { Calendar, Euro, Clock, FileText, User } from "lucide-react";
+import { Calendar, Euro, Clock, FileText, User, Briefcase, MapPin } from "lucide-react";
 
 interface ContractDialogProps {
   open: boolean;
@@ -33,8 +33,17 @@ export const ContractDialog = ({ open, onOpenChange, contract }: ContractDialogP
           {/* Header Info */}
           <div className="flex items-start justify-between">
             <div>
-              <h3 className="text-xl font-semibold">{contract.full_name}</h3>
-              <p className="text-sm text-muted-foreground">{contract.email}</p>
+              <h3 className="text-xl font-semibold">{contract.contract_name}</h3>
+              {contract.employees && (
+                <p className="text-sm text-muted-foreground">
+                  {contract.employees.full_name} - {contract.employees.email}
+                </p>
+              )}
+              {contract.is_template && (
+                <Badge variant="outline" className="mt-2">
+                  Modello
+                </Badge>
+              )}
             </div>
             <Badge variant={contract.is_active ? "default" : "secondary"}>
               {contract.is_active ? "Attivo" : "Cessato"}
@@ -59,20 +68,32 @@ export const ContractDialog = ({ open, onOpenChange, contract }: ContractDialogP
               <div className="flex items-start gap-3">
                 <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Data Assunzione</p>
+                  <p className="text-sm font-medium text-muted-foreground">Data Inizio</p>
                   <p className="text-base font-semibold">
-                    {contract.hire_date
-                      ? format(new Date(contract.hire_date), "dd MMMM yyyy", { locale: it })
+                    {contract.start_date
+                      ? format(new Date(contract.start_date), "dd MMMM yyyy", { locale: it })
                       : "-"}
                   </p>
                 </div>
               </div>
 
+              {contract.end_date && (
+                <div className="flex items-start gap-3">
+                  <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Data Fine</p>
+                    <p className="text-base font-semibold">
+                      {format(new Date(contract.end_date), "dd MMMM yyyy", { locale: it })}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-start gap-3">
-                <User className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <Briefcase className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Codice Fiscale</p>
-                  <p className="text-base font-semibold">{contract.tax_code}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Qualifica</p>
+                  <p className="text-base font-semibold">{contract.job_title || "-"}</p>
                 </div>
               </div>
             </div>
@@ -99,10 +120,10 @@ export const ContractDialog = ({ open, onOpenChange, contract }: ContractDialogP
               </div>
 
               <div className="flex items-start gap-3">
-                <User className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Tipo Dipendente</p>
-                  <p className="text-base font-semibold">{contract.employee_type || "-"}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Luogo di Lavoro</p>
+                  <p className="text-base font-semibold">{contract.work_location || "-"}</p>
                 </div>
               </div>
             </div>
@@ -110,70 +131,56 @@ export const ContractDialog = ({ open, onOpenChange, contract }: ContractDialogP
 
           <Separator />
 
+          {/* Job Description */}
+          {contract.job_description && (
+            <>
+              <Separator />
+              <div className="space-y-4">
+                <h4 className="font-semibold">Descrizione Mansioni</h4>
+                <p className="text-sm whitespace-pre-wrap">{contract.job_description}</p>
+              </div>
+            </>
+          )}
+
+          {/* Benefits */}
+          {contract.benefits && (
+            <>
+              <Separator />
+              <div className="space-y-4">
+                <h4 className="font-semibold">Benefit e Trattamento Economico</h4>
+                <p className="text-sm whitespace-pre-wrap">{contract.benefits}</p>
+              </div>
+            </>
+          )}
+
           {/* Additional Information */}
-          <div className="space-y-4">
-            <h4 className="font-semibold">Informazioni Aggiuntive</h4>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Posizione INPS</p>
-                <p className="text-sm">{contract.inps_position || "-"}</p>
-              </div>
-
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Posizione INAIL</p>
-                <p className="text-sm">{contract.inail_position || "-"}</p>
-              </div>
-
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Fondo Pensione</p>
-                <p className="text-sm">{contract.pension_fund || "-"}</p>
-              </div>
-
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Categoria Pagamento</p>
-                <p className="text-sm">{contract.payment_category || "-"}</p>
-              </div>
-
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">IBAN</p>
-                <p className="text-sm font-mono">{contract.iban || "-"}</p>
-              </div>
-
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Familiari a Carico</p>
-                <p className="text-sm">{contract.dependents_count || 0}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Contact Information */}
           <Separator />
-          
           <div className="space-y-4">
-            <h4 className="font-semibold">Contatti</h4>
+            <h4 className="font-semibold">Dettagli Contrattuali</h4>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Telefono</p>
-                <p className="text-sm">{contract.phone || "-"}</p>
+                <p className="text-sm font-medium text-muted-foreground">Periodo di Prova</p>
+                <p className="text-sm">{contract.trial_period_days} giorni</p>
               </div>
 
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Email</p>
-                <p className="text-sm">{contract.email}</p>
-              </div>
-
-              <div className="md:col-span-2">
-                <p className="text-sm font-medium text-muted-foreground">Indirizzo</p>
-                <p className="text-sm">
-                  {contract.city && contract.province
-                    ? `${contract.city} (${contract.province}), ${contract.postal_code || ""} - ${contract.country || "Italia"}`
-                    : "-"}
-                </p>
+                <p className="text-sm font-medium text-muted-foreground">Preavviso</p>
+                <p className="text-sm">{contract.notice_period_days} giorni</p>
               </div>
             </div>
           </div>
+
+          {/* Additional Clauses */}
+          {contract.additional_clauses && (
+            <>
+              <Separator />
+              <div className="space-y-4">
+                <h4 className="font-semibold">Clausole Aggiuntive</h4>
+                <p className="text-sm whitespace-pre-wrap">{contract.additional_clauses}</p>
+              </div>
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>
