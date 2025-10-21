@@ -19,6 +19,7 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Documents from "./pages/Documents";
 import SuperAdmin from "./pages/SuperAdmin";
+import Companies from "./pages/Companies";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -79,6 +80,11 @@ const AppContent = () => {
       <Route path="/superadmin" element={
         <ProtectedRoute requireRole={['superadmin']}>
           <SuperAdmin />
+        </ProtectedRoute>
+      } />
+      <Route path="/companies" element={
+        <ProtectedRoute requireRole={['admin', 'superadmin']}>
+          <Companies />
         </ProtectedRoute>
       } />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

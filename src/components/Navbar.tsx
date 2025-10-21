@@ -1,11 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
-import { FileText, LogOut, Settings, Shield } from "lucide-react";
+import { FileText, LogOut, Settings, Shield, ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -20,15 +23,23 @@ const Navbar = () => {
 
   const navItems = [
     { path: "/dashboard", label: "Dashboard", roles: ["admin", "hr_manager", "employee"] },
-    { path: "/employees", label: "Dipendenti", roles: ["admin", "hr_manager", "employee"] },
+  ];
+
+  const employeeMenuItems = [
+    { path: "/employees", label: "Elenco Dipendenti", roles: ["admin", "hr_manager", "employee"] },
     { path: "/presence", label: "Presenze", roles: ["admin", "hr_manager", "employee"] },
     { path: "/payroll", label: "Cedolini", roles: ["admin", "hr_manager", "employee"] },
     { path: "/compliance", label: "Adempimenti Fiscali", roles: ["admin", "hr_manager"] },
     { path: "/documents", label: "Documenti", roles: ["admin", "hr_manager"] },
     { path: "/reports", label: "Report", roles: ["admin", "hr_manager"] },
+    { path: "/settings", label: "Gestione Azienda", roles: ["admin", "hr_manager"] },
   ];
 
   const visibleNavItems = navItems.filter(item => 
+    item.roles.some(role => hasRole(role))
+  );
+
+  const visibleEmployeeMenuItems = employeeMenuItems.filter(item => 
     item.roles.some(role => hasRole(role))
   );
 
@@ -56,6 +67,46 @@ const Navbar = () => {
                   {item.label}
                 </Button>
               ))}
+              
+              {/* Dropdown Menu Dipendenti */}
+              {visibleEmployeeMenuItems.length > 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant={
+                        ["/employees", "/presence", "/payroll", "/compliance", "/documents", "/reports", "/settings"].includes(location.pathname)
+                          ? "secondary"
+                          : "ghost"
+                      }
+                      className="text-sm gap-1"
+                    >
+                      Dipendenti
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    {visibleEmployeeMenuItems.map((item) => (
+                      <DropdownMenuItem
+                        key={item.path}
+                        onClick={() => navigate(item.path)}
+                      >
+                        {item.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+
+              {/* Gestione Aziende - per admin */}
+              {hasRole("admin") && (
+                <Button
+                  variant={location.pathname === "/companies" ? "secondary" : "ghost"}
+                  onClick={() => navigate("/companies")}
+                  className="text-sm"
+                >
+                  Gestione Aziende
+                </Button>
+              )}
             </div>
           </div>
 
@@ -73,9 +124,6 @@ const Navbar = () => {
                     Pannello SuperAdmin
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem onClick={() => navigate("/settings")}>
-                  Impostazioni
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Esci
