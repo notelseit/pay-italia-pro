@@ -86,8 +86,8 @@ const Navbar = () => {
                 </DropdownMenu>
               )}
 
-              {/* Gestione Aziende - per admin */}
-              {hasRole("admin") && (
+              {/* Gestione Aziende - solo per superadmin */}
+              {isSuperAdmin && (
                 <Button
                   variant={location.pathname === "/companies" ? "secondary" : "ghost"}
                   onClick={() => navigate("/companies")}
