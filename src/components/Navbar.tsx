@@ -6,9 +6,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -21,47 +18,55 @@ const Navbar = () => {
     await signOut();
   };
 
+  // Dashboard
+  const dashboardItem = { path: "/dashboard", label: "Dashboard", roles: ["admin", "hr_manager", "employee"] };
+
+  // Menu Dipendenti (sottomenu)
   const employeeMenuItems = [
     { path: "/employees", label: "Elenco Dipendenti", roles: ["admin", "hr_manager", "employee"] },
     { path: "/presence", label: "Presenze", roles: ["admin", "hr_manager", "employee"] },
     { path: "/payroll", label: "Cedolini", roles: ["admin", "hr_manager", "employee"] },
+  ];
+
+  // Voci di sistema
+  const systemItems = [
     { path: "/compliance", label: "Adempimenti Fiscali", roles: ["admin", "hr_manager"] },
     { path: "/documents", label: "Documenti", roles: ["admin", "hr_manager"] },
     { path: "/reports", label: "Report", roles: ["admin", "hr_manager"] },
-  ];
-
-  const navItems = [
-    { path: "/companies", label: "Gestione Aziende", roles: ["admin", "superadmin"] },
     { path: "/settings", label: "Impostazioni", roles: ["admin", "hr_manager"] },
   ];
 
-  const visibleNavItems = navItems.filter((item) => item.roles.some((role) => hasRole(role)));
-
+  // Filtriamo in base ai ruoli
+  const canSeeDashboard = dashboardItem.roles.some((role) => hasRole(role));
   const visibleEmployeeMenuItems = employeeMenuItems.filter((item) => item.roles.some((role) => hasRole(role)));
+  const visibleSystemItems = systemItems.filter((item) => item.roles.some((role) => hasRole(role)));
 
   return (
     <nav className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-8">
+            {/* Logo */}
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/dashboard")}>
               <FileText className="h-6 w-6 text-primary" />
               <h1 className="text-xl font-bold text-foreground">PayHub</h1>
             </div>
 
+            {/* Menu principale */}
             <div className="hidden md:flex items-center gap-1">
-              {visibleNavItems.map((item) => (
+              {/* Dashboard */}
+              {canSeeDashboard && (
                 <Button
-                  key={item.path}
-                  variant={location.pathname === item.path ? "secondary" : "ghost"}
-                  onClick={() => navigate(item.path)}
+                  key={dashboardItem.path}
+                  variant={location.pathname === dashboardItem.path ? "secondary" : "ghost"}
+                  onClick={() => navigate(dashboardItem.path)}
                   className="text-sm"
                 >
-                  {item.label}
+                  {dashboardItem.label}
                 </Button>
-              ))}
+              )}
 
-              {/* Dropdown Menu Dipendenti */}
+              {/* Dropdown Dipendenti */}
               {visibleEmployeeMenuItems.length > 0 && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -85,19 +90,32 @@ const Navbar = () => {
                 </DropdownMenu>
               )}
 
-              {/* Gestione Aziende - per admin 
+              {/* Voci di sistema */}
+              {visibleSystemItems.map((item) => (
+                <Button
+                  key={item.path}
+                  variant={location.pathname === item.path ? "secondary" : "ghost"}
+                  onClick={() => navigate(item.path)}
+                  className="text-sm"
+                >
+                  {item.label}
+                </Button>
+              ))}
+
+              {/* Gestione Aziende solo per admin */}
               {hasRole("admin") && (
                 <Button
-                  variant={location.pathname === "/superadmin" ? "secondary" : "ghost"}
+                  variant={location.pathname === "/companies" ? "secondary" : "ghost"}
                   onClick={() => navigate("/companies")}
                   className="text-sm"
                 >
                   Gestione Aziende
                 </Button>
-              )} */}
+              )}
             </div>
           </div>
 
+          {/* Menu impostazioni */}
           <div className="flex items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
