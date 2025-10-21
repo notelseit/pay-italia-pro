@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import Employees from "./pages/Employees";
 import Presence from "./pages/Presence";
 import Payroll from "./pages/Payroll";
+import Contract from "./pages/Contract";
 import Compliance from "./pages/Compliance";
 import F24 from "./pages/F24";
 import Reports from "./pages/Reports";
@@ -50,6 +51,11 @@ const AppContent = () => {
       <Route path="/payroll" element={
         <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda', 'hr_manager', 'employee']}>
           <Payroll />
+        </ProtectedRoute>
+      } />
+      <Route path="/contract" element={
+        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda', 'hr_manager', 'employee']}>
+          <Contract />
         </ProtectedRoute>
       } />
       <Route path="/compliance" element={
