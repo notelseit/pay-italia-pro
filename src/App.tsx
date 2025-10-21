@@ -33,47 +33,47 @@ const AppContent = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/dashboard" element={
-        <ProtectedRoute requireRole={['admin', 'hr_manager', 'employee']}>
+        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda', 'hr_manager', 'employee']}>
           <Dashboard />
         </ProtectedRoute>
       } />
       <Route path="/employees" element={
-        <ProtectedRoute requireRole={['admin', 'hr_manager', 'employee']}>
+        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda', 'hr_manager', 'employee']}>
           <Employees />
         </ProtectedRoute>
       } />
       <Route path="/presence" element={
-        <ProtectedRoute requireRole={['admin', 'hr_manager', 'employee']}>
+        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda', 'hr_manager', 'employee']}>
           <Presence />
         </ProtectedRoute>
       } />
       <Route path="/payroll" element={
-        <ProtectedRoute requireRole={['admin', 'hr_manager', 'employee']}>
+        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda', 'hr_manager', 'employee']}>
           <Payroll />
         </ProtectedRoute>
       } />
       <Route path="/compliance" element={
-        <ProtectedRoute requireRole={['admin', 'hr_manager']}>
+        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda']}>
           <Compliance />
         </ProtectedRoute>
       } />
       <Route path="/compliance/f24" element={
-        <ProtectedRoute requireRole={['admin', 'hr_manager']}>
+        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda']}>
           <F24 />
         </ProtectedRoute>
       } />
       <Route path="/reports" element={
-        <ProtectedRoute requireRole={['admin', 'hr_manager']}>
+        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda', 'hr_manager']}>
           <Reports />
         </ProtectedRoute>
       } />
       <Route path="/documents" element={
-        <ProtectedRoute requireRole={['admin', 'hr_manager']}>
+        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda', 'hr_manager']}>
           <Documents />
         </ProtectedRoute>
       } />
       <Route path="/settings" element={
-        <ProtectedRoute requireRole={['admin', 'hr_manager']}>
+        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda']}>
           <Settings />
         </ProtectedRoute>
       } />
@@ -83,7 +83,7 @@ const AppContent = () => {
         </ProtectedRoute>
       } />
       <Route path="/companies" element={
-        <ProtectedRoute requireRole={['superadmin']}>
+        <ProtectedRoute requireRole={['superadmin', 'admin']}>
           <Companies />
         </ProtectedRoute>
       } />

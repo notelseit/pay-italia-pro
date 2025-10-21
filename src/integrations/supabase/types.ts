@@ -1019,7 +1019,12 @@ export type Database = {
         | "welcome"
         | "notification"
       payroll_status: "bozza" | "generato" | "inviato" | "confermato"
-      user_role: "admin" | "hr_manager" | "employee" | "superadmin"
+      user_role:
+        | "admin"
+        | "hr_manager"
+        | "employee"
+        | "superadmin"
+        | "admin_sub_azienda"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1162,7 +1167,13 @@ export const Constants = {
         "notification",
       ],
       payroll_status: ["bozza", "generato", "inviato", "confermato"],
-      user_role: ["admin", "hr_manager", "employee", "superadmin"],
+      user_role: [
+        "admin",
+        "hr_manager",
+        "employee",
+        "superadmin",
+        "admin_sub_azienda",
+      ],
     },
   },
 } as const

@@ -22,18 +22,18 @@ const Navbar = () => {
   };
 
   const employeeMenuItems = [
-    { path: "/employees", label: "Elenco Dipendenti", roles: ["admin", "hr_manager", "employee"] },
-    { path: "/presence", label: "Presenze", roles: ["admin", "hr_manager", "employee"] },
-    { path: "/payroll", label: "Cedolini", roles: ["admin", "hr_manager", "employee"] },
-    { path: "/contract", label: "Contratti", roles: ["admin", "hr_manager", "employee"] },
+    { path: "/employees", label: "Elenco Dipendenti", roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager", "employee"] },
+    { path: "/presence", label: "Presenze", roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager", "employee"] },
+    { path: "/payroll", label: "Cedolini", roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager", "employee"] },
+    { path: "/contract", label: "Contratti", roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager", "employee"] },
   ];
 
   const navItems = [
-    { path: "/dashboard", label: "Dashboard", roles: ["admin", "hr_manager", "employee"] },
-    { path: "/compliance", label: "Adempimenti Fiscali", roles: ["admin", "hr_manager"] },
-    { path: "/documents", label: "Documenti", roles: ["admin", "hr_manager"] },
-    { path: "/reports", label: "Report", roles: ["admin", "hr_manager"] },
-    { path: "/settings", label: "Impostazioni", roles: ["admin", "hr_manager"] },
+    { path: "/dashboard", label: "Dashboard", roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager", "employee"] },
+    { path: "/compliance", label: "Adempimenti Fiscali", roles: ["superadmin", "admin", "admin_sub_azienda"] },
+    { path: "/documents", label: "Documenti", roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager"] },
+    { path: "/reports", label: "Report", roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager"] },
+    { path: "/settings", label: "Impostazioni", roles: ["superadmin", "admin", "admin_sub_azienda"] },
   ];
 
   const visibleNavItems = navItems.filter((item) => item.roles.some((role) => hasRole(role)));
@@ -86,8 +86,8 @@ const Navbar = () => {
                 </DropdownMenu>
               )}
 
-              {/* Gestione Aziende - solo per superadmin */}
-              {isSuperAdmin && (
+              {/* Gestione Aziende - per superadmin e admin */}
+              {(isSuperAdmin || hasRole("admin")) && (
                 <Button
                   variant={location.pathname === "/companies" ? "secondary" : "ghost"}
                   onClick={() => navigate("/companies")}
