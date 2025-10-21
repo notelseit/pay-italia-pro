@@ -33,13 +33,23 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    // Check if user is superadmin
-    const { data: isSuperAdmin } = await supabaseClient
-      .rpc('is_superadmin', { _user_id: user.id });
+    // Check if user is superadmin or admin
+    const { data: userRoles } = await supabaseClient
+      .from('user_roles')
+      .select('role, company_id')
+      .eq('user_id', user.id);
 
-    if (!isSuperAdmin) {
-      throw new Error('Only superadmins can create companies');
+    const isSuperAdmin = userRoles?.some(r => r.role === 'superadmin');
+    const isAdmin = userRoles?.some(r => r.role === 'admin');
+    
+    if (!isSuperAdmin && !isAdmin) {
+      throw new Error('Only superadmins and admins can create companies');
     }
+
+    // Get the user's company_id if they are admin (for parent_company_id)
+    const adminCompanyId = isAdmin && !isSuperAdmin 
+      ? userRoles?.find(r => r.role === 'admin')?.company_id 
+      : null;
 
     const { adminEmail, adminPassword, adminFullName, companyName, companyEmail } = await req.json();
     console.log('Creating company:', companyName, 'with admin:', adminEmail);
@@ -50,6 +60,8 @@ serve(async (req) => {
       .insert({
         name: companyName,
         email: companyEmail,
+        created_by: user.id,
+        parent_company_id: adminCompanyId,
       })
       .select()
       .single();

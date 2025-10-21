@@ -37,9 +37,11 @@ const Companies = () => {
   const { data: companies, isLoading } = useQuery({
     queryKey: ["allCompanies"],
     queryFn: async () => {
+      // The RLS policies will automatically filter companies based on user role
+      // Superadmins see all, admins see only their created companies
       const { data, error } = await supabase
         .from("companies")
-        .select("*")
+        .select("*, profiles:profiles!companies_created_by_fkey(count)")
         .order("created_at", { ascending: false });
       
       if (error) throw error;

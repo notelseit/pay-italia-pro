@@ -116,11 +116,13 @@ export type Database = {
           city: string | null
           country: string | null
           created_at: string | null
+          created_by: string | null
           default_ccnl_contract_id: string | null
           email: string | null
           id: string
           matricola_inps: string | null
           name: string
+          parent_company_id: string | null
           phone: string | null
           posizione_inail: string | null
           postal_code: string | null
@@ -135,11 +137,13 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string | null
+          created_by?: string | null
           default_ccnl_contract_id?: string | null
           email?: string | null
           id?: string
           matricola_inps?: string | null
           name: string
+          parent_company_id?: string | null
           phone?: string | null
           posizione_inail?: string | null
           postal_code?: string | null
@@ -154,11 +158,13 @@ export type Database = {
           city?: string | null
           country?: string | null
           created_at?: string | null
+          created_by?: string | null
           default_ccnl_contract_id?: string | null
           email?: string | null
           id?: string
           matricola_inps?: string | null
           name?: string
+          parent_company_id?: string | null
           phone?: string | null
           posizione_inail?: string | null
           postal_code?: string | null
@@ -174,6 +180,13 @@ export type Database = {
             columns: ["default_ccnl_contract_id"]
             isOneToOne: false
             referencedRelation: "ccnl_contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "companies_parent_company_id_fkey"
+            columns: ["parent_company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
