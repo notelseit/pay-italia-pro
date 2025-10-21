@@ -207,7 +207,6 @@ export const ContractFormDialog = ({
                       <SelectValue placeholder="Seleziona dipendente" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Nessun dipendente</SelectItem>
                       {employees?.map((emp) => (
                         <SelectItem key={emp.id} value={emp.id}>
                           {emp.full_name}
