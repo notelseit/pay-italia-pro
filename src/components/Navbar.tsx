@@ -33,11 +33,16 @@ const Navbar = () => {
     { path: "/compliance", label: "Adempimenti Fiscali", roles: ["superadmin", "admin", "admin_sub_azienda"] },
     { path: "/documents", label: "Documenti", roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager"] },
     { path: "/reports", label: "Report", roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager"] },
-    { path: "/settings", label: "Impostazioni", roles: ["superadmin", "admin", "admin_sub_azienda"] },
   ];
 
-  const visibleNavItems = navItems.filter((item) => item.roles.some((role) => hasRole(role)));
+  const settingsItem = { path: "/settings", label: "Impostazioni", roles: ["superadmin", "admin", "admin_sub_azienda"] };
 
+  const dashboardItem = navItems[0]; // Dashboard
+  const otherNavItems = navItems.slice(1); // Compliance, Documents, Reports
+  
+  const visibleDashboard = dashboardItem.roles.some((role) => hasRole(role)) ? dashboardItem : null;
+  const visibleOtherNavItems = otherNavItems.filter((item) => item.roles.some((role) => hasRole(role)));
+  const visibleSettings = settingsItem.roles.some((role) => hasRole(role)) ? settingsItem : null;
   const visibleEmployeeMenuItems = employeeMenuItems.filter((item) => item.roles.some((role) => hasRole(role)));
 
   return (
@@ -51,16 +56,16 @@ const Navbar = () => {
             </div>
 
             <div className="hidden md:flex items-center gap-1">
-              {visibleNavItems.map((item) => (
+              {/* Dashboard */}
+              {visibleDashboard && (
                 <Button
-                  key={item.path}
-                  variant={location.pathname === item.path ? "secondary" : "ghost"}
-                  onClick={() => navigate(item.path)}
+                  variant={location.pathname === visibleDashboard.path ? "secondary" : "ghost"}
+                  onClick={() => navigate(visibleDashboard.path)}
                   className="text-sm"
                 >
-                  {item.label}
+                  {visibleDashboard.label}
                 </Button>
-              ))}
+              )}
 
               {/* Dropdown Menu Dipendenti */}
               {visibleEmployeeMenuItems.length > 0 && (
@@ -68,7 +73,7 @@ const Navbar = () => {
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant={
-                        ["/employees", "/presence", "/payroll"].includes(location.pathname) ? "secondary" : "ghost"
+                        ["/employees", "/presence", "/payroll", "/contract"].includes(location.pathname) ? "secondary" : "ghost"
                       }
                       className="text-sm gap-1"
                     >
@@ -86,6 +91,18 @@ const Navbar = () => {
                 </DropdownMenu>
               )}
 
+              {/* Altri menu items: Compliance, Documents, Reports */}
+              {visibleOtherNavItems.map((item) => (
+                <Button
+                  key={item.path}
+                  variant={location.pathname === item.path ? "secondary" : "ghost"}
+                  onClick={() => navigate(item.path)}
+                  className="text-sm"
+                >
+                  {item.label}
+                </Button>
+              ))}
+
               {/* Gestione Aziende - per superadmin e admin (non admin_sub_azienda) */}
               {(isSuperAdmin || (hasRole("admin") && !hasRole("admin_sub_azienda"))) && (
                 <Button
@@ -94,6 +111,17 @@ const Navbar = () => {
                   className="text-sm"
                 >
                   Gestione Aziende
+                </Button>
+              )}
+
+              {/* Impostazioni */}
+              {visibleSettings && (
+                <Button
+                  variant={location.pathname === visibleSettings.path ? "secondary" : "ghost"}
+                  onClick={() => navigate(visibleSettings.path)}
+                  className="text-sm"
+                >
+                  {visibleSettings.label}
                 </Button>
               )}
             </div>
