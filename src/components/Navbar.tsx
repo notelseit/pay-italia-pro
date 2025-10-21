@@ -21,24 +21,17 @@ const Navbar = () => {
     await signOut();
   };
 
-  const navItems = [
-    { path: "/dashboard", label: "Dashboard", roles: ["admin", "hr_manager", "employee"] },
-    { path: "/compliance", label: "Adempimenti Fiscali", roles: ["admin", "hr_manager"] },
-    { path: "/documents", label: "Documenti", roles: ["admin", "hr_manager"] },
-    { path: "/reports", label: "Report", roles: ["admin", "hr_manager"] },
-    { path: "/settings", label: "Impostazioni", roles: ["admin", "hr_manager"] },
-  ];
-
   const employeeMenuItems = [
     { path: "/employees", label: "Elenco Dipendenti", roles: ["admin", "hr_manager", "employee"] },
     { path: "/presence", label: "Presenze", roles: ["admin", "hr_manager", "employee"] },
     { path: "/payroll", label: "Cedolini", roles: ["admin", "hr_manager", "employee"] },
-  ];
-
-  const navItems = [
     { path: "/compliance", label: "Adempimenti Fiscali", roles: ["admin", "hr_manager"] },
     { path: "/documents", label: "Documenti", roles: ["admin", "hr_manager"] },
     { path: "/reports", label: "Report", roles: ["admin", "hr_manager"] },
+  ];
+
+  const navItems = [
+    { path: "/companies", label: "Gestione Aziende", roles: ["admin", "superadmin"] },
     { path: "/settings", label: "Impostazioni", roles: ["admin", "hr_manager"] },
   ];
 
