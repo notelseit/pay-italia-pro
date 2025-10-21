@@ -16,7 +16,6 @@ export const useCCNLContracts = (companyId?: string) => {
       const { data, error } = await supabase
         .from("ccnl_contracts")
         .select("*")
-        .eq("company_id", companyId!)
         .eq("is_active", true)
         .order("name", { ascending: true });
 
