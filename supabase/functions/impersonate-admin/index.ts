@@ -98,6 +98,9 @@ serve(async (req) => {
     const { data: sessionData, error: sessionError } = await supabaseClient.auth.admin.generateLink({
       type: 'magiclink',
       email: profile.email,
+      options: {
+        redirectTo: `${Deno.env.get('SUPABASE_URL')?.replace('https://cmuexgntkizquulskuzd.supabase.co', 'https://pay-italia-pro.lovable.app')}/dashboard`
+      }
     });
 
     if (sessionError) {
