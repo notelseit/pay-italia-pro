@@ -25,6 +25,7 @@ const Navbar = () => {
     { path: "/employees", label: "Elenco Dipendenti", roles: ["admin", "hr_manager", "employee"] },
     { path: "/presence", label: "Presenze", roles: ["admin", "hr_manager", "employee"] },
     { path: "/payroll", label: "Cedolini", roles: ["admin", "hr_manager", "employee"] },
+    { path: "/contract", label: "Contratti", roles: ["admin", "hr_manager", "employee"] },
   ];
 
   const navItems = [
@@ -89,7 +90,7 @@ const Navbar = () => {
               {hasRole("admin") && (
                 <Button
                   variant={location.pathname === "/superadmin" ? "secondary" : "ghost"}
-                  onClick={() => navigate("/superadmin")}
+                  onClick={() => navigate("#")}
                   className="text-sm"
                 >
                   Gestione Aziende
