@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Building2, UserPlus, Edit, Trash2 } from "lucide-react";
+import { Building2, UserPlus, Edit, Trash2, LogIn } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { z } from "zod";
 
@@ -193,6 +193,40 @@ const Companies = () => {
     }
   };
 
+  const accessCompanyMutation = useMutation({
+    mutationFn: async (companyId: string) => {
+      const { data, error } = await supabase.functions.invoke("impersonate-admin", {
+        body: { companyId },
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      if (data.redirectUrl) {
+        toast({
+          title: "Accesso in corso...",
+          description: "Verrai reindirizzato all'azienda selezionata",
+        });
+        // Reindirizza al magic link per effettuare il login come admin di quell'azienda
+        setTimeout(() => {
+          window.location.href = data.redirectUrl;
+        }, 1000);
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Errore",
+        description: error.message || "Impossibile accedere all'azienda",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleAccessCompany = (companyId: string) => {
+    accessCompanyMutation.mutate(companyId);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -290,6 +324,14 @@ const Companies = () => {
                       <TableCell>{company.city || "-"}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleAccessCompany(company.id)}
+                            title="Accedi all'azienda"
+                          >
+                            <LogIn className="h-4 w-4 text-primary" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="icon"

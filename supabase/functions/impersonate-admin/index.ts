@@ -33,18 +33,31 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    // Check if user is superadmin
+    // Check if user is superadmin or admin
     const { data: isSuperAdmin } = await supabaseClient
       .rpc('is_superadmin', { _user_id: user.id });
-
-    if (!isSuperAdmin) {
-      throw new Error('Only superadmins can impersonate users');
-    }
 
     const { companyId } = await req.json();
 
     if (!companyId) {
       throw new Error('Company ID is required');
+    }
+
+    // If not superadmin, check if user is admin and owns this company
+    if (!isSuperAdmin) {
+      const { data: company, error: companyError } = await supabaseClient
+        .from('companies')
+        .select('created_by')
+        .eq('id', companyId)
+        .single();
+
+      if (companyError || !company) {
+        throw new Error('Company not found');
+      }
+
+      if (company.created_by !== user.id) {
+        throw new Error('You can only access companies you created');
+      }
     }
 
     // Get the admin user for this company
@@ -54,7 +67,7 @@ serve(async (req) => {
       .from('user_roles')
       .select('user_id, company_id, role')
       .eq('company_id', companyId)
-      .eq('role', 'admin')
+      .in('role', ['admin', 'admin_sub_azienda'])
       .limit(1)
       .single();
 
@@ -92,7 +105,7 @@ serve(async (req) => {
       throw sessionError;
     }
 
-    console.log(`SuperAdmin ${user.email} impersonating admin ${profile.email} for company ${companyId}`);
+    console.log(`User ${user.email} accessing company ${companyId} as ${profile.email}`);
 
     return new Response(
       JSON.stringify({ 
