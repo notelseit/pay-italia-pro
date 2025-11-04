@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,7 +21,23 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const systemPrompt = `Sei un assistente virtuale per un sistema di gestione HR e paghe aziendali. 
+    // Create Supabase client
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // Fetch HR news sources
+    const { data: sources } = await supabase
+      .from('hr_news_sources')
+      .select('*')
+      .eq('is_active', true);
+
+    const sourcesInfo = sources && sources.length > 0
+      ? `\n\nFonti di informazioni aggiuntive da consultare quando necessario:\n${sources.map((s: { name: string; url: string; description: string | null }) => `- ${s.name}: ${s.url}${s.description ? ` (${s.description})` : ''}`).join('\n')}`
+      : '';
+
+    const systemPrompt = `Sei un assistente virtuale per un sistema di gestione HR e paghe aziendali italiano. 
     
 Il sistema include le seguenti funzionalità:
 - **Gestione Dipendenti**: anagrafica completa, dati CCNL, cittadinanza, istruzione, dati payroll
@@ -43,6 +60,8 @@ Quando rispondi:
 4. Se non sei sicuro, ammettilo e suggerisci di contattare il supporto
 5. Offri guide passo-passo quando appropriato
 6. Menziona le sezioni specifiche dell'app quando rilevanti
+7. Per informazioni su normative recenti o aggiornamenti specifici, puoi fare riferimento alle fonti ufficiali configurate
+8. Se hai bisogno di informazioni aggiornate sulla normativa HR italiana, menziona che puoi consultare fonti autorevoli${sourcesInfo}
 
 Rispondi sempre in italiano.`;
 

@@ -10,11 +10,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Building2, Plus, Users, Edit, LogIn, Trash2, FileText } from "lucide-react";
+import { Building2, Plus, Users, Edit, LogIn, Trash2, FileText, Globe } from "lucide-react";
 import { z } from "zod";
 import Navbar from "@/components/Navbar";
 import { useNavigate } from "react-router-dom";
 import { LogsTab } from "@/components/superadmin/LogsTab";
+import { HRSourcesTab } from "@/components/superadmin/HRSourcesTab";
 
 const createCompanySchema = z.object({
   companyName: z.string().min(2, "Nome azienda richiesto"),
@@ -391,10 +392,14 @@ const SuperAdmin = () => {
         </div>
 
         <Tabs defaultValue="companies" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="companies" className="gap-2">
               <Building2 className="h-4 w-4" />
               Aziende
+            </TabsTrigger>
+            <TabsTrigger value="sources" className="gap-2">
+              <Globe className="h-4 w-4" />
+              Fonti HR
             </TabsTrigger>
             <TabsTrigger value="logs" className="gap-2">
               <FileText className="h-4 w-4" />
@@ -483,6 +488,10 @@ const SuperAdmin = () => {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="sources">
+            <HRSourcesTab />
           </TabsContent>
 
           <TabsContent value="logs">

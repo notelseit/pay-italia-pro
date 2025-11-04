@@ -714,6 +714,36 @@ export type Database = {
           },
         ]
       }
+      hr_news_sources: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+          url: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+          url: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string | null
+          url?: string
+        }
+        Relationships: []
+      }
       payroll_records: {
         Row: {
           base_salary: number
@@ -1068,10 +1098,7 @@ export type Database = {
         }
         Returns: string
       }
-      get_user_company: {
-        Args: { _user_id: string }
-        Returns: string
-      }
+      get_user_company: { Args: { _user_id: string }; Returns: string }
       has_role_in_company: {
         Args: {
           _company_id: string
@@ -1080,10 +1107,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_superadmin: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
+      is_superadmin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       absence_type: "ferie" | "malattia" | "permesso" | "congedo_parentale"
