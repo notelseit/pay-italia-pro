@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { useAccessLogger } from "@/hooks/useAccessLogger";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { Chatbot } from "@/components/Chatbot";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
@@ -107,6 +108,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <AppContent />
+          <Chatbot />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
