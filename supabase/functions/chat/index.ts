@@ -34,7 +34,12 @@ serve(async (req) => {
       .eq('is_active', true);
 
     const sourcesInfo = sources && sources.length > 0
-      ? `\n\nFonti di informazioni aggiuntive da consultare quando necessario:\n${sources.map((s: { name: string; url: string; description: string | null }) => `- ${s.name}: ${s.url}${s.description ? ` (${s.description})` : ''}`).join('\n')}`
+      ? `\n\nFonti di informazioni aggiuntive da consultare quando necessario:\n${sources.map((s: { name: string; url: string | null; description: string | null; file_name: string | null }) => {
+          if (s.file_name) {
+            return `- ${s.name}: Documento ${s.file_name}${s.description ? ` (${s.description})` : ''}`;
+          }
+          return `- ${s.name}: ${s.url}${s.description ? ` (${s.description})` : ''}`;
+        }).join('\n')}`
       : '';
 
     const systemPrompt = `Sei un assistente virtuale per un sistema di gestione HR e paghe aziendali italiano. 

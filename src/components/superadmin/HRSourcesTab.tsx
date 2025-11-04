@@ -9,18 +9,22 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Edit, Trash2, Globe } from "lucide-react";
+import { Plus, Edit, Trash2, Globe, FileText, Upload } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 
 interface Source {
   id: string;
   name: string;
-  url: string;
+  url: string | null;
   description: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  file_path: string | null;
+  file_name: string | null;
+  file_size: number | null;
+  mime_type: string | null;
 }
 
 export const HRSourcesTab = () => {
@@ -30,6 +34,7 @@ export const HRSourcesTab = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedSource, setSelectedSource] = useState<Source | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     url: "",
@@ -54,16 +59,40 @@ export const HRSourcesTab = () => {
   // Create/Update source mutation
   const saveMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
+      let fileData: { file_path?: string; file_name?: string; file_size?: number; mime_type?: string } = {};
+      
+      // Handle file upload if present
+      if (selectedFile) {
+        const fileExt = selectedFile.name.split('.').pop();
+        const fileName = `${crypto.randomUUID()}.${fileExt}`;
+        const filePath = `hr-sources/${fileName}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('documents')
+          .upload(filePath, selectedFile);
+        
+        if (uploadError) throw uploadError;
+        
+        fileData = {
+          file_path: filePath,
+          file_name: selectedFile.name,
+          file_size: selectedFile.size,
+          mime_type: selectedFile.type,
+        };
+      }
+      
+      const payload = { ...data, ...fileData };
+      
       if (isEditMode && selectedSource) {
         const { error } = await supabase
           .from('hr_news_sources')
-          .update(data)
+          .update(payload)
           .eq('id', selectedSource.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('hr_news_sources')
-          .insert([data]);
+          .insert([payload]);
         if (error) throw error;
       }
     },
@@ -87,11 +116,18 @@ export const HRSourcesTab = () => {
 
   // Delete source mutation
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (source: Source) => {
+      // Delete file from storage if exists
+      if (source.file_path) {
+        await supabase.storage
+          .from('documents')
+          .remove([source.file_path]);
+      }
+      
       const { error } = await supabase
         .from('hr_news_sources')
         .delete()
-        .eq('id', id);
+        .eq('id', source.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -140,6 +176,7 @@ export const HRSourcesTab = () => {
       description: "",
       is_active: true,
     });
+    setSelectedFile(null);
     setIsEditMode(false);
     setSelectedSource(null);
   };
@@ -153,10 +190,11 @@ export const HRSourcesTab = () => {
     setSelectedSource(source);
     setFormData({
       name: source.name,
-      url: source.url,
+      url: source.url || "",
       description: source.description || "",
       is_active: source.is_active,
     });
+    setSelectedFile(null);
     setIsEditMode(true);
     setIsDialogOpen(true);
   };
@@ -169,6 +207,63 @@ export const HRSourcesTab = () => {
   const handleDeleteClick = (source: Source) => {
     setSelectedSource(source);
     setIsDeleteDialogOpen(true);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const allowedTypes = [
+        'application/pdf',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/msword'
+      ];
+      
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          title: "Formato non supportato",
+          description: "Solo file PDF, DOCX e DOC sono supportati",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        toast({
+          title: "File troppo grande",
+          description: "Il file non deve superare i 10MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setSelectedFile(file);
+    }
+  };
+
+  const downloadFile = async (source: Source) => {
+    if (!source.file_path) return;
+    
+    const { data, error } = await supabase.storage
+      .from('documents')
+      .download(source.file_path);
+    
+    if (error) {
+      toast({
+        title: "Errore",
+        description: "Impossibile scaricare il file",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const url = URL.createObjectURL(data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = source.file_name || 'documento';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const handleToggleActive = (source: Source) => {
@@ -218,15 +313,39 @@ export const HRSourcesTab = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="url">URL</Label>
+                    <Label htmlFor="url">URL (opzionale se carichi un file)</Label>
                     <Input
                       id="url"
                       type="url"
                       placeholder="https://www.lavoro.gov.it"
                       value={formData.url}
                       onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-                      required
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="file">Carica Documento (PDF, DOCX, DOC)</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="file"
+                        type="file"
+                        accept=".pdf,.docx,.doc"
+                        onChange={handleFileChange}
+                        className="cursor-pointer"
+                      />
+                      {selectedFile && (
+                        <FileText className="h-5 w-5 text-primary" />
+                      )}
+                    </div>
+                    {selectedFile && (
+                      <p className="text-sm text-muted-foreground">
+                        File selezionato: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(2)} KB)
+                      </p>
+                    )}
+                    {isEditMode && selectedSource?.file_name && !selectedFile && (
+                      <p className="text-sm text-muted-foreground">
+                        File corrente: {selectedSource.file_name}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="description">Descrizione (opzionale)</Label>
@@ -266,7 +385,8 @@ export const HRSourcesTab = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Nome</TableHead>
-                  <TableHead>URL</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Riferimento</TableHead>
                   <TableHead>Descrizione</TableHead>
                   <TableHead className="text-center">Stato</TableHead>
                   <TableHead>Data Aggiunta</TableHead>
@@ -278,14 +398,40 @@ export const HRSourcesTab = () => {
                   <TableRow key={source.id}>
                     <TableCell className="font-medium">{source.name}</TableCell>
                     <TableCell>
-                      <a 
-                        href={source.url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline"
-                      >
-                        {source.url.length > 40 ? source.url.substring(0, 40) + '...' : source.url}
-                      </a>
+                      {source.file_path ? (
+                        <div className="flex items-center gap-1">
+                          <FileText className="h-4 w-4" />
+                          <span>Documento</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          <Globe className="h-4 w-4" />
+                          <span>URL</span>
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {source.file_path ? (
+                        <Button
+                          variant="link"
+                          className="p-0 h-auto"
+                          onClick={() => downloadFile(source)}
+                        >
+                          <FileText className="h-4 w-4 mr-1" />
+                          {source.file_name || 'Scarica'}
+                        </Button>
+                      ) : source.url ? (
+                        <a 
+                          href={source.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline"
+                        >
+                          {source.url.length > 40 ? source.url.substring(0, 40) + '...' : source.url}
+                        </a>
+                      ) : (
+                        '-'
+                      )}
                     </TableCell>
                     <TableCell className="max-w-xs truncate">
                       {source.description || '-'}
@@ -346,7 +492,7 @@ export const HRSourcesTab = () => {
           <AlertDialogFooter>
             <AlertDialogCancel>Annulla</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => selectedSource && deleteMutation.mutate(selectedSource.id)}
+              onClick={() => selectedSource && deleteMutation.mutate(selectedSource)}
               className="bg-destructive hover:bg-destructive/90"
             >
               Elimina

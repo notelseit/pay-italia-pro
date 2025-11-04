@@ -718,29 +718,41 @@ export type Database = {
         Row: {
           created_at: string | null
           description: string | null
+          file_name: string | null
+          file_path: string | null
+          file_size: number | null
           id: string
           is_active: boolean | null
+          mime_type: string | null
           name: string
           updated_at: string | null
-          url: string
+          url: string | null
         }
         Insert: {
           created_at?: string | null
           description?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
           id?: string
           is_active?: boolean | null
+          mime_type?: string | null
           name: string
           updated_at?: string | null
-          url: string
+          url?: string | null
         }
         Update: {
           created_at?: string | null
           description?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
           id?: string
           is_active?: boolean | null
+          mime_type?: string | null
           name?: string
           updated_at?: string | null
-          url?: string
+          url?: string | null
         }
         Relationships: []
       }
