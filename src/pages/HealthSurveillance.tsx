@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -17,11 +18,20 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format, isBefore, addDays, startOfDay, endOfDay } from "date-fns";
 import { it } from "date-fns/locale";
+import { MedicalVisitDialog } from "@/components/health-surveillance/MedicalVisitDialog";
+import { MedicalRecordDialog } from "@/components/health-surveillance/MedicalRecordDialog";
+import { ProtocolManagementDialog } from "@/components/health-surveillance/ProtocolManagementDialog";
+import { FitnessJudgmentDialog } from "@/components/health-surveillance/FitnessJudgmentDialog";
 
 const HealthSurveillance = () => {
   const navigate = useNavigate();
   const { companyId, hasRole } = useAuth();
   const isEmployee = hasRole('employee') && !hasRole('admin') && !hasRole('hr_manager');
+
+  const [visitDialogOpen, setVisitDialogOpen] = useState(false);
+  const [recordDialogOpen, setRecordDialogOpen] = useState(false);
+  const [protocolDialogOpen, setProtocolDialogOpen] = useState(false);
+  const [judgmentDialogOpen, setJudgmentDialogOpen] = useState(false);
 
   // Fetch dashboard stats
   const { data: dashboardStats } = useQuery({
@@ -158,7 +168,7 @@ const HealthSurveillance = () => {
                 <Button 
                   variant="outline" 
                   className="w-full justify-start"
-                  onClick={() => {/* TODO: Implementare */}}
+                  onClick={() => setVisitDialogOpen(true)}
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   Nuova Visita Medica
@@ -166,7 +176,7 @@ const HealthSurveillance = () => {
                 <Button 
                   variant="outline" 
                   className="w-full justify-start"
-                  onClick={() => {/* TODO: Implementare */}}
+                  onClick={() => setRecordDialogOpen(true)}
                 >
                   <FileText className="mr-2 h-4 w-4" />
                   Nuova Cartella Sanitaria
@@ -174,7 +184,7 @@ const HealthSurveillance = () => {
                 <Button 
                   variant="outline" 
                   className="w-full justify-start"
-                  onClick={() => {/* TODO: Implementare */}}
+                  onClick={() => setProtocolDialogOpen(true)}
                 >
                   <Stethoscope className="mr-2 h-4 w-4" />
                   Gestione Protocolli
@@ -182,7 +192,7 @@ const HealthSurveillance = () => {
                 <Button 
                   variant="outline" 
                   className="w-full justify-start"
-                  onClick={() => {/* TODO: Implementare */}}
+                  onClick={() => setJudgmentDialogOpen(true)}
                 >
                   <ClipboardCheck className="mr-2 h-4 w-4" />
                   Giudizi di Idoneità
@@ -295,6 +305,32 @@ const HealthSurveillance = () => {
           </CardContent>
         </Card>
       </main>
+
+      {/* Dialogs */}
+      {companyId && (
+        <>
+          <MedicalVisitDialog
+            open={visitDialogOpen}
+            onOpenChange={setVisitDialogOpen}
+            companyId={companyId}
+          />
+          <MedicalRecordDialog
+            open={recordDialogOpen}
+            onOpenChange={setRecordDialogOpen}
+            companyId={companyId}
+          />
+          <ProtocolManagementDialog
+            open={protocolDialogOpen}
+            onOpenChange={setProtocolDialogOpen}
+            companyId={companyId}
+          />
+          <FitnessJudgmentDialog
+            open={judgmentDialogOpen}
+            onOpenChange={setJudgmentDialogOpen}
+            companyId={companyId}
+          />
+        </>
+      )}
     </div>
   );
 };
