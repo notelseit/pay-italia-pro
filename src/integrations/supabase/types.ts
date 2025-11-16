@@ -673,6 +673,76 @@ export type Database = {
           },
         ]
       }
+      fitness_judgments: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          document_url: string | null
+          employee_id: string
+          expiry_date: string | null
+          id: string
+          judgment_date: string
+          judgment_type: string
+          limitations: string | null
+          notes: string | null
+          prescriptions: string | null
+          updated_at: string | null
+          visit_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          document_url?: string | null
+          employee_id: string
+          expiry_date?: string | null
+          id?: string
+          judgment_date: string
+          judgment_type: string
+          limitations?: string | null
+          notes?: string | null
+          prescriptions?: string | null
+          updated_at?: string | null
+          visit_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          document_url?: string | null
+          employee_id?: string
+          expiry_date?: string | null
+          id?: string
+          judgment_date?: string
+          judgment_type?: string
+          limitations?: string | null
+          notes?: string | null
+          prescriptions?: string | null
+          updated_at?: string | null
+          visit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fitness_judgments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fitness_judgments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fitness_judgments_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "medical_visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ftp_upload_logs: {
         Row: {
           company_id: string
@@ -755,6 +825,269 @@ export type Database = {
           url?: string | null
         }
         Relationships: []
+      }
+      medical_convocations: {
+        Row: {
+          company_id: string
+          convocation_date: string | null
+          created_at: string | null
+          employee_id: string
+          id: string
+          message_content: string | null
+          notification_type: string
+          sent_at: string | null
+          status: string
+          visit_id: string
+        }
+        Insert: {
+          company_id: string
+          convocation_date?: string | null
+          created_at?: string | null
+          employee_id: string
+          id?: string
+          message_content?: string | null
+          notification_type: string
+          sent_at?: string | null
+          status?: string
+          visit_id: string
+        }
+        Update: {
+          company_id?: string
+          convocation_date?: string | null
+          created_at?: string | null
+          employee_id?: string
+          id?: string
+          message_content?: string | null
+          notification_type?: string
+          sent_at?: string | null
+          status?: string
+          visit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medical_convocations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_convocations_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_convocations_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "medical_visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medical_protocols: {
+        Row: {
+          allegato_3b_mapping: Json | null
+          company_id: string
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          reference_law: string | null
+          risk_assessment: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          allegato_3b_mapping?: Json | null
+          company_id: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          reference_law?: string | null
+          risk_assessment?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          allegato_3b_mapping?: Json | null
+          company_id?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          reference_law?: string | null
+          risk_assessment?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medical_protocols_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medical_records: {
+        Row: {
+          closed_at: string | null
+          company_id: string
+          created_at: string | null
+          employee_id: string
+          family_history: string | null
+          id: string
+          notes: string | null
+          opened_at: string | null
+          personal_history: string | null
+          protocol_id: string | null
+          recent_pathology: string | null
+          remote_pathology: string | null
+          risk_profile: Json | null
+          status: string
+          updated_at: string | null
+          work_history: string | null
+        }
+        Insert: {
+          closed_at?: string | null
+          company_id: string
+          created_at?: string | null
+          employee_id: string
+          family_history?: string | null
+          id?: string
+          notes?: string | null
+          opened_at?: string | null
+          personal_history?: string | null
+          protocol_id?: string | null
+          recent_pathology?: string | null
+          remote_pathology?: string | null
+          risk_profile?: Json | null
+          status?: string
+          updated_at?: string | null
+          work_history?: string | null
+        }
+        Update: {
+          closed_at?: string | null
+          company_id?: string
+          created_at?: string | null
+          employee_id?: string
+          family_history?: string | null
+          id?: string
+          notes?: string | null
+          opened_at?: string | null
+          personal_history?: string | null
+          protocol_id?: string | null
+          recent_pathology?: string | null
+          remote_pathology?: string | null
+          risk_profile?: Json | null
+          status?: string
+          updated_at?: string | null
+          work_history?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medical_records_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_records_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_records_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "medical_protocols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medical_visits: {
+        Row: {
+          additional_tests: Json | null
+          company_id: string
+          completed_date: string | null
+          created_at: string | null
+          doctor_name: string | null
+          employee_id: string
+          id: string
+          medical_record_id: string | null
+          notes: string | null
+          objective_examination: string | null
+          scheduled_date: string
+          status: string
+          target_organs: string | null
+          updated_at: string | null
+          visit_type: string
+        }
+        Insert: {
+          additional_tests?: Json | null
+          company_id: string
+          completed_date?: string | null
+          created_at?: string | null
+          doctor_name?: string | null
+          employee_id: string
+          id?: string
+          medical_record_id?: string | null
+          notes?: string | null
+          objective_examination?: string | null
+          scheduled_date: string
+          status?: string
+          target_organs?: string | null
+          updated_at?: string | null
+          visit_type: string
+        }
+        Update: {
+          additional_tests?: Json | null
+          company_id?: string
+          completed_date?: string | null
+          created_at?: string | null
+          doctor_name?: string | null
+          employee_id?: string
+          id?: string
+          medical_record_id?: string | null
+          notes?: string | null
+          objective_examination?: string | null
+          scheduled_date?: string
+          status?: string
+          target_organs?: string | null
+          updated_at?: string | null
+          visit_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medical_visits_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_visits_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_visits_medical_record_id_fkey"
+            columns: ["medical_record_id"]
+            isOneToOne: false
+            referencedRelation: "medical_records"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payroll_records: {
         Row: {
@@ -1093,6 +1426,70 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vaccinations: {
+        Row: {
+          administration_date: string
+          batch_number: string | null
+          company_id: string
+          created_at: string | null
+          employee_id: string
+          expiry_date: string | null
+          id: string
+          medical_record_id: string | null
+          notes: string | null
+          updated_at: string | null
+          vaccine_name: string
+        }
+        Insert: {
+          administration_date: string
+          batch_number?: string | null
+          company_id: string
+          created_at?: string | null
+          employee_id: string
+          expiry_date?: string | null
+          id?: string
+          medical_record_id?: string | null
+          notes?: string | null
+          updated_at?: string | null
+          vaccine_name: string
+        }
+        Update: {
+          administration_date?: string
+          batch_number?: string | null
+          company_id?: string
+          created_at?: string | null
+          employee_id?: string
+          expiry_date?: string | null
+          id?: string
+          medical_record_id?: string | null
+          notes?: string | null
+          updated_at?: string | null
+          vaccine_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vaccinations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vaccinations_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vaccinations_medical_record_id_fkey"
+            columns: ["medical_record_id"]
+            isOneToOne: false
+            referencedRelation: "medical_records"
             referencedColumns: ["id"]
           },
         ]

@@ -17,6 +17,7 @@ import Payroll from "./pages/Payroll";
 import Contract from "./pages/Contract";
 import Compliance from "./pages/Compliance";
 import F24 from "./pages/F24";
+import HealthSurveillance from "./pages/HealthSurveillance";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Documents from "./pages/Documents";
@@ -67,6 +68,11 @@ const AppContent = () => {
       <Route path="/compliance/f24" element={
         <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda']}>
           <F24 />
+        </ProtectedRoute>
+      } />
+      <Route path="/health-surveillance" element={
+        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda', 'hr_manager', 'employee']}>
+          <HealthSurveillance />
         </ProtectedRoute>
       } />
       <Route path="/reports" element={

@@ -44,13 +44,25 @@ const Navbar = () => {
     },
   ];
 
+  const complianceMenuItems = [
+    {
+      path: "/compliance",
+      label: "Adempimenti Fiscali",
+      roles: ["superadmin", "admin", "admin_sub_azienda"],
+    },
+    {
+      path: "/health-surveillance",
+      label: "Sorveglianza Sanitaria",
+      roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager", "employee"],
+    },
+  ];
+
   const navItems = [
     {
       path: "/dashboard",
       label: "Dashboard",
       roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager", "employee"],
     },
-    { path: "/compliance", label: "Adempimenti Fiscali", roles: ["superadmin", "admin", "admin_sub_azienda"] },
     { path: "/documents", label: "Documenti", roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager"] },
     { path: "/reports", label: "Report", roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager"] },
   ];
@@ -62,12 +74,13 @@ const Navbar = () => {
   };
 
   const dashboardItem = navItems[0]; // Dashboard
-  const otherNavItems = navItems.slice(1); // Compliance, Documents, Reports
+  const otherNavItems = navItems.slice(1); // Documents, Reports
 
   const visibleDashboard = dashboardItem.roles.some((role) => hasRole(role)) ? dashboardItem : null;
   const visibleOtherNavItems = otherNavItems.filter((item) => item.roles.some((role) => hasRole(role)));
   const visibleSettings = settingsItem.roles.some((role) => hasRole(role)) ? settingsItem : null;
   const visibleEmployeeMenuItems = employeeMenuItems.filter((item) => item.roles.some((role) => hasRole(role)));
+  const visibleComplianceMenuItems = complianceMenuItems.filter((item) => item.roles.some((role) => hasRole(role)));
 
   return (
     <nav className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
@@ -117,7 +130,33 @@ const Navbar = () => {
                 </DropdownMenu>
               )}
 
-              {/* Altri menu items: Compliance, Documents, Reports */}
+              {/* Dropdown Menu Compliance */}
+              {visibleComplianceMenuItems.length > 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant={
+                        ["/compliance", "/health-surveillance"].includes(location.pathname)
+                          ? "secondary"
+                          : "ghost"
+                      }
+                      className="text-sm gap-1"
+                    >
+                      Compliance
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    {visibleComplianceMenuItems.map((item) => (
+                      <DropdownMenuItem key={item.path} onClick={() => navigate(item.path)}>
+                        {item.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+
+              {/* Altri menu items: Documents, Reports */}
               {visibleOtherNavItems.map((item) => (
                 <Button
                   key={item.path}
