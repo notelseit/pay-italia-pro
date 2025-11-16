@@ -11,33 +11,33 @@ const Landing = () => {
     {
       icon: <Users className="h-6 w-6 text-primary" />,
       title: "Gestione Dipendenti",
-      description: "Anagrafica completa con codici fiscali, contratti e documenti"
+      description: "Anagrafica completa con codici fiscali, contratti e documenti",
     },
     {
       icon: <Clock className="h-6 w-6 text-primary" />,
       title: "Presenze e Assenze",
-      description: "Tracciamento ferie, malattie e permessi con importazione automatica"
+      description: "Tracciamento ferie, malattie e permessi con importazione automatica",
     },
     {
       icon: <FileText className="h-6 w-6 text-primary" />,
       title: "Cedolini Automatici",
-      description: "Calcolo automatico INPS e IRPEF secondo normativa italiana"
+      description: "Calcolo automatico INPS e IRPEF secondo normativa italiana",
     },
     {
       icon: <Shield className="h-6 w-6 text-primary" />,
       title: "Compliance GDPR",
-      description: "Piena conformità alle normative sulla privacy e sicurezza dati"
+      description: "Piena conformità alle normative sulla privacy e sicurezza dati",
     },
     {
       icon: <TrendingUp className="h-6 w-6 text-primary" />,
       title: "Report Dettagliati",
-      description: "Analisi costo del lavoro e scadenze fiscali in tempo reale"
+      description: "Analisi costo del lavoro e scadenze fiscali in tempo reale",
     },
     {
       icon: <CheckCircle className="h-6 w-6 text-primary" />,
       title: "Multi-tenant",
-      description: "Ogni azienda con dati isolati e configurazioni personalizzate"
-    }
+      description: "Ogni azienda con dati isolati e configurazioni personalizzate",
+    },
   ];
 
   return (
@@ -47,7 +47,7 @@ const Landing = () => {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FileText className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold text-foreground">PayHub</h1>
+            <h1 className="text-2xl font-bold text-foreground">PayHub by Unilabgroup</h1>
           </div>
           <Button variant="hero" onClick={() => navigate("/login")}>
             Accedi
@@ -67,8 +67,8 @@ const Landing = () => {
                 </span>
               </h2>
               <p className="text-xl text-muted-foreground">
-                La piattaforma SaaS completa per HR manager che automatizza cedolini, 
-                contributi e conformità alle normative italiane del lavoro.
+                La piattaforma SaaS completa per HR manager che automatizza cedolini, contributi e conformità alle
+                normative italiane del lavoro.
               </p>
               <div className="flex gap-4">
                 <Button variant="hero" size="lg" onClick={() => navigate("/login")}>
@@ -80,11 +80,7 @@ const Landing = () => {
               </div>
             </div>
             <div className="relative">
-              <img 
-                src={heroImage} 
-                alt="Professional HR team working" 
-                className="rounded-2xl shadow-elevated w-full"
-              />
+              <img src={heroImage} alt="Professional HR team working" className="rounded-2xl shadow-elevated w-full" />
             </div>
           </div>
         </div>
@@ -133,7 +129,7 @@ const Landing = () => {
       {/* Footer */}
       <footer className="border-t py-8 px-4 bg-card">
         <div className="container mx-auto text-center text-muted-foreground">
-          <p>© 2025 PayHub. Tutti i diritti riservati.</p>
+          <p>© 2025 PayHub by Unilabgroup. Tutti i diritti riservati.</p>
         </div>
       </footer>
     </div>

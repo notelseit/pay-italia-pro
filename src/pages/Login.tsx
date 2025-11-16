@@ -4,7 +4,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -17,16 +24,18 @@ const loginSchema = z.object({
   password: z.string().min(6, "La password deve essere almeno 6 caratteri"),
 });
 
-const registerSchema = z.object({
-  fullName: z.string().min(2, "Nome richiesto"),
-  companyName: z.string().min(2, "Nome azienda richiesto"),
-  email: z.string().email("Email non valida"),
-  password: z.string().min(6, "La password deve essere almeno 6 caratteri"),
-  confirmPassword: z.string(),
-}).refine(data => data.password === data.confirmPassword, {
-  message: "Le password non coincidono",
-  path: ["confirmPassword"],
-});
+const registerSchema = z
+  .object({
+    fullName: z.string().min(2, "Nome richiesto"),
+    companyName: z.string().min(2, "Nome azienda richiesto"),
+    email: z.string().email("Email non valida"),
+    password: z.string().min(6, "La password deve essere almeno 6 caratteri"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Le password non coincidono",
+    path: ["confirmPassword"],
+  });
 
 const Login = () => {
   const navigate = useNavigate();
@@ -52,7 +61,7 @@ const Login = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       loginSchema.parse(loginData);
       setIsLoading(true);
@@ -74,16 +83,11 @@ const Login = () => {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       registerSchema.parse(registerData);
       setIsLoading(true);
-      await signUp(
-        registerData.email,
-        registerData.password,
-        registerData.fullName,
-        registerData.companyName
-      );
+      await signUp(registerData.email, registerData.password, registerData.fullName, registerData.companyName);
       toast({
         title: "Registrazione completata",
         description: "Account creato con successo",
@@ -101,7 +105,7 @@ const Login = () => {
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!resetEmail || !z.string().email().safeParse(resetEmail).success) {
       toast({
         title: "Errore",
@@ -141,15 +145,13 @@ const Login = () => {
       <div className="w-full max-w-md">
         <div className="flex items-center justify-center gap-2 mb-8">
           <FileText className="h-10 w-10 text-primary" />
-          <h1 className="text-3xl font-bold text-foreground">PayHub</h1>
+          <h1 className="text-3xl font-bold text-foreground">PayHub by Unilabgroup</h1>
         </div>
 
         <Card className="shadow-elevated">
           <CardHeader>
             <CardTitle>Benvenuto</CardTitle>
-            <CardDescription>
-              Accedi o registra la tua azienda per iniziare
-            </CardDescription>
+            <CardDescription>Accedi o registra la tua azienda per iniziare</CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="login">
@@ -161,34 +163,29 @@ const Login = () => {
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email aziendale</Label>
-                    <Input 
-                      id="email" 
-                      type="email" 
+                    <Input
+                      id="email"
+                      type="email"
                       placeholder="hr@azienda.it"
                       value={loginData.email}
                       onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                      required 
+                      required
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="password">Password</Label>
-                    <Input 
-                      id="password" 
+                    <Input
+                      id="password"
                       type="password"
                       value={loginData.password}
                       onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                      required 
+                      required
                     />
                   </div>
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    variant="hero"
-                    disabled={isLoading}
-                  >
+                  <Button type="submit" className="w-full" variant="hero" disabled={isLoading}>
                     {isLoading ? "Accesso in corso..." : "Accedi"}
                   </Button>
-                  
+
                   <div className="text-center mt-4">
                     <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
                       <DialogTrigger asChild>
@@ -206,21 +203,16 @@ const Login = () => {
                         <form onSubmit={handleForgotPassword} className="space-y-4 mt-4">
                           <div className="space-y-2">
                             <Label htmlFor="reset-email">Email</Label>
-                            <Input 
-                              id="reset-email" 
-                              type="email" 
+                            <Input
+                              id="reset-email"
+                              type="email"
                               placeholder="hr@azienda.it"
                               value={resetEmail}
                               onChange={(e) => setResetEmail(e.target.value)}
-                              required 
+                              required
                             />
                           </div>
-                          <Button 
-                            type="submit" 
-                            className="w-full" 
-                            variant="hero"
-                            disabled={isLoading}
-                          >
+                          <Button type="submit" className="w-full" variant="hero" disabled={isLoading}>
                             {isLoading ? "Invio in corso..." : "Invia Link di Reset"}
                           </Button>
                         </form>
@@ -234,61 +226,56 @@ const Login = () => {
                 <form onSubmit={handleRegister} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="fullName">Nome Completo</Label>
-                    <Input 
-                      id="fullName" 
+                    <Input
+                      id="fullName"
                       placeholder="Mario Rossi"
                       value={registerData.fullName}
                       onChange={(e) => setRegisterData({ ...registerData, fullName: e.target.value })}
-                      required 
+                      required
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="company">Nome Azienda</Label>
-                    <Input 
-                      id="company" 
+                    <Input
+                      id="company"
                       placeholder="Azienda S.r.l."
                       value={registerData.companyName}
                       onChange={(e) => setRegisterData({ ...registerData, companyName: e.target.value })}
-                      required 
+                      required
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="reg-email">Email aziendale</Label>
-                    <Input 
-                      id="reg-email" 
-                      type="email" 
+                    <Input
+                      id="reg-email"
+                      type="email"
                       placeholder="hr@azienda.it"
                       value={registerData.email}
                       onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
-                      required 
+                      required
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="reg-password">Password</Label>
-                    <Input 
-                      id="reg-password" 
+                    <Input
+                      id="reg-password"
                       type="password"
                       value={registerData.password}
                       onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
-                      required 
+                      required
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirm-password">Conferma Password</Label>
-                    <Input 
-                      id="confirm-password" 
+                    <Input
+                      id="confirm-password"
                       type="password"
                       value={registerData.confirmPassword}
                       onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
-                      required 
+                      required
                     />
                   </div>
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    variant="hero"
-                    disabled={isLoading}
-                  >
+                  <Button type="submit" className="w-full" variant="hero" disabled={isLoading}>
                     {isLoading ? "Registrazione in corso..." : "Crea Account"}
                   </Button>
                 </form>

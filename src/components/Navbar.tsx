@@ -22,24 +22,48 @@ const Navbar = () => {
   };
 
   const employeeMenuItems = [
-    { path: "/employees", label: "Elenco Dipendenti", roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager", "employee"] },
-    { path: "/presence", label: "Presenze", roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager", "employee"] },
-    { path: "/payroll", label: "Cedolini", roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager", "employee"] },
-    { path: "/contract", label: "Contratti", roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager", "employee"] },
+    {
+      path: "/employees",
+      label: "Elenco Dipendenti",
+      roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager", "employee"],
+    },
+    {
+      path: "/presence",
+      label: "Presenze",
+      roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager", "employee"],
+    },
+    {
+      path: "/payroll",
+      label: "Cedolini",
+      roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager", "employee"],
+    },
+    {
+      path: "/contract",
+      label: "Contratti",
+      roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager", "employee"],
+    },
   ];
 
   const navItems = [
-    { path: "/dashboard", label: "Dashboard", roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager", "employee"] },
+    {
+      path: "/dashboard",
+      label: "Dashboard",
+      roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager", "employee"],
+    },
     { path: "/compliance", label: "Adempimenti Fiscali", roles: ["superadmin", "admin", "admin_sub_azienda"] },
     { path: "/documents", label: "Documenti", roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager"] },
     { path: "/reports", label: "Report", roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager"] },
   ];
 
-  const settingsItem = { path: "/settings", label: "Impostazioni", roles: ["superadmin", "admin", "admin_sub_azienda"] };
+  const settingsItem = {
+    path: "/settings",
+    label: "Impostazioni",
+    roles: ["superadmin", "admin", "admin_sub_azienda"],
+  };
 
   const dashboardItem = navItems[0]; // Dashboard
   const otherNavItems = navItems.slice(1); // Compliance, Documents, Reports
-  
+
   const visibleDashboard = dashboardItem.roles.some((role) => hasRole(role)) ? dashboardItem : null;
   const visibleOtherNavItems = otherNavItems.filter((item) => item.roles.some((role) => hasRole(role)));
   const visibleSettings = settingsItem.roles.some((role) => hasRole(role)) ? settingsItem : null;
@@ -52,7 +76,7 @@ const Navbar = () => {
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/dashboard")}>
               <FileText className="h-6 w-6 text-primary" />
-              <h1 className="text-xl font-bold text-foreground">PayHub</h1>
+              <h1 className="text-xl font-bold text-foreground">PayHub by UnilabGroup</h1>
             </div>
 
             <div className="hidden md:flex items-center gap-1">
@@ -73,7 +97,9 @@ const Navbar = () => {
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant={
-                        ["/employees", "/presence", "/payroll", "/contract"].includes(location.pathname) ? "secondary" : "ghost"
+                        ["/employees", "/presence", "/payroll", "/contract"].includes(location.pathname)
+                          ? "secondary"
+                          : "ghost"
                       }
                       className="text-sm gap-1"
                     >
