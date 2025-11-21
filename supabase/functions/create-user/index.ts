@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { checkRateLimit } from "../_shared/rate-limiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,6 +22,34 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Get identifier for rate limiting (IP or user ID)
+    const authHeader = req.headers.get("Authorization");
+    const clientIp = req.headers.get("x-forwarded-for") || "unknown";
+    const identifier = authHeader ? authHeader.slice(0, 50) : clientIp;
+    
+    // Check rate limit: 10 requests per minute
+    const rateLimitResult = checkRateLimit(identifier, {
+      windowMs: 60 * 1000, // 1 minute
+      maxRequests: 10
+    });
+    
+    if (!rateLimitResult.allowed) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Troppi tentativi. Riprova più tardi.",
+          retryAfter: Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000)
+        }),
+        {
+          status: 429,
+          headers: { 
+            "Content-Type": "application/json", 
+            "Retry-After": String(Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000)),
+            ...corsHeaders 
+          },
+        }
+      );
+    }
+    
     const { email, password, fullName, role, companyId }: CreateUserRequest = await req.json();
 
     // Validate inputs
@@ -47,7 +76,6 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
     // Check if requesting user is admin of the company
-    const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(
         JSON.stringify({ error: "Non autorizzato" }),
@@ -102,7 +130,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (createError) {
       console.error("Error creating user:", createError);
       return new Response(
-        JSON.stringify({ error: createError.message }),
+        JSON.stringify({ error: "Impossibile creare l'utente. Riprova o contatta l'assistenza." }),
         {
           status: 400,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -121,7 +149,7 @@ const handler = async (req: Request): Promise<Response> => {
       // Try to clean up the created user
       await supabaseAdmin.auth.admin.deleteUser(newUser.user.id);
       return new Response(
-        JSON.stringify({ error: "Errore nella creazione del profilo" }),
+        JSON.stringify({ error: "Impossibile creare il profilo utente. Riprova o contatta l'assistenza." }),
         {
           status: 500,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -143,7 +171,7 @@ const handler = async (req: Request): Promise<Response> => {
       // Try to clean up
       await supabaseAdmin.auth.admin.deleteUser(newUser.user.id);
       return new Response(
-        JSON.stringify({ error: "Errore nell'assegnazione del ruolo" }),
+        JSON.stringify({ error: "Impossibile assegnare il ruolo. Riprova o contatta l'assistenza." }),
         {
           status: 500,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -167,7 +195,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error in create-user function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "Si è verificato un errore. Riprova o contatta l'amministratore." }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

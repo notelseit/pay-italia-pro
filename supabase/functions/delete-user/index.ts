@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { checkRateLimit } from "../_shared/rate-limiter.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,6 +17,33 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Get identifier for rate limiting
+    const authHeader = req.headers.get('Authorization');
+    const clientIp = req.headers.get('x-forwarded-for') || 'unknown';
+    const identifier = authHeader ? authHeader.slice(0, 50) : clientIp;
+    
+    // Check rate limit: 10 requests per minute
+    const rateLimitResult = checkRateLimit(identifier, {
+      windowMs: 60 * 1000,
+      maxRequests: 10
+    });
+    
+    if (!rateLimitResult.allowed) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Troppi tentativi. Riprova più tardi.',
+          retryAfter: Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000)
+        }),
+        { 
+          status: 429, 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json',
+            'Retry-After': String(Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000))
+          } 
+        }
+      );
+    }
     const supabaseAdmin = Deno.env.get('SUPABASE_URL')
       ? await import('https://esm.sh/@supabase/supabase-js@2.75.1').then((mod) => {
           return mod.createClient(
@@ -45,7 +73,6 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Get the requesting user from auth header
-    const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
       return new Response(
         JSON.stringify({ error: 'Missing authorization header' }),
@@ -94,8 +121,9 @@ const handler = async (req: Request): Promise<Response> => {
       .single()
 
     if (profileError || userProfile?.company_id !== companyId) {
+      console.error('User profile error:', profileError);
       return new Response(
-        JSON.stringify({ error: 'User not found in this company' }),
+        JSON.stringify({ error: 'Impossibile eliminare l\'utente. Riprova o contatta l\'assistenza.' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -118,7 +146,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (deleteError) {
       console.error('Error deleting user from auth:', deleteError)
       return new Response(
-        JSON.stringify({ error: 'Failed to delete user: ' + deleteError.message }),
+        JSON.stringify({ error: 'Impossibile eliminare l\'utente. Riprova o contatta l\'assistenza.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -130,9 +158,8 @@ const handler = async (req: Request): Promise<Response> => {
 
   } catch (error) {
     console.error('Error in delete-user function:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error'
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: 'Si è verificato un errore. Riprova o contatta l\'amministratore.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
