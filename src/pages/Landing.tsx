@@ -129,7 +129,10 @@ const Landing = () => {
       {/* Footer */}
       <footer className="border-t py-8 px-4 bg-card">
         <div className="container mx-auto text-center text-muted-foreground">
-          <p>© 2025 PayHub by Unilabgroup. Tutti i diritti riservati.</p>
+          <p>
+            © 2025 PayHub by UNILAB GROUP S.R.L.S. Tutti i diritti riservati. P.IVA 03436460731 - Piazzale Dante, 26,
+            74121, Taranto (TA)
+          </p>
         </div>
       </footer>
     </div>
