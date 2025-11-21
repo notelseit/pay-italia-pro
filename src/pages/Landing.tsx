@@ -61,7 +61,7 @@ const Landing = () => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <h2 className="text-5xl font-bold leading-tight text-foreground">
-                Gestione Payroll
+                Gestione Payroll by Unilabgroup
                 <span className="block bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
                   Semplice e Conforme
                 </span>
