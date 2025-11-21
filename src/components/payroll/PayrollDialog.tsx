@@ -6,10 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEmployees } from "@/hooks/useEmployees";
 import { useCCNLContracts } from "@/hooks/useCCNLContracts";
-import { calculatePayroll, formatCurrency, PayrollResult } from "@/lib/payrollCalculations";
+import { calculatePayroll, formatCurrency, PayrollResult, payrollParamsSchema } from "@/lib/payrollCalculations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 
 interface PayrollDialogProps {
   open: boolean;
@@ -83,21 +84,26 @@ export const PayrollDialog = ({
 
   useEffect(() => {
     if (formData.baseSalary > 0) {
-      const result = calculatePayroll({
-        baseSalary: formData.baseSalary,
-        bonuses: formData.bonuses,
-        overtimePay: formData.overtimePay,
-        dependentsCount: formData.dependentsCount,
-        taxDeductions: formData.taxDeductions,
-        ccnlContract: {
-          inps_rate: formData.inpsRate / 100,
-          inail_rate: formData.inailRate / 100,
-          thirteenth_salary: formData.thirteenthSalary,
-          fourteenth_salary: formData.fourteenthSalary,
-          meal_voucher_amount: formData.mealVoucherAmount,
-        }
-      });
-      setCalculation(result);
+      try {
+        const result = calculatePayroll({
+          baseSalary: formData.baseSalary,
+          bonuses: formData.bonuses,
+          overtimePay: formData.overtimePay,
+          dependentsCount: formData.dependentsCount,
+          taxDeductions: formData.taxDeductions,
+          ccnlContract: {
+            inps_rate: formData.inpsRate / 100,
+            inail_rate: formData.inailRate / 100,
+            thirteenth_salary: formData.thirteenthSalary,
+            fourteenth_salary: formData.fourteenthSalary,
+            meal_voucher_amount: formData.mealVoucherAmount,
+          }
+        });
+        setCalculation(result);
+      } catch (error: any) {
+        toast.error(error.message || "Errore nella validazione dei dati");
+        setCalculation(null);
+      }
     }
   }, [formData]);
 

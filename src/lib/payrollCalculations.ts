@@ -2,6 +2,19 @@
  * Calcoli per la gestione cedolini conformi alle normative italiane 2025
  */
 
+import { z } from 'zod';
+
+// Schema di validazione per i parametri del cedolino
+export const payrollParamsSchema = z.object({
+  baseSalary: z.number().min(0, "Lo stipendio base deve essere positivo").max(1000000, "Lo stipendio base è troppo alto"),
+  bonuses: z.number().min(0, "I bonus devono essere positivi").max(100000, "I bonus sono troppo alti").optional(),
+  overtimePay: z.number().min(0, "Gli straordinari devono essere positivi").max(50000, "Gli straordinari sono troppo alti").optional(),
+  dependentsCount: z.number().int("Il numero di figli deve essere un intero").min(0, "Il numero di figli non può essere negativo").max(20, "Il numero di figli è troppo alto").optional(),
+  taxDeductions: z.number().min(0, "Le detrazioni devono essere positive").max(50000, "Le detrazioni sono troppo alte").optional(),
+  workingHours: z.number().min(0).max(168).optional(),
+  ccnlContract: z.any().optional()
+});
+
 // Scaglioni IRPEF 2025
 export const IRPEF_BRACKETS = [
   { min: 0, max: 28000, rate: 0.23 },
@@ -138,6 +151,9 @@ export interface PayrollResult {
  * Calcola il cedolino completo
  */
 export function calculatePayroll(params: PayrollParams): PayrollResult {
+  // Valida i parametri in input
+  const validated = payrollParamsSchema.parse(params);
+  
   const {
     baseSalary,
     bonuses = 0,
@@ -145,7 +161,7 @@ export function calculatePayroll(params: PayrollParams): PayrollResult {
     dependentsCount = 0,
     taxDeductions = 0,
     ccnlContract
-  } = params;
+  } = validated;
 
   // Usa aliquote INPS dal contratto CCNL se disponibili, altrimenti valori standard
   const inpsEmployeeRate = ccnlContract?.inps_rate ? ccnlContract.inps_rate / 100 : INPS_RATES.employee;
