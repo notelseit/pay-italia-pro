@@ -10,6 +10,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { CheckSquare, Upload } from "lucide-react";
+import { VisitChecklistDialog } from "./VisitChecklistDialog";
+import { MedicalDocumentsDialog } from "./MedicalDocumentsDialog";
 
 interface MedicalVisitViewDialogProps {
   open: boolean;
@@ -28,8 +31,10 @@ const visitTypes = [
 
 export const MedicalVisitViewDialog = ({ open, onOpenChange, visit, companyId }: MedicalVisitViewDialogProps) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [checklistOpen, setChecklistOpen] = useState(false);
+  const [documentsOpen, setDocumentsOpen] = useState(false);
   const [formData, setFormData] = useState({
-    visit_type: visit.visit_type || "",
+    visit_type: visit.visit_type || "preventiva",
     scheduled_date: visit.scheduled_date || "",
     completed_date: visit.completed_date || "",
     doctor_name: visit.doctor_name || "",
@@ -43,7 +48,7 @@ export const MedicalVisitViewDialog = ({ open, onOpenChange, visit, companyId }:
 
   useEffect(() => {
     setFormData({
-      visit_type: visit.visit_type || "",
+      visit_type: visit.visit_type || "preventiva",
       scheduled_date: visit.scheduled_date || "",
       completed_date: visit.completed_date || "",
       doctor_name: visit.doctor_name || "",
@@ -230,29 +235,66 @@ export const MedicalVisitViewDialog = ({ open, onOpenChange, visit, companyId }:
             />
           </div>
 
-          <div className="flex justify-end gap-2">
-            {!isEditing ? (
-              <>
-                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                  Chiudi
-                </Button>
-                <Button type="button" onClick={() => setIsEditing(true)}>
-                  Modifica
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
-                  Annulla
-                </Button>
-                <Button type="submit" disabled={updateVisitMutation.isPending}>
-                  {updateVisitMutation.isPending ? "Salvataggio..." : "Salva Modifiche"}
-                </Button>
-              </>
-            )}
+          <div className="flex justify-between gap-2 pt-4 border-t">
+            <div className="flex gap-2">
+              <Button 
+                type="button" 
+                variant="outline"
+                onClick={() => setChecklistOpen(true)}
+              >
+                <CheckSquare className="h-4 w-4 mr-2" />
+                Checklist
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline"
+                onClick={() => setDocumentsOpen(true)}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Documenti
+              </Button>
+            </div>
+
+            <div className="flex gap-2">
+              {!isEditing ? (
+                <>
+                  <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                    Chiudi
+                  </Button>
+                  <Button type="button" onClick={() => setIsEditing(true)}>
+                    Modifica
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
+                    Annulla
+                  </Button>
+                  <Button type="submit" disabled={updateVisitMutation.isPending}>
+                    {updateVisitMutation.isPending ? "Salvataggio..." : "Salva Modifiche"}
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </form>
       </DialogContent>
+
+      <VisitChecklistDialog
+        open={checklistOpen}
+        onOpenChange={setChecklistOpen}
+        visitId={visit.id}
+        employeeId={visit.employee_id}
+        companyId={companyId}
+      />
+
+      <MedicalDocumentsDialog
+        open={documentsOpen}
+        onOpenChange={setDocumentsOpen}
+        employeeId={visit.employee_id}
+        companyId={companyId}
+        visitId={visit.id}
+      />
     </Dialog>
   );
 };

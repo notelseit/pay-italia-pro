@@ -926,6 +926,86 @@ export type Database = {
           },
         ]
       }
+      medical_documents: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          document_type: string
+          employee_id: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          medical_record_id: string | null
+          mime_type: string | null
+          notes: string | null
+          updated_at: string | null
+          uploaded_by: string | null
+          visit_id: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          document_type: string
+          employee_id: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          medical_record_id?: string | null
+          mime_type?: string | null
+          notes?: string | null
+          updated_at?: string | null
+          uploaded_by?: string | null
+          visit_id?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          document_type?: string
+          employee_id?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          medical_record_id?: string | null
+          mime_type?: string | null
+          notes?: string | null
+          updated_at?: string | null
+          uploaded_by?: string | null
+          visit_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medical_documents_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_documents_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_documents_medical_record_id_fkey"
+            columns: ["medical_record_id"]
+            isOneToOne: false
+            referencedRelation: "medical_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_documents_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "medical_visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medical_protocols: {
         Row: {
           allegato_3b_mapping: Json | null
@@ -1630,6 +1710,70 @@ export type Database = {
             columns: ["medical_record_id"]
             isOneToOne: false
             referencedRelation: "medical_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      visit_checklists: {
+        Row: {
+          checklist_items: Json
+          company_id: string
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string | null
+          employee_id: string
+          id: string
+          reminder_sent: boolean | null
+          reminder_sent_at: string | null
+          updated_at: string | null
+          visit_id: string
+        }
+        Insert: {
+          checklist_items?: Json
+          company_id: string
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          employee_id: string
+          id?: string
+          reminder_sent?: boolean | null
+          reminder_sent_at?: string | null
+          updated_at?: string | null
+          visit_id: string
+        }
+        Update: {
+          checklist_items?: Json
+          company_id?: string
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          employee_id?: string
+          id?: string
+          reminder_sent?: boolean | null
+          reminder_sent_at?: string | null
+          updated_at?: string | null
+          visit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visit_checklists_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visit_checklists_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visit_checklists_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "medical_visits"
             referencedColumns: ["id"]
           },
         ]
