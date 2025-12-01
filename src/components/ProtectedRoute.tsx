@@ -30,15 +30,28 @@ export function ProtectedRoute({ children, requireRole }: ProtectedRouteProps) {
     return null;
   }
 
-  if (requireRole && !requireRole.some(role => roles.includes(role))) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2 text-foreground">Accesso Negato</h1>
-          <p className="text-muted-foreground">Non hai i permessi necessari per accedere a questa pagina.</p>
+  // Wait for roles to load before checking permissions
+  if (requireRole) {
+    // If user exists but roles are empty and not explicitly set, still loading
+    if (roles.length === 0 && user) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </div>
-    );
+      );
+    }
+    
+    // Only show access denied if roles are loaded but user doesn't have required role
+    if (!requireRole.some(role => roles.includes(role))) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-2 text-foreground">Accesso Negato</h1>
+            <p className="text-muted-foreground">Non hai i permessi necessari per accedere a questa pagina.</p>
+          </div>
+        </div>
+      );
+    }
   }
 
   return <>{children}</>;
