@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.check-medical-visit-expiry]
 verify_jwt = false
+
+[functions.session-manager]
+verify_jwt = true

@@ -1767,6 +1767,57 @@ export type Database = {
           },
         ]
       }
+      user_sessions: {
+        Row: {
+          created_at: string | null
+          device_info: Json | null
+          expires_at: string
+          id: string
+          ip_address: string | null
+          is_active: boolean | null
+          last_activity_at: string | null
+          location_info: Json | null
+          refresh_token_hash: string | null
+          revoked_at: string | null
+          revoked_reason: string | null
+          session_token: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          device_info?: Json | null
+          expires_at: string
+          id?: string
+          ip_address?: string | null
+          is_active?: boolean | null
+          last_activity_at?: string | null
+          location_info?: Json | null
+          refresh_token_hash?: string | null
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          session_token: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          device_info?: Json | null
+          expires_at?: string
+          id?: string
+          ip_address?: string | null
+          is_active?: boolean | null
+          last_activity_at?: string | null
+          location_info?: Json | null
+          refresh_token_hash?: string | null
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          session_token?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       vaccinations: {
         Row: {
           administration_date: string
@@ -1964,6 +2015,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_sessions: { Args: never; Returns: number }
       create_company_for_user: {
         Args: {
           _company_email: string
@@ -1982,6 +2034,10 @@ export type Database = {
         Returns: boolean
       }
       is_superadmin: { Args: { _user_id: string }; Returns: boolean }
+      update_session_activity: {
+        Args: { p_session_token: string }
+        Returns: boolean
+      }
     }
     Enums: {
       absence_type: "ferie" | "malattia" | "permesso" | "congedo_parentale"

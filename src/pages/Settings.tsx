@@ -14,6 +14,7 @@ import { UserRolesManagement } from "@/components/settings/UserRolesManagement";
 import { CCNLManagement } from "@/components/settings/CCNLManagement";
 import { EmailTemplates } from "@/components/settings/EmailTemplates";
 import { EmailSettingsManagement } from "@/components/settings/EmailSettingsManagement";
+import { SessionManagement } from "@/components/settings/SessionManagement";
 import { useCCNLContracts } from "@/hooks/useCCNLContracts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -175,7 +176,7 @@ const Settings = () => {
                     onClick={() => setActiveSection("security")}
                   >
                     <Shield className="mr-2 h-4 w-4" />
-                    Sicurezza
+                    Sicurezza e Sessioni
                   </Button>
                   <Button
                     variant={activeSection === "email" ? "secondary" : "ghost"}
@@ -520,6 +521,11 @@ const Settings = () => {
                       </div>
                     </div>
                   </div>
+                  
+                  <Separator />
+                  
+                  {/* Session Management */}
+                  <SessionManagement />
                 </CardContent>
               </Card>
             )}
