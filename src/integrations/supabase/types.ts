@@ -1128,6 +1128,107 @@ export type Database = {
           },
         ]
       }
+      notification_logs: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          days_before_expiry: number
+          email_error: string | null
+          email_recipient: string | null
+          email_sent: boolean | null
+          email_status: string | null
+          employee_id: string | null
+          id: string
+          message_content: string | null
+          notification_date: string | null
+          notification_type: string
+          reference_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          days_before_expiry: number
+          email_error?: string | null
+          email_recipient?: string | null
+          email_sent?: boolean | null
+          email_status?: string | null
+          employee_id?: string | null
+          id?: string
+          message_content?: string | null
+          notification_date?: string | null
+          notification_type: string
+          reference_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          days_before_expiry?: number
+          email_error?: string | null
+          email_recipient?: string | null
+          email_sent?: boolean | null
+          email_status?: string | null
+          employee_id?: string | null
+          id?: string
+          message_content?: string | null
+          notification_date?: string | null
+          notification_type?: string
+          reference_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_logs_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_settings: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          days_before_expiry: number[]
+          id: string
+          is_active: boolean | null
+          notification_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          days_before_expiry?: number[]
+          id?: string
+          is_active?: boolean | null
+          notification_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          days_before_expiry?: number[]
+          id?: string
+          is_active?: boolean | null
+          notification_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_settings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payroll_records: {
         Row: {
           base_salary: number
