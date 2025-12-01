@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.chat]
 verify_jwt = false
+
+[functions.check-medical-visit-expiry]
+verify_jwt = false

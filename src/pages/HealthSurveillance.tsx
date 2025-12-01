@@ -22,6 +22,8 @@ import { MedicalVisitDialog } from "@/components/health-surveillance/MedicalVisi
 import { MedicalRecordDialog } from "@/components/health-surveillance/MedicalRecordDialog";
 import { ProtocolManagementDialog } from "@/components/health-surveillance/ProtocolManagementDialog";
 import { FitnessJudgmentDialog } from "@/components/health-surveillance/FitnessJudgmentDialog";
+import { JobRoleProtocolDialog } from "@/components/health-surveillance/JobRoleProtocolDialog";
+import { NotificationTestButton } from "@/components/health-surveillance/NotificationTestButton";
 
 const HealthSurveillance = () => {
   const navigate = useNavigate();
@@ -32,6 +34,7 @@ const HealthSurveillance = () => {
   const [recordDialogOpen, setRecordDialogOpen] = useState(false);
   const [protocolDialogOpen, setProtocolDialogOpen] = useState(false);
   const [judgmentDialogOpen, setJudgmentDialogOpen] = useState(false);
+  const [jobRoleProtocolDialogOpen, setJobRoleProtocolDialogOpen] = useState(false);
 
   // Fetch dashboard stats
   const { data: dashboardStats } = useQuery({
@@ -133,10 +136,15 @@ const HealthSurveillance = () => {
       
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2 text-foreground">Sorveglianza Sanitaria</h1>
-          <p className="text-muted-foreground">
-            Gestione visite mediche, protocolli sanitari e monitoraggio idoneità secondo D.Lgs. 81/08 e D.Lgs. 101/20
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold mb-2 text-foreground">Sorveglianza Sanitaria</h1>
+              <p className="text-muted-foreground">
+                Gestione visite mediche, protocolli sanitari e monitoraggio idoneità secondo D.Lgs. 81/08 e D.Lgs. 101/20
+              </p>
+            </div>
+            {!isEmployee && <NotificationTestButton />}
+          </div>
         </div>
 
         {/* Stats Grid */}
@@ -196,6 +204,14 @@ const HealthSurveillance = () => {
                 >
                   <ClipboardCheck className="mr-2 h-4 w-4" />
                   Giudizi di Idoneità
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => setJobRoleProtocolDialogOpen(true)}
+                >
+                  <UserCheck className="mr-2 h-4 w-4" />
+                  Mansioni e Protocolli
                 </Button>
               </CardContent>
             </Card>
@@ -327,6 +343,11 @@ const HealthSurveillance = () => {
           <FitnessJudgmentDialog
             open={judgmentDialogOpen}
             onOpenChange={setJudgmentDialogOpen}
+            companyId={companyId}
+          />
+          <JobRoleProtocolDialog
+            open={jobRoleProtocolDialogOpen}
+            onOpenChange={setJobRoleProtocolDialogOpen}
             companyId={companyId}
           />
         </>
