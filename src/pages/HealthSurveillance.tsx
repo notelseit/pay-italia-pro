@@ -24,6 +24,11 @@ import { ProtocolManagementDialog } from "@/components/health-surveillance/Proto
 import { FitnessJudgmentDialog } from "@/components/health-surveillance/FitnessJudgmentDialog";
 import { JobRoleProtocolDialog } from "@/components/health-surveillance/JobRoleProtocolDialog";
 import { NotificationTestButton } from "@/components/health-surveillance/NotificationTestButton";
+import { MedicalVisitCalendar } from "@/components/health-surveillance/MedicalVisitCalendar";
+import { NotificationSettingsDialog } from "@/components/health-surveillance/NotificationSettingsDialog";
+import { NotificationLogsDialog } from "@/components/health-surveillance/NotificationLogsDialog";
+import { MedicalRecordListDialog } from "@/components/health-surveillance/MedicalRecordListDialog";
+import { MedicalVisitListDialog } from "@/components/health-surveillance/MedicalVisitListDialog";
 
 const HealthSurveillance = () => {
   const navigate = useNavigate();
@@ -35,6 +40,10 @@ const HealthSurveillance = () => {
   const [protocolDialogOpen, setProtocolDialogOpen] = useState(false);
   const [judgmentDialogOpen, setJudgmentDialogOpen] = useState(false);
   const [jobRoleProtocolDialogOpen, setJobRoleProtocolDialogOpen] = useState(false);
+  const [notificationSettingsOpen, setNotificationSettingsOpen] = useState(false);
+  const [notificationLogsOpen, setNotificationLogsOpen] = useState(false);
+  const [recordListOpen, setRecordListOpen] = useState(false);
+  const [visitListOpen, setVisitListOpen] = useState(false);
 
   // Fetch dashboard stats
   const { data: dashboardStats } = useQuery({
@@ -150,7 +159,14 @@ const HealthSurveillance = () => {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, index) => (
-            <Card key={index} className="hover:shadow-elevated transition-all duration-300">
+            <Card 
+              key={index} 
+              className="hover:shadow-elevated transition-all duration-300 cursor-pointer"
+              onClick={() => {
+                if (index === 0) setRecordListOpen(true);
+                if (index === 1 || index === 2) setVisitListOpen(true);
+              }}
+            >
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   {stat.title}
@@ -163,6 +179,17 @@ const HealthSurveillance = () => {
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        {/* Calendario Visite */}
+        <div className="mb-8">
+          <MedicalVisitCalendar 
+            companyId={companyId} 
+            onVisitClick={(visit) => {
+              console.log('Visit clicked:', visit);
+              setVisitListOpen(true);
+            }}
+          />
         </div>
 
         <div className="grid lg:grid-cols-2 gap-6 mb-8">
@@ -212,6 +239,22 @@ const HealthSurveillance = () => {
                 >
                   <UserCheck className="mr-2 h-4 w-4" />
                   Mansioni e Protocolli
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => setNotificationSettingsOpen(true)}
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  Configurazione Notifiche
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => setNotificationLogsOpen(true)}
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  Storico Notifiche
                 </Button>
               </CardContent>
             </Card>
@@ -348,6 +391,26 @@ const HealthSurveillance = () => {
           <JobRoleProtocolDialog
             open={jobRoleProtocolDialogOpen}
             onOpenChange={setJobRoleProtocolDialogOpen}
+            companyId={companyId}
+          />
+          <NotificationSettingsDialog
+            open={notificationSettingsOpen}
+            onOpenChange={setNotificationSettingsOpen}
+            companyId={companyId}
+          />
+          <NotificationLogsDialog
+            open={notificationLogsOpen}
+            onOpenChange={setNotificationLogsOpen}
+            companyId={companyId}
+          />
+          <MedicalRecordListDialog
+            open={recordListOpen}
+            onOpenChange={setRecordListOpen}
+            companyId={companyId}
+          />
+          <MedicalVisitListDialog
+            open={visitListOpen}
+            onOpenChange={setVisitListOpen}
             companyId={companyId}
           />
         </>
