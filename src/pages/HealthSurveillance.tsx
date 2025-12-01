@@ -29,6 +29,7 @@ import { NotificationSettingsDialog } from "@/components/health-surveillance/Not
 import { NotificationLogsDialog } from "@/components/health-surveillance/NotificationLogsDialog";
 import { MedicalRecordListDialog } from "@/components/health-surveillance/MedicalRecordListDialog";
 import { MedicalVisitListDialog } from "@/components/health-surveillance/MedicalVisitListDialog";
+import { DVRRiskManagement } from "@/components/health-surveillance/DVRRiskManagement";
 
 const HealthSurveillance = () => {
   const navigate = useNavigate();
@@ -44,6 +45,7 @@ const HealthSurveillance = () => {
   const [notificationLogsOpen, setNotificationLogsOpen] = useState(false);
   const [recordListOpen, setRecordListOpen] = useState(false);
   const [visitListOpen, setVisitListOpen] = useState(false);
+  const [dvrRisksOpen, setDvrRisksOpen] = useState(false);
 
   // Fetch dashboard stats
   const { data: dashboardStats } = useQuery({
@@ -256,6 +258,14 @@ const HealthSurveillance = () => {
                   <FileText className="mr-2 h-4 w-4" />
                   Storico Notifiche
                 </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => setDvrRisksOpen(true)}
+                >
+                  <AlertTriangle className="mr-2 h-4 w-4" />
+                  Gestione Rischi DVR
+                </Button>
               </CardContent>
             </Card>
           )}
@@ -411,6 +421,11 @@ const HealthSurveillance = () => {
           <MedicalVisitListDialog
             open={visitListOpen}
             onOpenChange={setVisitListOpen}
+            companyId={companyId}
+          />
+          <DVRRiskManagement
+            open={dvrRisksOpen}
+            onOpenChange={setDvrRisksOpen}
             companyId={companyId}
           />
         </>

@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { CheckSquare, Upload } from "lucide-react";
+import { CheckSquare, Upload, Send } from "lucide-react";
 import { VisitChecklistDialog } from "./VisitChecklistDialog";
 import { MedicalDocumentsDialog } from "./MedicalDocumentsDialog";
 
@@ -236,24 +236,44 @@ export const MedicalVisitViewDialog = ({ open, onOpenChange, visit, companyId }:
           </div>
 
           <div className="flex justify-between gap-2 pt-4 border-t">
-            <div className="flex gap-2">
-              <Button 
-                type="button" 
-                variant="outline"
-                onClick={() => setChecklistOpen(true)}
-              >
-                <CheckSquare className="h-4 w-4 mr-2" />
-                Checklist
-              </Button>
-              <Button 
-                type="button" 
-                variant="outline"
-                onClick={() => setDocumentsOpen(true)}
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                Documenti
-              </Button>
-            </div>
+          <div className="flex justify-end gap-2">
+            <Button 
+              type="button" 
+              variant="outline"
+              onClick={async () => {
+                try {
+                  await supabase.functions.invoke("send-visit-confirmation", {
+                    body: {
+                      visitId: visit.id,
+                      companyId: companyId,
+                    },
+                  });
+                  toast.success("Email di conferma inviata");
+                } catch (error: any) {
+                  toast.error(`Errore: ${error.message}`);
+                }
+              }}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Invia Conferma
+            </Button>
+            <Button 
+              type="button" 
+              variant="outline"
+              onClick={() => setChecklistOpen(true)}
+            >
+              <CheckSquare className="h-4 w-4 mr-2" />
+              Checklist
+            </Button>
+            <Button 
+              type="button" 
+              variant="outline"
+              onClick={() => setDocumentsOpen(true)}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Documenti
+            </Button>
+          </div>
 
             <div className="flex gap-2">
               {!isEditing ? (
