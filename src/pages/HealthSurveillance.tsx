@@ -56,6 +56,7 @@ const HealthSurveillance = () => {
   const [recordListOpen, setRecordListOpen] = useState(false);
   const [visitListOpen, setVisitListOpen] = useState(false);
   const [dvrRisksOpen, setDvrRisksOpen] = useState(false);
+  const [prefilledEmployeeId, setPrefilledEmployeeId] = useState<string | undefined>();
 
   // Fetch dashboard stats
   const { data: dashboardStats } = useQuery({
@@ -366,7 +367,14 @@ const HealthSurveillance = () => {
                         </p>
                       </div>
                     </div>
-                    <Button size="sm" variant="outline">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => {
+                        setPrefilledEmployeeId(judgment.employee_id);
+                        setJudgmentDialogOpen(true);
+                      }}
+                    >
                       Rinnova
                     </Button>
                   </div>
@@ -401,8 +409,12 @@ const HealthSurveillance = () => {
           />
           <FitnessJudgmentDialog
             open={judgmentDialogOpen}
-            onOpenChange={setJudgmentDialogOpen}
+            onOpenChange={(open) => {
+              setJudgmentDialogOpen(open);
+              if (!open) setPrefilledEmployeeId(undefined);
+            }}
             companyId={companyId}
+            prefilledEmployeeId={prefilledEmployeeId}
           />
           <JobRoleProtocolDialog
             open={jobRoleProtocolDialogOpen}
