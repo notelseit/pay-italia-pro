@@ -52,7 +52,7 @@ export const PayrollTab = ({ form, companyId }: PayrollTabProps) => {
                 <FormLabel>Contratto CCNL</FormLabel>
                 <Select 
                   onValueChange={field.onChange} 
-                  value={field.value}
+                  value={field.value || undefined}
                   disabled={isLoading}
                 >
                   <FormControl>
@@ -61,11 +61,13 @@ export const PayrollTab = ({ form, companyId }: PayrollTabProps) => {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {contracts?.map((contract) => (
-                      <SelectItem key={contract.id} value={contract.id}>
-                        {contract.name}
-                      </SelectItem>
-                    ))}
+                    {contracts
+                      ?.filter((contract) => contract.id && contract.id.trim() !== "")
+                      .map((contract) => (
+                        <SelectItem key={contract.id} value={contract.id}>
+                          {contract.name}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
