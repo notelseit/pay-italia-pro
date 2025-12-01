@@ -24,6 +24,19 @@ const handler = async (req: Request): Promise<Response> => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Get email settings for the company
+    const { data: emailSettings, error: settingsError } = await supabase
+      .from("email_settings")
+      .select("*")
+      .single();
+
+    if (settingsError) {
+      console.error("Error fetching email settings:", settingsError);
+    }
+
+    const fromEmail = emailSettings?.from_email || "Sorveglianza Sanitaria <onboarding@resend.dev>";
+    const fromName = emailSettings?.from_name || "Sorveglianza Sanitaria";
+
     // Get visit details with employee info
     const { data: visit, error: visitError } = await supabase
       .from("medical_visits")
@@ -112,7 +125,7 @@ const handler = async (req: Request): Promise<Response> => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Sorveglianza Sanitaria <onboarding@resend.dev>",
+        from: fromEmail,
         to: [visit.employees.email],
         subject: `Conferma Visita Medica - ${visitDate}`,
         html: emailHtml,
