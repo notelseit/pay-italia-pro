@@ -191,6 +191,73 @@ export type Database = {
           },
         ]
       }
+      digital_signatures: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          document_id: string | null
+          id: string
+          ip_address: string | null
+          is_valid: boolean | null
+          judgment_id: string | null
+          signature_data: string
+          signature_hash: string
+          signed_by: string
+          timestamp: string
+          user_agent: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          document_id?: string | null
+          id?: string
+          ip_address?: string | null
+          is_valid?: boolean | null
+          judgment_id?: string | null
+          signature_data: string
+          signature_hash: string
+          signed_by: string
+          timestamp?: string
+          user_agent?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          document_id?: string | null
+          id?: string
+          ip_address?: string | null
+          is_valid?: boolean | null
+          judgment_id?: string | null
+          signature_data?: string
+          signature_hash?: string
+          signed_by?: string
+          timestamp?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digital_signatures_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digital_signatures_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "medical_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digital_signatures_judgment_id_fkey"
+            columns: ["judgment_id"]
+            isOneToOne: false
+            referencedRelation: "fitness_judgments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           category: string
@@ -231,6 +298,56 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "documents_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dvr_risks: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          risk_category: string
+          risk_code: string
+          risk_name: string
+          severity_level: string | null
+          suggested_protocols: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          risk_category: string
+          risk_code: string
+          risk_name: string
+          severity_level?: string | null
+          suggested_protocols?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          risk_category?: string
+          risk_code?: string
+          risk_name?: string
+          severity_level?: string | null
+          suggested_protocols?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dvr_risks_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
@@ -1771,6 +1888,70 @@ export type Database = {
           },
           {
             foreignKeyName: "visit_checklists_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "medical_visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      visit_confirmations: {
+        Row: {
+          company_id: string
+          confirmation_token: string
+          confirmed_at: string | null
+          created_at: string | null
+          email_sent: boolean | null
+          email_sent_at: string | null
+          employee_id: string
+          id: string
+          status: string
+          updated_at: string | null
+          visit_id: string
+        }
+        Insert: {
+          company_id: string
+          confirmation_token?: string
+          confirmed_at?: string | null
+          created_at?: string | null
+          email_sent?: boolean | null
+          email_sent_at?: string | null
+          employee_id: string
+          id?: string
+          status?: string
+          updated_at?: string | null
+          visit_id: string
+        }
+        Update: {
+          company_id?: string
+          confirmation_token?: string
+          confirmed_at?: string | null
+          created_at?: string | null
+          email_sent?: boolean | null
+          email_sent_at?: string | null
+          employee_id?: string
+          id?: string
+          status?: string
+          updated_at?: string | null
+          visit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visit_confirmations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visit_confirmations_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visit_confirmations_visit_id_fkey"
             columns: ["visit_id"]
             isOneToOne: false
             referencedRelation: "medical_visits"
