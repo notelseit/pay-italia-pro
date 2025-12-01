@@ -11,6 +11,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
+import { Upload, Download } from "lucide-react";
+import { MedicalDocumentsDialog } from "./MedicalDocumentsDialog";
+import { generateMedicalRecordPDF } from "@/lib/medicalRecordPdfGenerator";
 
 interface MedicalRecordViewDialogProps {
   open: boolean;
@@ -21,6 +24,7 @@ interface MedicalRecordViewDialogProps {
 
 export const MedicalRecordViewDialog = ({ open, onOpenChange, record, companyId }: MedicalRecordViewDialogProps) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [documentsOpen, setDocumentsOpen] = useState(false);
   const [formData, setFormData] = useState({
     protocol_id: record.protocol_id || "",
     work_history: record.work_history || "",
@@ -33,6 +37,36 @@ export const MedicalRecordViewDialog = ({ open, onOpenChange, record, companyId 
   });
 
   const queryClient = useQueryClient();
+
+  const { data: visits } = useQuery({
+    queryKey: ["medical-visits-for-record", record.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("medical_visits")
+        .select("*")
+        .eq("medical_record_id", record.id)
+        .order("scheduled_date", { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: open,
+  });
+
+  const { data: judgments } = useQuery({
+    queryKey: ["fitness-judgments-for-record", record.employee_id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("fitness_judgments")
+        .select("*")
+        .eq("employee_id", record.employee_id)
+        .order("judgment_date", { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: open,
+  });
 
   useEffect(() => {
     setFormData({
@@ -101,6 +135,21 @@ export const MedicalRecordViewDialog = ({ open, onOpenChange, record, companyId 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     updateRecordMutation.mutate(formData);
+  };
+
+  const handleGeneratePDF = async () => {
+    try {
+      const pdf = generateMedicalRecordPDF(
+        record,
+        visits || [],
+        judgments || []
+      );
+      
+      pdf.save(`cartella_sanitaria_${record.employees?.full_name}_${new Date().getTime()}.pdf`);
+      toast.success("PDF generato con successo");
+    } catch (error: any) {
+      toast.error(`Errore nella generazione del PDF: ${error.message}`);
+    }
   };
 
   return (
@@ -241,29 +290,58 @@ export const MedicalRecordViewDialog = ({ open, onOpenChange, record, companyId 
             </TabsContent>
           </Tabs>
 
-          <div className="flex justify-end gap-2">
-            {!isEditing ? (
-              <>
-                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                  Chiudi
-                </Button>
-                <Button type="button" onClick={() => setIsEditing(true)}>
-                  Modifica
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
-                  Annulla
-                </Button>
-                <Button type="submit" disabled={updateRecordMutation.isPending}>
-                  {updateRecordMutation.isPending ? "Salvataggio..." : "Salva Modifiche"}
-                </Button>
-              </>
-            )}
+          <div className="flex justify-between gap-2 pt-4 border-t">
+            <div className="flex gap-2">
+              <Button 
+                type="button" 
+                variant="outline"
+                onClick={() => setDocumentsOpen(true)}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Documenti
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline"
+                onClick={handleGeneratePDF}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Genera PDF
+              </Button>
+            </div>
+
+            <div className="flex gap-2">
+              {!isEditing ? (
+                <>
+                  <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                    Chiudi
+                  </Button>
+                  <Button type="button" onClick={() => setIsEditing(true)}>
+                    Modifica
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
+                    Annulla
+                  </Button>
+                  <Button type="submit" disabled={updateRecordMutation.isPending}>
+                    {updateRecordMutation.isPending ? "Salvataggio..." : "Salva Modifiche"}
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </form>
       </DialogContent>
+
+      <MedicalDocumentsDialog
+        open={documentsOpen}
+        onOpenChange={setDocumentsOpen}
+        employeeId={record.employee_id}
+        companyId={companyId}
+        medicalRecordId={record.id}
+      />
     </Dialog>
   );
 };
