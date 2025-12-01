@@ -826,6 +826,45 @@ export type Database = {
         }
         Relationships: []
       }
+      job_role_protocols: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          id: string
+          job_role: string
+          protocol_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          id?: string
+          job_role: string
+          protocol_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          id?: string
+          job_role?: string
+          protocol_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_role_protocols_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_role_protocols_protocol_id_fkey"
+            columns: ["protocol_id"]
+            isOneToOne: false
+            referencedRelation: "medical_protocols"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medical_convocations: {
         Row: {
           company_id: string
