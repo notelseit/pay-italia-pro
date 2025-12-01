@@ -175,15 +175,15 @@ export const MedicalRecordViewDialog = ({ open, onOpenChange, record, companyId 
           <div className="space-y-2">
             <Label htmlFor="protocol_id">Protocollo Sanitario</Label>
             <Select
-              value={formData.protocol_id}
-              onValueChange={(value) => setFormData({ ...formData, protocol_id: value })}
+              value={formData.protocol_id || "none"}
+              onValueChange={(value) => setFormData({ ...formData, protocol_id: value === "none" ? null : value })}
               disabled={!isEditing}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Seleziona protocollo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Nessuno</SelectItem>
+                <SelectItem value="none">Nessuno</SelectItem>
                 {protocols?.map((protocol) => (
                   <SelectItem key={protocol.id} value={protocol.id}>
                     {protocol.name}
