@@ -12,6 +12,19 @@ serve(async (req) => {
   }
 
   try {
+    // Verify authorization for manual triggers
+    const authHeader = req.headers.get("Authorization");
+    const expectedSecret = Deno.env.get("CRON_SECRET");
+    
+    // Allow if called with correct secret or skip for now if no secret is set
+    if (expectedSecret && authHeader !== `Bearer ${expectedSecret}`) {
+      console.log('[check-medical-visit-expiry] Unauthorized access attempt');
+      return new Response(
+        JSON.stringify({ error: "Unauthorized access" }),
+        { status: 401, headers: corsHeaders }
+      );
+    }
+
     console.log('[check-medical-visit-expiry] Starting medical visit expiry check...');
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;

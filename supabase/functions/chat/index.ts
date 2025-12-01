@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.1";
+import { checkRateLimit } from "../_shared/rate-limiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,6 +13,21 @@ serve(async (req) => {
   }
 
   try {
+    // Rate limit by IP address
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0] || "unknown";
+    const rateLimitResult = checkRateLimit(clientIp, {
+      windowMs: 60 * 1000, // 1 minute
+      maxRequests: 20 // 20 messages per minute
+    });
+
+    if (!rateLimitResult.allowed) {
+      console.log(`Rate limit exceeded for IP: ${clientIp}`);
+      return new Response(
+        JSON.stringify({ error: "Troppe richieste. Riprova tra qualche minuto." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { messages } = await req.json();
     console.log("Chat request received with", messages?.length || 0, "messages");
 

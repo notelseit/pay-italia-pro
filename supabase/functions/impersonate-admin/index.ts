@@ -61,7 +61,7 @@ serve(async (req) => {
     }
 
     // Get the admin user for this company
-    console.log('Looking for admin user for company:', companyId);
+    console.log('Looking for admin user for company');
     
     const { data: adminRole, error: roleError } = await supabaseClient
       .from('user_roles')
@@ -71,7 +71,7 @@ serve(async (req) => {
       .limit(1)
       .single();
 
-    console.log('Admin role query result:', { adminRole, roleError });
+    console.log('Admin role query completed:', { hasRole: !!adminRole, hasError: !!roleError });
 
     if (roleError || !adminRole) {
       console.error('Admin role not found. Error:', roleError);
@@ -85,7 +85,7 @@ serve(async (req) => {
       .eq('id', adminRole.user_id)
       .single();
 
-    console.log('Profile query result:', { profile, profileError });
+    console.log('Profile query completed:', { hasProfile: !!profile, hasError: !!profileError });
 
     if (profileError || !profile) {
       console.error('Profile not found for admin user:', adminRole.user_id);
@@ -93,7 +93,7 @@ serve(async (req) => {
     }
 
     // Generate a session token for the admin user
-    console.log('Generating magic link for:', profile.email);
+    console.log('Generating magic link for admin access');
     
     const { data: sessionData, error: sessionError } = await supabaseClient.auth.admin.generateLink({
       type: 'magiclink',
@@ -108,7 +108,7 @@ serve(async (req) => {
       throw sessionError;
     }
 
-    console.log(`User ${user.email} accessing company ${companyId} as ${profile.email}`);
+    console.log('Impersonation successful for company:', companyId.substring(0, 8) + '...');
 
     return new Response(
       JSON.stringify({ 
