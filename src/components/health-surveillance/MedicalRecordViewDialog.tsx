@@ -134,6 +134,10 @@ export const MedicalRecordViewDialog = ({ open, onOpenChange, record, companyId 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isEditing) {
+      toast.error("Attiva la modalità modifica prima di salvare");
+      return;
+    }
     updateRecordMutation.mutate(formData);
   };
 
@@ -316,17 +320,32 @@ export const MedicalRecordViewDialog = ({ open, onOpenChange, record, companyId 
                   <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                     Chiudi
                   </Button>
-                  <Button type="button" onClick={() => setIsEditing(true)}>
+                  <Button 
+                    type="button" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setIsEditing(true);
+                    }}
+                  >
                     Modifica
                   </Button>
                 </>
               ) : (
                 <>
-                  <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setIsEditing(false);
+                    }}
+                  >
                     Annulla
                   </Button>
                   <Button type="submit" disabled={updateRecordMutation.isPending}>
-                    {updateRecordMutation.isPending ? "Salvataggio..." : "Salva Modifiche"}
+                    {updateRecordMutation.isPending ? "Salvataggio..." : "Salva"}
                   </Button>
                 </>
               )}
