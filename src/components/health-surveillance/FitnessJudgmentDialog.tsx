@@ -14,6 +14,7 @@ interface FitnessJudgmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   companyId: string;
+  prefilledEmployeeId?: string;
 }
 
 const judgmentTypes = [
@@ -23,7 +24,7 @@ const judgmentTypes = [
   { value: "idoneo_temporaneamente", label: "Idoneo Temporaneamente" },
 ];
 
-export const FitnessJudgmentDialog = ({ open, onOpenChange, companyId }: FitnessJudgmentDialogProps) => {
+export const FitnessJudgmentDialog = ({ open, onOpenChange, companyId, prefilledEmployeeId }: FitnessJudgmentDialogProps) => {
   const [formData, setFormData] = useState({
     visit_id: "",
     judgment_type: "",
@@ -38,19 +39,27 @@ export const FitnessJudgmentDialog = ({ open, onOpenChange, companyId }: Fitness
 
   // Fetch completed visits without judgment
   const { data: visits } = useQuery({
-    queryKey: ["completed-visits", companyId],
+    queryKey: ["completed-visits", companyId, prefilledEmployeeId],
     queryFn: async () => {
-      const { data: completedVisits, error: visitError } = await supabase
+      let query = supabase
         .from("medical_visits")
         .select(`
           id,
           scheduled_date,
           visit_type,
+          employee_id,
           employees (full_name)
         `)
         .eq("company_id", companyId)
         .eq("status", "completed")
         .order("completed_date", { ascending: false });
+
+      // Filter by employee if prefilledEmployeeId is provided
+      if (prefilledEmployeeId) {
+        query = query.eq("employee_id", prefilledEmployeeId);
+      }
+
+      const { data: completedVisits, error: visitError } = await query;
 
       if (visitError) throw visitError;
 
