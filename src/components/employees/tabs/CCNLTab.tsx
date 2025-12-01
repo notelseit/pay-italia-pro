@@ -33,7 +33,7 @@ export const CCNLTab = ({ form, companyId }: CCNLTabProps) => {
             <FormLabel>Contratto CCNL</FormLabel>
             <Select
               onValueChange={field.onChange}
-              value={field.value || ""}
+              value={field.value || undefined}
             >
               <FormControl>
                 <SelectTrigger>
@@ -42,20 +42,22 @@ export const CCNLTab = ({ form, companyId }: CCNLTabProps) => {
               </FormControl>
               <SelectContent>
                 {isLoading ? (
-                  <SelectItem value="loading" disabled>
+                  <div className="py-2 px-3 text-sm text-muted-foreground">
                     Caricamento...
-                  </SelectItem>
+                  </div>
                 ) : contracts && contracts.length > 0 ? (
-                  contracts.map((contract) => (
-                    <SelectItem key={contract.id} value={contract.id}>
-                      {contract.name}
-                      {contract.description && ` - ${contract.description}`}
-                    </SelectItem>
-                  ))
+                  contracts
+                    .filter((contract) => contract.id && contract.id.trim() !== "")
+                    .map((contract) => (
+                      <SelectItem key={contract.id} value={contract.id}>
+                        {contract.name}
+                        {contract.description && ` - ${contract.description}`}
+                      </SelectItem>
+                    ))
                 ) : (
-                  <SelectItem value="none" disabled>
+                  <div className="py-2 px-3 text-sm text-muted-foreground">
                     Nessun contratto disponibile
-                  </SelectItem>
+                  </div>
                 )}
               </SelectContent>
             </Select>
