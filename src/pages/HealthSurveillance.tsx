@@ -10,8 +10,18 @@ import {
   ClipboardCheck,
   UserCheck,
   Plus,
-  CalendarClock
+  CalendarClock,
+  Settings,
+  ChevronDown
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
@@ -218,54 +228,50 @@ const HealthSurveillance = () => {
                   <FileText className="mr-2 h-4 w-4" />
                   Nuova Cartella Sanitaria
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => setProtocolDialogOpen(true)}
-                >
-                  <Stethoscope className="mr-2 h-4 w-4" />
-                  Gestione Protocolli
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => setJudgmentDialogOpen(true)}
-                >
-                  <ClipboardCheck className="mr-2 h-4 w-4" />
-                  Giudizi di Idoneità
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => setJobRoleProtocolDialogOpen(true)}
-                >
-                  <UserCheck className="mr-2 h-4 w-4" />
-                  Mansioni e Protocolli
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => setNotificationSettingsOpen(true)}
-                >
-                  <Calendar className="mr-2 h-4 w-4" />
-                  Configurazione Notifiche
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => setNotificationLogsOpen(true)}
-                >
-                  <FileText className="mr-2 h-4 w-4" />
-                  Storico Notifiche
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => setDvrRisksOpen(true)}
-                >
-                  <AlertTriangle className="mr-2 h-4 w-4" />
-                  Gestione Rischi DVR
-                </Button>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start"
+                    >
+                      <Settings className="mr-2 h-4 w-4" />
+                      Gestione e Configurazioni
+                      <ChevronDown className="ml-auto h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-64">
+                    <DropdownMenuLabel>Gestione Sanitaria</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => setProtocolDialogOpen(true)}>
+                      <Stethoscope className="mr-2 h-4 w-4" />
+                      Gestione Protocolli
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setJudgmentDialogOpen(true)}>
+                      <ClipboardCheck className="mr-2 h-4 w-4" />
+                      Giudizi di Idoneità
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setJobRoleProtocolDialogOpen(true)}>
+                      <UserCheck className="mr-2 h-4 w-4" />
+                      Mansioni e Protocolli
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setDvrRisksOpen(true)}>
+                      <AlertTriangle className="mr-2 h-4 w-4" />
+                      Gestione Rischi DVR
+                    </DropdownMenuItem>
+                    
+                    <DropdownMenuSeparator />
+                    
+                    <DropdownMenuLabel>Notifiche</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => setNotificationSettingsOpen(true)}>
+                      <Calendar className="mr-2 h-4 w-4" />
+                      Configurazione Notifiche
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setNotificationLogsOpen(true)}>
+                      <FileText className="mr-2 h-4 w-4" />
+                      Storico Notifiche
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </CardContent>
             </Card>
           )}
