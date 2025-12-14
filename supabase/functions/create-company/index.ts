@@ -6,6 +6,32 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Strong password validation
+function validatePassword(password: string): { valid: boolean; message?: string } {
+  if (password.length < 8) {
+    return { valid: false, message: "La password deve essere di almeno 8 caratteri" };
+  }
+  if (!/[A-Z]/.test(password)) {
+    return { valid: false, message: "La password deve contenere almeno una lettera maiuscola" };
+  }
+  if (!/[a-z]/.test(password)) {
+    return { valid: false, message: "La password deve contenere almeno una lettera minuscola" };
+  }
+  if (!/[0-9]/.test(password)) {
+    return { valid: false, message: "La password deve contenere almeno un numero" };
+  }
+  if (!/[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/`~]/.test(password)) {
+    return { valid: false, message: "La password deve contenere almeno un carattere speciale" };
+  }
+  return { valid: true };
+}
+
+// Email validation
+function validateEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email) && email.length <= 255;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -30,7 +56,10 @@ serve(async (req) => {
     // Verify the caller is authenticated
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
     if (authError || !user) {
-      throw new Error('Unauthorized');
+      return new Response(
+        JSON.stringify({ error: 'Non autorizzato' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
     }
 
     // Check if user is superadmin or admin
@@ -43,15 +72,58 @@ serve(async (req) => {
     const isAdmin = userRoles?.some(r => r.role === 'admin');
     
     if (!isSuperAdmin && !isAdmin) {
-      throw new Error('Only superadmins and admins can create companies');
+      return new Response(
+        JSON.stringify({ error: 'Solo superadmin e admin possono creare aziende' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+      );
     }
 
-    // Get the user's company_id if they are admin (for parent_company_id)
     const adminCompanyId = isAdmin && !isSuperAdmin 
       ? userRoles?.find(r => r.role === 'admin')?.company_id 
       : null;
 
     const { adminEmail, adminPassword, adminFullName, companyName, companyEmail } = await req.json();
+
+    // Validate inputs
+    if (!adminEmail || !adminPassword || !adminFullName || !companyName || !companyEmail) {
+      return new Response(
+        JSON.stringify({ error: 'Tutti i campi sono obbligatori' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    // Validate emails
+    if (!validateEmail(adminEmail) || !validateEmail(companyEmail)) {
+      return new Response(
+        JSON.stringify({ error: 'Email non valida' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    // Validate password strength
+    const passwordValidation = validatePassword(adminPassword);
+    if (!passwordValidation.valid) {
+      return new Response(
+        JSON.stringify({ error: passwordValidation.message }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    // Validate names
+    if (adminFullName.length < 2 || adminFullName.length > 100) {
+      return new Response(
+        JSON.stringify({ error: 'Il nome deve essere tra 2 e 100 caratteri' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    if (companyName.length < 2 || companyName.length > 200) {
+      return new Response(
+        JSON.stringify({ error: 'Il nome azienda deve essere tra 2 e 200 caratteri' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
     console.log('Creating company:', companyName, 'with admin:', adminEmail);
 
     // Create the company first
@@ -68,7 +140,10 @@ serve(async (req) => {
 
     if (companyError) {
       console.error('Company creation error:', companyError);
-      throw companyError;
+      return new Response(
+        JSON.stringify({ error: 'Impossibile creare l\'azienda.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
     }
     console.log('Company created successfully:', company.id);
 
@@ -86,11 +161,14 @@ serve(async (req) => {
       console.error('User creation error:', userError);
       // Rollback company creation if user creation fails
       await supabaseClient.from('companies').delete().eq('id', company.id);
-      throw userError;
+      return new Response(
+        JSON.stringify({ error: 'Impossibile creare l\'utente admin. L\'email potrebbe essere già in uso.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
     }
     console.log('User created successfully:', newUser.user.id);
 
-    // Update profile for the new user (profile was created by trigger)
+    // Update profile for the new user
     const { error: profileError } = await supabaseClient
       .from('profiles')
       .update({
@@ -101,7 +179,13 @@ serve(async (req) => {
 
     if (profileError) {
       console.error('Profile update error:', profileError);
-      throw profileError;
+      // Rollback
+      await supabaseClient.from('companies').delete().eq('id', company.id);
+      await supabaseClient.auth.admin.deleteUser(newUser.user.id);
+      return new Response(
+        JSON.stringify({ error: 'Impossibile creare il profilo.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
     }
     console.log('Profile updated successfully');
 
@@ -116,9 +200,38 @@ serve(async (req) => {
 
     if (roleError) {
       console.error('Role assignment error:', roleError);
-      throw roleError;
+      // Rollback
+      await supabaseClient.from('companies').delete().eq('id', company.id);
+      await supabaseClient.auth.admin.deleteUser(newUser.user.id);
+      return new Response(
+        JSON.stringify({ error: 'Impossibile assegnare il ruolo admin.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
     }
     console.log('Admin role assigned successfully');
+
+    // Log audit event
+    const auditClientIp = req.headers.get("x-forwarded-for") || "unknown";
+    const userAgent = req.headers.get("user-agent") || "unknown";
+
+    await supabaseClient.from("audit_logs").insert({
+      company_id: company.id,
+      user_id: user.id,
+      user_email: user.email || "unknown",
+      action: "company_created",
+      entity_type: "company",
+      entity_id: company.id,
+      new_value: { 
+        company_name: companyName, 
+        company_email: companyEmail,
+        admin_email: adminEmail,
+        admin_name: adminFullName 
+      },
+      ip_address: auditClientIp,
+      user_agent: userAgent,
+    });
+
+    console.log(`Company created: ${companyName} by ${user.email}`);
 
     return new Response(
       JSON.stringify({ 
@@ -134,19 +247,11 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Create company error:', error);
-    let errorMessage = 'Unknown error occurred';
-    
-    if (error instanceof Error) {
-      errorMessage = error.message;
-    } else if (typeof error === 'object' && error !== null) {
-      errorMessage = JSON.stringify(error);
-    }
-    
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: 'Si è verificato un errore. Riprova più tardi.' }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400 
+        status: 500 
       }
     );
   }

@@ -12,19 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Building2, UserPlus, Edit, Trash2, LogIn } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { z } from "zod";
-
-const createCompanySchema = z.object({
-  adminEmail: z.string().email("Email non valida"),
-  adminPassword: z.string().min(8, "La password deve essere di almeno 8 caratteri"),
-  adminFullName: z.string().min(1, "Il nome è obbligatorio"),
-  companyName: z.string().min(1, "Il nome azienda è obbligatorio"),
-  companyEmail: z.string().email("Email non valida"),
-});
-
-const editCompanySchema = z.object({
-  companyName: z.string().min(1, "Il nome azienda è obbligatorio"),
-  companyEmail: z.string().email("Email non valida"),
-});
+import { createCompanySchema, editCompanySchema, getFirstValidationError } from "@/lib/validationSchemas";
 
 const Companies = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -134,18 +122,18 @@ const Companies = () => {
     const formData = new FormData(e.currentTarget);
 
     const data = {
-      adminEmail: formData.get("adminEmail") as string,
+      adminEmail: (formData.get("adminEmail") as string).trim(),
       adminPassword: formData.get("adminPassword") as string,
-      adminFullName: formData.get("adminFullName") as string,
-      companyName: formData.get("companyName") as string,
-      companyEmail: formData.get("companyEmail") as string,
+      adminFullName: (formData.get("adminFullName") as string).trim(),
+      companyName: (formData.get("companyName") as string).trim(),
+      companyEmail: (formData.get("companyEmail") as string).trim(),
     };
 
     const validation = createCompanySchema.safeParse(data);
     if (!validation.success) {
       toast({
         title: "Errore di validazione",
-        description: validation.error.errors[0].message,
+        description: getFirstValidationError(validation.error),
         variant: "destructive",
       });
       return;
@@ -160,15 +148,15 @@ const Companies = () => {
 
     const formData = new FormData(e.currentTarget);
     const data = {
-      companyName: formData.get("companyName") as string,
-      companyEmail: formData.get("companyEmail") as string,
+      companyName: (formData.get("companyName") as string).trim(),
+      companyEmail: (formData.get("companyEmail") as string).trim(),
     };
 
     const validation = editCompanySchema.safeParse(data);
     if (!validation.success) {
       toast({
         title: "Errore di validazione",
-        description: validation.error.errors[0].message,
+        description: getFirstValidationError(validation.error),
         variant: "destructive",
       });
       return;

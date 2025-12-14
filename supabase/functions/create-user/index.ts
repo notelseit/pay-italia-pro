@@ -16,20 +16,46 @@ interface CreateUserRequest {
   companyId: string;
 }
 
+// Strong password validation
+function validatePassword(password: string): { valid: boolean; message?: string } {
+  if (password.length < 8) {
+    return { valid: false, message: "La password deve essere di almeno 8 caratteri" };
+  }
+  if (!/[A-Z]/.test(password)) {
+    return { valid: false, message: "La password deve contenere almeno una lettera maiuscola" };
+  }
+  if (!/[a-z]/.test(password)) {
+    return { valid: false, message: "La password deve contenere almeno una lettera minuscola" };
+  }
+  if (!/[0-9]/.test(password)) {
+    return { valid: false, message: "La password deve contenere almeno un numero" };
+  }
+  if (!/[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/`~]/.test(password)) {
+    return { valid: false, message: "La password deve contenere almeno un carattere speciale" };
+  }
+  return { valid: true };
+}
+
+// Email validation
+function validateEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email) && email.length <= 255;
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Get identifier for rate limiting (IP or user ID)
+    // Get identifier for rate limiting
     const authHeader = req.headers.get("Authorization");
     const clientIp = req.headers.get("x-forwarded-for") || "unknown";
     const identifier = authHeader ? authHeader.slice(0, 50) : clientIp;
     
     // Check rate limit: 10 requests per minute
     const rateLimitResult = checkRateLimit(identifier, {
-      windowMs: 60 * 1000, // 1 minute
+      windowMs: 60 * 1000,
       maxRequests: 10
     });
     
@@ -52,18 +78,49 @@ const handler = async (req: Request): Promise<Response> => {
     
     const { email, password, fullName, role, companyId }: CreateUserRequest = await req.json();
 
-    // Validate inputs
+    // Validate required inputs
     if (!email || !password || !fullName || !role || !companyId) {
       return new Response(
         JSON.stringify({ error: "Tutti i campi sono obbligatori" }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    // Create Supabase admin client with service role
+    // Validate email format
+    if (!validateEmail(email)) {
+      return new Response(
+        JSON.stringify({ error: "Email non valida" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Validate password strength
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.valid) {
+      return new Response(
+        JSON.stringify({ error: passwordValidation.message }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Validate full name
+    if (fullName.length < 2 || fullName.length > 100) {
+      return new Response(
+        JSON.stringify({ error: "Il nome deve essere tra 2 e 100 caratteri" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Validate role
+    const validRoles = ["admin", "hr_manager", "employee", "admin_sub_azienda"];
+    if (!validRoles.includes(role)) {
+      return new Response(
+        JSON.stringify({ error: "Ruolo non valido" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Create Supabase admin client
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
@@ -75,14 +132,11 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
 
-    // Check if requesting user is admin of the company
+    // Verify requesting user is authenticated
     if (!authHeader) {
       return new Response(
         JSON.stringify({ error: "Non autorizzato" }),
-        {
-          status: 401,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -92,10 +146,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (authError || !requestingUser) {
       return new Response(
         JSON.stringify({ error: "Non autorizzato" }),
-        {
-          status: 401,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -110,10 +161,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (roleError || userRole?.role !== "admin") {
       return new Response(
         JSON.stringify({ error: "Solo gli amministratori possono creare nuovi utenti" }),
-        {
-          status: 403,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -122,19 +170,14 @@ const handler = async (req: Request): Promise<Response> => {
       email,
       password,
       email_confirm: true,
-      user_metadata: {
-        full_name: fullName,
-      },
+      user_metadata: { full_name: fullName },
     });
 
     if (createError) {
       console.error("Error creating user:", createError);
       return new Response(
-        JSON.stringify({ error: "Impossibile creare l'utente. Riprova o contatta l'assistenza." }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
+        JSON.stringify({ error: "Impossibile creare l'utente. L'email potrebbe essere già in uso." }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -146,14 +189,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (profileError) {
       console.error("Error updating profile:", profileError);
-      // Try to clean up the created user
       await supabaseAdmin.auth.admin.deleteUser(newUser.user.id);
       return new Response(
-        JSON.stringify({ error: "Impossibile creare il profilo utente. Riprova o contatta l'assistenza." }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
+        JSON.stringify({ error: "Impossibile creare il profilo utente." }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -168,38 +207,43 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (roleInsertError) {
       console.error("Error assigning role:", roleInsertError);
-      // Try to clean up
       await supabaseAdmin.auth.admin.deleteUser(newUser.user.id);
       return new Response(
-        JSON.stringify({ error: "Impossibile assegnare il ruolo. Riprova o contatta l'assistenza." }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
+        JSON.stringify({ error: "Impossibile assegnare il ruolo." }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
+
+    // Log audit event
+    const auditClientIp = req.headers.get("x-forwarded-for") || "unknown";
+    const userAgent = req.headers.get("user-agent") || "unknown";
+    
+    await supabaseAdmin.from("audit_logs").insert({
+      company_id: companyId,
+      user_id: requestingUser.id,
+      user_email: requestingUser.email || "unknown",
+      action: "user_created",
+      entity_type: "user",
+      entity_id: newUser.user.id,
+      new_value: { email: newUser.user.email, role, full_name: fullName },
+      ip_address: auditClientIp,
+      user_agent: userAgent,
+    });
+
+    console.log(`User created: ${newUser.user.email} with role ${role} by ${requestingUser.email}`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        user: {
-          id: newUser.user.id,
-          email: newUser.user.email,
-        },
+        user: { id: newUser.user.id, email: newUser.user.email },
       }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
+      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in create-user function:", error);
     return new Response(
-      JSON.stringify({ error: "Si è verificato un errore. Riprova o contatta l'amministratore." }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
+      JSON.stringify({ error: "Si è verificato un errore. Riprova più tardi." }),
+      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
 };
