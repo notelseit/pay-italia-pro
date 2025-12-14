@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Tables } from "@/integrations/supabase/types";
+import { logAuditEvent } from "@/lib/auditLogger";
 
 type PayrollRecord = Tables<"payroll_records"> & {
   employees?: {
@@ -74,11 +75,18 @@ export const usePayroll = (month: number, year: number, companyId?: string) => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["payroll"] });
       toast({
         title: "Cedolino generato",
         description: "Il cedolino è stato creato con successo.",
+      });
+      // Audit log
+      logAuditEvent({
+        action: "payroll_created",
+        entityType: "payroll",
+        entityId: data.id,
+        newValue: { month: data.month, year: data.year, employee_id: data.employee_id },
       });
     },
     onError: (error: Error) => {
@@ -102,11 +110,18 @@ export const usePayroll = (month: number, year: number, companyId?: string) => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["payroll"] });
       toast({
         title: "Cedolino aggiornato",
         description: "Il cedolino è stato modificato con successo.",
+      });
+      // Audit log
+      logAuditEvent({
+        action: "payroll_updated",
+        entityType: "payroll",
+        entityId: data.id,
+        newValue: { net_salary: data.net_salary, gross_total: data.gross_total },
       });
     },
     onError: (error: Error) => {
@@ -133,11 +148,18 @@ export const usePayroll = (month: number, year: number, companyId?: string) => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["payroll"] });
       toast({
         title: "Cedolino confermato",
         description: "Il cedolino è stato confermato con successo.",
+      });
+      // Audit log
+      logAuditEvent({
+        action: "payroll_confirmed",
+        entityType: "payroll",
+        entityId: data.id,
+        newValue: { confirmed_at: data.confirmed_at },
       });
     },
     onError: (error: Error) => {
@@ -230,11 +252,18 @@ export const usePayroll = (month: number, year: number, companyId?: string) => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["payroll"] });
       toast({
         title: "Cedolino inviato",
         description: "Il cedolino è stato inviato al dipendente via email.",
+      });
+      // Audit log
+      logAuditEvent({
+        action: "payroll_sent",
+        entityType: "payroll",
+        entityId: data.id,
+        newValue: { sent_at: data.sent_at },
       });
     },
     onError: (error: Error) => {
@@ -264,11 +293,17 @@ export const usePayroll = (month: number, year: number, companyId?: string) => {
 
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ["payroll"] });
       toast({
         title: "Cedolino eliminato",
         description: "Il cedolino è stato eliminato.",
+      });
+      // Audit log
+      logAuditEvent({
+        action: "payroll_deleted",
+        entityType: "payroll",
+        entityId: id,
       });
     },
     onError: (error: Error) => {

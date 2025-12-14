@@ -18,24 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
-
-const loginSchema = z.object({
-  email: z.string().email("Email non valida"),
-  password: z.string().min(6, "La password deve essere almeno 6 caratteri"),
-});
-
-const registerSchema = z
-  .object({
-    fullName: z.string().min(2, "Nome richiesto"),
-    companyName: z.string().min(2, "Nome azienda richiesto"),
-    email: z.string().email("Email non valida"),
-    password: z.string().min(6, "La password deve essere almeno 6 caratteri"),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Le password non coincidono",
-    path: ["confirmPassword"],
-  });
+import { loginFormSchema, registerFormSchema, getFirstValidationError } from "@/lib/validationSchemas";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -62,8 +45,17 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const validation = loginFormSchema.safeParse(loginData);
+    if (!validation.success) {
+      toast({
+        title: "Errore di validazione",
+        description: getFirstValidationError(validation.error),
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      loginSchema.parse(loginData);
       setIsLoading(true);
       await signIn(loginData.email, loginData.password);
       toast({
@@ -84,8 +76,17 @@ const Login = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const validation = registerFormSchema.safeParse(registerData);
+    if (!validation.success) {
+      toast({
+        title: "Errore di validazione",
+        description: getFirstValidationError(validation.error),
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      registerSchema.parse(registerData);
       setIsLoading(true);
       await signUp(registerData.email, registerData.password, registerData.fullName, registerData.companyName);
       toast({
