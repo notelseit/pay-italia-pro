@@ -126,7 +126,27 @@ serve(async (req) => {
 
     console.log('Creating company:', companyName, 'with admin:', adminEmail);
 
-    // Create the company first
+    // Check if admin email already exists BEFORE creating company
+    const { data: existingUsers, error: listError } = await supabaseClient.auth.admin.listUsers();
+    
+    if (listError) {
+      console.error('Error checking existing users:', listError);
+      return new Response(
+        JSON.stringify({ error: 'Errore durante la verifica dell\'email.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+
+    const emailExists = existingUsers.users.some(u => u.email?.toLowerCase() === adminEmail.toLowerCase());
+    if (emailExists) {
+      console.log('Email already exists:', adminEmail);
+      return new Response(
+        JSON.stringify({ error: 'L\'email admin è già registrata. Usa un\'email diversa o associa l\'utente esistente.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    // Create the company only after verifying email is available
     const { data: company, error: companyError } = await supabaseClient
       .from('companies')
       .insert({
