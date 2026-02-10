@@ -23,6 +23,7 @@ import Settings from "./pages/Settings";
 import Documents from "./pages/Documents";
 import SuperAdmin from "./pages/SuperAdmin";
 import Companies from "./pages/Companies";
+import Simulator from "./pages/Simulator";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -98,6 +99,11 @@ const AppContent = () => {
       <Route path="/companies" element={
         <ProtectedRoute requireRole={['superadmin', 'admin']}>
           <Companies />
+        </ProtectedRoute>
+      } />
+      <Route path="/simulator" element={
+        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda', 'hr_manager']}>
+          <Simulator />
         </ProtectedRoute>
       } />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

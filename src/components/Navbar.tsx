@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
-import { FileText, LogOut, Settings, Shield, ChevronDown } from "lucide-react";
+import { FileText, LogOut, Settings, Shield, ChevronDown, Calculator } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -167,6 +167,18 @@ const Navbar = () => {
                   {item.label}
                 </Button>
               ))}
+
+              {/* Simulatore Costo */}
+              {(hasRole("superadmin") || hasRole("admin") || hasRole("admin_sub_azienda") || hasRole("hr_manager")) && (
+                <Button
+                  variant={location.pathname === "/simulator" ? "secondary" : "ghost"}
+                  onClick={() => navigate("/simulator")}
+                  className="text-sm gap-1"
+                >
+                  <Calculator className="h-4 w-4" />
+                  Simulatore
+                </Button>
+              )}
 
               {/* Gestione Aziende - per superadmin e admin (non admin_sub_azienda) */}
               {(isSuperAdmin || (hasRole("admin") && !hasRole("admin_sub_azienda"))) && (
