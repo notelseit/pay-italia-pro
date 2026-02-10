@@ -12,7 +12,8 @@ import {
   Plus,
   CalendarClock,
   Settings,
-  ChevronDown
+  ChevronDown,
+  History
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -40,6 +41,7 @@ import { NotificationLogsDialog } from "@/components/health-surveillance/Notific
 import { MedicalRecordListDialog } from "@/components/health-surveillance/MedicalRecordListDialog";
 import { MedicalVisitListDialog } from "@/components/health-surveillance/MedicalVisitListDialog";
 import { DVRRiskManagement } from "@/components/health-surveillance/DVRRiskManagement";
+import { MedicalTimelineDialog } from "@/components/health-surveillance/MedicalTimelineDialog";
 
 const HealthSurveillance = () => {
   const navigate = useNavigate();
@@ -56,6 +58,7 @@ const HealthSurveillance = () => {
   const [recordListOpen, setRecordListOpen] = useState(false);
   const [visitListOpen, setVisitListOpen] = useState(false);
   const [dvrRisksOpen, setDvrRisksOpen] = useState(false);
+  const [timelineDialogOpen, setTimelineDialogOpen] = useState(false);
   const [prefilledEmployeeId, setPrefilledEmployeeId] = useState<string | undefined>();
 
   // Fetch dashboard stats
@@ -228,6 +231,14 @@ const HealthSurveillance = () => {
                 >
                   <FileText className="mr-2 h-4 w-4" />
                   Nuova Cartella Sanitaria
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => setTimelineDialogOpen(true)}
+                >
+                  <History className="mr-2 h-4 w-4" />
+                  Timeline Sanitaria
                 </Button>
                 
                 <DropdownMenu>
@@ -444,6 +455,11 @@ const HealthSurveillance = () => {
           <DVRRiskManagement
             open={dvrRisksOpen}
             onOpenChange={setDvrRisksOpen}
+            companyId={companyId}
+          />
+          <MedicalTimelineDialog
+            open={timelineDialogOpen}
+            onOpenChange={setTimelineDialogOpen}
             companyId={companyId}
           />
         </>

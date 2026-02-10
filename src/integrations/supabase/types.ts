@@ -2250,6 +2250,19 @@ export type Database = {
         }
         Returns: string
       }
+      get_medical_timeline: {
+        Args: { p_company_id: string; p_employee_id: string }
+        Returns: {
+          description: string
+          event_date: string
+          event_type: string
+          id: string
+          is_future: boolean
+          metadata: Json
+          status: string
+          title: string
+        }[]
+      }
       get_user_company: { Args: { _user_id: string }; Returns: string }
       has_role_in_company: {
         Args: {
