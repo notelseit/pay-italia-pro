@@ -460,6 +460,47 @@ export type Database = {
           },
         ]
       }
+      domain_events: {
+        Row: {
+          company_id: string
+          created_at: string
+          entity_id: string
+          entity_type: string
+          event_type: string
+          id: string
+          payload: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          event_type: string
+          id?: string
+          payload?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          event_type?: string
+          id?: string
+          payload?: Json | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "domain_events_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dvr_risks: {
         Row: {
           company_id: string

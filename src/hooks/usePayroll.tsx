@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Tables } from "@/integrations/supabase/types";
 import { logAuditEvent } from "@/lib/auditLogger";
+import { emitEvent } from "@/lib/domainEvents";
 
 type PayrollRecord = Tables<"payroll_records"> & {
   employees?: {
@@ -88,6 +89,13 @@ export const usePayroll = (month: number, year: number, companyId?: string) => {
         entityId: data.id,
         newValue: { month: data.month, year: data.year, employee_id: data.employee_id },
       });
+      emitEvent({
+        eventType: "payroll_created",
+        entityType: "payroll",
+        entityId: data.id,
+        companyId: data.company_id,
+        payload: { month: data.month, year: data.year, employee_id: data.employee_id, net_salary: data.net_salary, gross_total: data.gross_total },
+      });
     },
     onError: (error: Error) => {
       toast({
@@ -160,6 +168,13 @@ export const usePayroll = (month: number, year: number, companyId?: string) => {
         entityType: "payroll",
         entityId: data.id,
         newValue: { confirmed_at: data.confirmed_at },
+      });
+      emitEvent({
+        eventType: "payroll_confirmed",
+        entityType: "payroll",
+        entityId: data.id,
+        companyId: data.company_id,
+        payload: { confirmed_at: data.confirmed_at, month: data.month, year: data.year, employee_id: data.employee_id },
       });
     },
     onError: (error: Error) => {
@@ -264,6 +279,13 @@ export const usePayroll = (month: number, year: number, companyId?: string) => {
         entityType: "payroll",
         entityId: data.id,
         newValue: { sent_at: data.sent_at },
+      });
+      emitEvent({
+        eventType: "payroll_sent",
+        entityType: "payroll",
+        entityId: data.id,
+        companyId: data.company_id,
+        payload: { sent_at: data.sent_at, month: data.month, year: data.year, employee_id: data.employee_id },
       });
     },
     onError: (error: Error) => {
