@@ -46,7 +46,7 @@ import { MedicalTimelineDialog } from "@/components/health-surveillance/MedicalT
 const HealthSurveillance = () => {
   const navigate = useNavigate();
   const { companyId, hasRole } = useAuth();
-  const isEmployee = hasRole('employee') && !hasRole('admin') && !hasRole('hr_manager');
+  const isEmployee = hasRole('employee') && !hasRole('admin') && !hasRole('hr_manager') && !hasRole('medical_officer');
 
   const [visitDialogOpen, setVisitDialogOpen] = useState(false);
   const [recordDialogOpen, setRecordDialogOpen] = useState(false);
