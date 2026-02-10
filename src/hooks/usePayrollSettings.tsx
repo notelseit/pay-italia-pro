@@ -69,16 +69,33 @@ export function usePayrollSettings(companyId?: string) {
   });
 
   const updateSettings = useMutation({
-    mutationFn: async (updates: Partial<PayrollSettings>) => {
+    mutationFn: async (updates: Partial<PayrollSettings> & { changeSummary?: string }) => {
       if (!companyId || !settings?.id) throw new Error("Missing company or settings ID");
 
+      const { changeSummary, ...settingsUpdates } = updates;
+
+      // Create immutable version before updating
+      const { data: userData } = await supabase.auth.getUser();
+      const snapshotData = { ...settings, ...settingsUpdates };
+      const { error: versionError } = await supabase
+        .from("payroll_settings_versions" as any)
+        .insert({
+          payroll_settings_id: settings.id,
+          company_id: companyId,
+          data_json: snapshotData,
+          change_summary: changeSummary || "Aggiornamento parametri",
+          is_active: true,
+          created_by: userData.user?.id || null,
+        });
+      if (versionError) throw versionError;
+
       // Convert types for Supabase
-      const dbUpdates: any = { ...updates };
-      if (updates.irpef_brackets) {
-        dbUpdates.irpef_brackets = updates.irpef_brackets as any;
+      const dbUpdates: any = { ...settingsUpdates };
+      if (settingsUpdates.irpef_brackets) {
+        dbUpdates.irpef_brackets = settingsUpdates.irpef_brackets as any;
       }
-      if (updates.work_deductions) {
-        dbUpdates.work_deductions = updates.work_deductions as any;
+      if (settingsUpdates.work_deductions) {
+        dbUpdates.work_deductions = settingsUpdates.work_deductions as any;
       }
 
       const { data, error } = await supabase
@@ -93,9 +110,10 @@ export function usePayrollSettings(companyId?: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["payroll-settings", companyId] });
+      queryClient.invalidateQueries({ queryKey: ["version_history", "payroll_settings"] });
       toast({
         title: "Impostazioni aggiornate",
-        description: "Le impostazioni dei cedolini sono state salvate con successo.",
+        description: "Le impostazioni dei cedolini sono state salvate e una nuova versione è stata creata.",
       });
     },
     onError: (error) => {

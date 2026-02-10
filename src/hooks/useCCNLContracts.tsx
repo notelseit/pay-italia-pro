@@ -53,7 +53,30 @@ export const useCCNLContracts = (companyId?: string) => {
   });
 
   const updateContract = useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: CCNLContractUpdate }) => {
+    mutationFn: async ({ id, updates, changeSummary }: { id: string; updates: CCNLContractUpdate; changeSummary?: string }) => {
+      // Fetch current data for version snapshot
+      const { data: currentData, error: fetchError } = await supabase
+        .from("ccnl_contracts")
+        .select("*")
+        .eq("id", id)
+        .single();
+      if (fetchError) throw fetchError;
+
+      // Create immutable version
+      const { data: userData } = await supabase.auth.getUser();
+      const { error: versionError } = await supabase
+        .from("ccnl_versions" as any)
+        .insert({
+          ccnl_id: id,
+          company_id: currentData.company_id,
+          data_json: { ...currentData, ...updates },
+          change_summary: changeSummary || "Aggiornamento CCNL",
+          is_active: true,
+          created_by: userData.user?.id || null,
+        });
+      if (versionError) throw versionError;
+
+      // Update master record
       const { data, error } = await supabase
         .from("ccnl_contracts")
         .update(updates)
@@ -66,9 +89,10 @@ export const useCCNLContracts = (companyId?: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ccnl_contracts"] });
+      queryClient.invalidateQueries({ queryKey: ["version_history", "ccnl"] });
       toast({
         title: "Contratto CCNL aggiornato",
-        description: "Il contratto è stato aggiornato con successo",
+        description: "Il contratto è stato aggiornato e una nuova versione è stata creata",
       });
     },
     onError: (error) => {

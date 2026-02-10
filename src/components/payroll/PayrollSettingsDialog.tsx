@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { usePayrollSettings } from "@/hooks/usePayrollSettings";
 import { Plus, Trash2, Save } from "lucide-react";
+import { VersionBadge } from "@/components/versioning/VersionBadge";
+import { VersionHistoryDialog } from "@/components/versioning/VersionHistoryDialog";
 
 interface PayrollSettingsDialogProps {
   open: boolean;
@@ -16,6 +18,7 @@ interface PayrollSettingsDialogProps {
 
 export function PayrollSettingsDialog({ open, onOpenChange, companyId }: PayrollSettingsDialogProps) {
   const { settings, isLoading, updateSettings } = usePayrollSettings(companyId);
+  const [showHistory, setShowHistory] = useState(false);
   
   const [irpefBrackets, setIrpefBrackets] = useState(settings?.irpef_brackets || []);
   const [inpsEmployeeRate, setInpsEmployeeRate] = useState(settings?.inps_employee_rate || 0);
@@ -110,8 +113,27 @@ export function PayrollSettingsDialog({ open, onOpenChange, companyId }: Payroll
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Configurazione Parametri Cedolini</DialogTitle>
+          <div className="flex items-center gap-3">
+            <DialogTitle>Configurazione Parametri Cedolini</DialogTitle>
+            {settings?.id && (
+              <VersionBadge
+                entityType="payroll_settings"
+                entityId={settings.id}
+                onClick={() => setShowHistory(true)}
+              />
+            )}
+          </div>
         </DialogHeader>
+
+        {settings?.id && (
+          <VersionHistoryDialog
+            open={showHistory}
+            onOpenChange={setShowHistory}
+            entityType="payroll_settings"
+            entityId={settings.id}
+            companyId={companyId}
+          />
+        )}
 
         <Tabs defaultValue="irpef" className="w-full">
           <TabsList className="grid w-full grid-cols-5 h-auto">
