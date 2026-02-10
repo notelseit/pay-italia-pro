@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Shield, UserCog, UserPlus, Trash2, Pencil } from "lucide-react";
+import { Loader2, Shield, UserCog, UserPlus, Trash2, Pencil, Stethoscope } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,7 +43,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-type UserRole = "admin" | "hr_manager" | "employee";
+type UserRole = "admin" | "hr_manager" | "employee" | "medical_officer";
 
 interface UserWithRole {
   id: string;
@@ -366,6 +366,13 @@ export function UserRolesManagement() {
         );
       case "employee":
         return <Badge variant="outline">Dipendente</Badge>;
+      case "medical_officer":
+        return (
+          <Badge variant="secondary" className="gap-1">
+            <Stethoscope className="h-3 w-3" />
+            Medico Competente
+          </Badge>
+        );
     }
   };
 
@@ -377,6 +384,8 @@ export function UserRolesManagement() {
         return "HR Manager";
       case "employee":
         return "Dipendente";
+      case "medical_officer":
+        return "Medico Competente";
     }
   };
 
@@ -463,6 +472,7 @@ export function UserRolesManagement() {
                         <SelectItem value="admin">Amministratore</SelectItem>
                         <SelectItem value="hr_manager">HR Manager</SelectItem>
                         <SelectItem value="employee">Dipendente</SelectItem>
+                        <SelectItem value="medical_officer">Medico Competente</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -529,6 +539,9 @@ export function UserRolesManagement() {
                           </SelectItem>
                           <SelectItem value="employee">
                             {getRoleLabel("employee")}
+                          </SelectItem>
+                          <SelectItem value="medical_officer">
+                            {getRoleLabel("medical_officer")}
                           </SelectItem>
                         </SelectContent>
                       </Select>

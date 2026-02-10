@@ -21,6 +21,9 @@ const Navbar = () => {
     await signOut();
   };
 
+  // Check if user is ONLY a medical_officer (no other admin/hr roles)
+  const isMedicalOfficerOnly = hasRole('medical_officer') && !hasRole('admin') && !hasRole('superadmin') && !hasRole('admin_sub_azienda') && !hasRole('hr_manager');
+
   const employeeMenuItems = [
     {
       path: "/employees",
@@ -61,7 +64,7 @@ const Navbar = () => {
     {
       path: "/dashboard",
       label: "Dashboard",
-      roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager", "employee"],
+      roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager", "employee", "medical_officer"],
     },
     { path: "/documents", label: "Documenti", roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager"] },
     { path: "/reports", label: "Report", roles: ["superadmin", "admin", "admin_sub_azienda", "hr_manager"] },
@@ -104,6 +107,26 @@ const Navbar = () => {
                 </Button>
               )}
 
+              {/* Medical Officer: menu dedicato */}
+              {isMedicalOfficerOnly ? (
+                <>
+                  <Button
+                    variant={location.pathname === "/health-surveillance" ? "secondary" : "ghost"}
+                    onClick={() => navigate("/health-surveillance")}
+                    className="text-sm"
+                  >
+                    Sorveglianza Sanitaria
+                  </Button>
+                  <Button
+                    variant={location.pathname === "/employees" ? "secondary" : "ghost"}
+                    onClick={() => navigate("/employees")}
+                    className="text-sm"
+                  >
+                    Elenco Dipendenti
+                  </Button>
+                </>
+              ) : (
+              <>
               {/* Dropdown Menu Dipendenti */}
               {visibleEmployeeMenuItems.length > 0 && (
                 <DropdownMenu>
@@ -200,6 +223,8 @@ const Navbar = () => {
                 >
                   {visibleSettings.label}
                 </Button>
+              )}
+              </>
               )}
             </div>
           </div>

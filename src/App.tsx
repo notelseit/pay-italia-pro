@@ -37,12 +37,12 @@ const AppContent = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/dashboard" element={
-        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda', 'hr_manager', 'employee']}>
+        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda', 'hr_manager', 'employee', 'medical_officer']}>
           <Dashboard />
         </ProtectedRoute>
       } />
       <Route path="/employees" element={
-        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda', 'hr_manager', 'employee']}>
+        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda', 'hr_manager', 'employee', 'medical_officer']}>
           <Employees />
         </ProtectedRoute>
       } />
@@ -72,7 +72,7 @@ const AppContent = () => {
         </ProtectedRoute>
       } />
       <Route path="/health-surveillance" element={
-        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda', 'hr_manager', 'employee']}>
+        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda', 'hr_manager', 'employee', 'medical_officer']}>
           <HealthSurveillance />
         </ProtectedRoute>
       } />

@@ -16,6 +16,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { EmployeeDialog } from "@/components/employees/EmployeeDialog";
 import { useEmployees } from "@/hooks/useEmployees";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import {
   AlertDialog,
@@ -29,6 +30,8 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const Employees = () => {
+  const { hasRole } = useAuth();
+  const isMedicalOfficerOnly = hasRole('medical_officer') && !hasRole('admin') && !hasRole('superadmin') && !hasRole('admin_sub_azienda') && !hasRole('hr_manager');
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
@@ -155,10 +158,12 @@ const Employees = () => {
                   className="pl-10"
                 />
               </div>
-              <Button variant="hero" onClick={handleAddEmployee}>
-                <Plus className="mr-2 h-4 w-4" />
-                Aggiungi Dipendente
-              </Button>
+              {!isMedicalOfficerOnly && (
+                <Button variant="hero" onClick={handleAddEmployee}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Aggiungi Dipendente
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -222,7 +227,7 @@ const Employees = () => {
                   <TableHead>Contratto</TableHead>
                   <TableHead>Retribuzione</TableHead>
                   <TableHead>Stato</TableHead>
-                  <TableHead className="text-right">Azioni</TableHead>
+                  {!isMedicalOfficerOnly && <TableHead className="text-right">Azioni</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -270,24 +275,26 @@ const Employees = () => {
                           {employee.is_active ? "Attivo" : "Non attivo"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => handleEditEmployee(employee)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => handleDeleteClick(employee.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
+                      {!isMedicalOfficerOnly && (
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleEditEmployee(employee)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleDeleteClick(employee.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))
                 )}
