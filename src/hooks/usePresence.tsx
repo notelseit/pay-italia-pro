@@ -34,6 +34,36 @@ export interface PresenceRecord {
   };
 }
 
+interface DailyDataRow {
+  day_date: string;
+  day_type: string;
+  overtime_hours: number;
+  night_holiday_hours: number;
+  notes: string;
+}
+
+async function saveDailyData(presenceRecordId: string, dailyData: DailyDataRow[]) {
+  // Delete existing daily data for this record then insert new
+  await supabase
+    .from("presence_daily")
+    .delete()
+    .eq("presence_record_id", presenceRecordId);
+
+  if (dailyData.length > 0) {
+    const rows = dailyData.map((d) => ({
+      presence_record_id: presenceRecordId,
+      day_date: d.day_date,
+      day_type: d.day_type,
+      overtime_hours: d.overtime_hours,
+      night_holiday_hours: d.night_holiday_hours,
+      notes: d.notes || null,
+    }));
+
+    const { error } = await supabase.from("presence_daily").insert(rows);
+    if (error) console.error("Error saving daily data:", error);
+  }
+}
+
 export const usePresence = (month: number, year: number) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -59,7 +89,8 @@ export const usePresence = (month: number, year: number) => {
   });
 
   const createPresence = useMutation({
-    mutationFn: async (newPresence: Omit<PresenceRecord, "id" | "created_at" | "updated_at" | "employees">) => {
+    mutationFn: async (input: any) => {
+      const { daily_data, ...newPresence } = input;
       const { data, error } = await supabase
         .from("presence_records")
         .insert(newPresence)
@@ -67,6 +98,12 @@ export const usePresence = (month: number, year: number) => {
         .single();
 
       if (error) throw error;
+
+      // Save daily data if provided
+      if (daily_data && daily_data.length > 0) {
+        await saveDailyData(data.id, daily_data);
+      }
+
       return data;
     },
     onSuccess: () => {
@@ -86,7 +123,8 @@ export const usePresence = (month: number, year: number) => {
   });
 
   const updatePresence = useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<PresenceRecord> & { id: string }) => {
+    mutationFn: async (input: any) => {
+      const { id, daily_data, ...updates } = input;
       const { data, error } = await supabase
         .from("presence_records")
         .update(updates)
@@ -95,6 +133,12 @@ export const usePresence = (month: number, year: number) => {
         .single();
 
       if (error) throw error;
+
+      // Save daily data if provided
+      if (daily_data && daily_data.length > 0) {
+        await saveDailyData(id, daily_data);
+      }
+
       return data;
     },
     onSuccess: () => {
@@ -116,7 +160,7 @@ export const usePresence = (month: number, year: number) => {
   const validatePresence = useMutation({
     mutationFn: async (id: string) => {
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       const { data, error } = await supabase
         .from("presence_records")
         .update({

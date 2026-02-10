@@ -1,5 +1,4 @@
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -8,19 +7,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PresenceCalendar } from "../PresenceCalendar";
+import { DayData } from "../DayCell";
 
 interface BasicPresenceTabProps {
   formData: any;
   setFormData: (data: any) => void;
   employees: any[];
   loadingEmployees: boolean;
+  days: DayData[];
+  onDaysChange: (days: DayData[]) => void;
+  month: number;
+  year: number;
 }
 
-export const BasicPresenceTab = ({ 
-  formData, 
-  setFormData, 
-  employees, 
-  loadingEmployees 
+export const BasicPresenceTab = ({
+  formData,
+  setFormData,
+  employees,
+  loadingEmployees,
+  days,
+  onDaysChange,
+  month,
+  year,
 }: BasicPresenceTabProps) => {
   return (
     <div className="space-y-4">
@@ -29,7 +38,7 @@ export const BasicPresenceTab = ({
           <Label htmlFor="employee">Dipendente *</Label>
           <Select
             value={formData.employee_id}
-            onValueChange={(value) => 
+            onValueChange={(value) =>
               setFormData({ ...formData, employee_id: value })
             }
             required
@@ -54,90 +63,9 @@ export const BasicPresenceTab = ({
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="working_days">Giorni Lavorativi *</Label>
-          <Input
-            id="working_days"
-            type="number"
-            min="0"
-            value={formData.working_days}
-            onChange={(e) =>
-              setFormData({ ...formData, working_days: parseInt(e.target.value) || 0 })
-            }
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="vacation_days">Giorni di Ferie</Label>
-          <Input
-            id="vacation_days"
-            type="number"
-            min="0"
-            value={formData.vacation_days}
-            onChange={(e) =>
-              setFormData({ ...formData, vacation_days: parseInt(e.target.value) || 0 })
-            }
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="sick_days">Giorni di Malattia</Label>
-          <Input
-            id="sick_days"
-            type="number"
-            min="0"
-            value={formData.sick_days}
-            onChange={(e) =>
-              setFormData({ ...formData, sick_days: parseInt(e.target.value) || 0 })
-            }
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="other_absences">Altre Assenze</Label>
-          <Input
-            id="other_absences"
-            type="number"
-            min="0"
-            value={formData.other_absences}
-            onChange={(e) =>
-              setFormData({ ...formData, other_absences: parseInt(e.target.value) || 0 })
-            }
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="overtime_hours">Ore Straordinarie</Label>
-          <Input
-            id="overtime_hours"
-            type="number"
-            min="0"
-            step="0.5"
-            value={formData.overtime_hours}
-            onChange={(e) =>
-              setFormData({ ...formData, overtime_hours: parseFloat(e.target.value) || 0 })
-            }
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="night_holiday_hours">Ore Notturno e Festivo</Label>
-          <Input
-            id="night_holiday_hours"
-            type="number"
-            min="0"
-            step="0.5"
-            value={formData.night_holiday_hours}
-            onChange={(e) =>
-              setFormData({ ...formData, night_holiday_hours: parseFloat(e.target.value) || 0 })
-            }
-          />
-        </div>
-
         <div className="col-span-2 space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="exclude_weekends">Sabato e Domenica</Label>
+            <Label htmlFor="exclude_weekends">Escludi Sabato e Domenica</Label>
             <Switch
               id="exclude_weekends"
               checked={formData.exclude_weekends}
@@ -147,10 +75,19 @@ export const BasicPresenceTab = ({
             />
           </div>
           <p className="text-xs text-muted-foreground">
-            Se attivo, sabato e domenica sono esclusi dal calcolo delle ore lavorative
+            Se attivo, sabato e domenica sono pre-impostati come "Non Lavorativo"
           </p>
         </div>
       </div>
+
+      {/* Calendario mensile */}
+      <PresenceCalendar
+        month={month}
+        year={year}
+        days={days}
+        onDaysChange={onDaysChange}
+        excludeWeekends={formData.exclude_weekends}
+      />
     </div>
   );
 };

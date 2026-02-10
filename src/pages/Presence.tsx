@@ -197,21 +197,23 @@ const Presence = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="gennaio-2025">Gennaio 2025</SelectItem>
-                    <SelectItem value="febbraio-2025">Febbraio 2025</SelectItem>
-                    <SelectItem value="marzo-2025">Marzo 2025</SelectItem>
-                    <SelectItem value="aprile-2025">Aprile 2025</SelectItem>
-                    <SelectItem value="maggio-2025">Maggio 2025</SelectItem>
-                    <SelectItem value="giugno-2025">Giugno 2025</SelectItem>
-                    <SelectItem value="luglio-2025">Luglio 2025</SelectItem>
-                    <SelectItem value="agosto-2025">Agosto 2025</SelectItem>
-                    <SelectItem value="settembre-2025">Settembre 2025</SelectItem>
-                    <SelectItem value="ottobre-2025">Ottobre 2025</SelectItem>
-                    <SelectItem value="novembre-2025">Novembre 2025</SelectItem>
-                    <SelectItem value="dicembre-2025">Dicembre 2025</SelectItem>
-                    <SelectItem value="dicembre-2024">Dicembre 2024</SelectItem>
-                    <SelectItem value="novembre-2024">Novembre 2024</SelectItem>
-                    <SelectItem value="ottobre-2024">Ottobre 2024</SelectItem>
+                    {(() => {
+                      const items: React.ReactNode[] = [];
+                      const monthNames = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"];
+                      const monthLabels = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
+                      const cy = currentDate.getFullYear();
+                      // Current year + previous year
+                      for (const yr of [cy, cy - 1]) {
+                        for (let m = 11; m >= 0; m--) {
+                          items.push(
+                            <SelectItem key={`${monthNames[m]}-${yr}`} value={`${monthNames[m]}-${yr}`}>
+                              {monthLabels[m]} {yr}
+                            </SelectItem>
+                          );
+                        }
+                      }
+                      return items;
+                    })()}
                   </SelectContent>
                 </Select>
               </div>

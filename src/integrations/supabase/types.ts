@@ -1868,6 +1868,47 @@ export type Database = {
           },
         ]
       }
+      presence_daily: {
+        Row: {
+          created_at: string
+          day_date: string
+          day_type: string
+          id: string
+          night_holiday_hours: number
+          notes: string | null
+          overtime_hours: number
+          presence_record_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_date: string
+          day_type?: string
+          id?: string
+          night_holiday_hours?: number
+          notes?: string | null
+          overtime_hours?: number
+          presence_record_id: string
+        }
+        Update: {
+          created_at?: string
+          day_date?: string
+          day_type?: string
+          id?: string
+          night_holiday_hours?: number
+          notes?: string | null
+          overtime_hours?: number
+          presence_record_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "presence_daily_presence_record_id_fkey"
+            columns: ["presence_record_id"]
+            isOneToOne: false
+            referencedRelation: "presence_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       presence_records: {
         Row: {
           allowances: number | null
