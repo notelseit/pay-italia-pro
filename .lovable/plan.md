@@ -1,100 +1,100 @@
 
 
-## Piano: Ruolo "Medical Officer" con Accesso Esclusivo ai Dati Sanitari
+## Piano: Sistema Eventi di Dominio per Payroll e Presenze
 
 ### Panoramica
 
-Aggiungere il nuovo ruolo `medical_officer` all'enum `user_role`, concedendogli accesso esclusivo alle tabelle sanitarie (medical_records, medical_visits, fitness_judgments, medical_documents, medical_protocols, vaccinations, medical_convocations, visit_checklists) e alla lista dipendenti (sola lettura). Nessun accesso a payroll, presenze, dati fiscali, contratti, impostazioni o compliance.
+Creare una tabella `domain_events` e una utility TypeScript `emitEvent()` per tracciare eventi di dominio critici (presence_validated, payroll_created, payroll_confirmed, payroll_paid, payroll_sent). Questo sistema e complementare all'audit log esistente: l'audit log registra "chi ha fatto cosa", gli eventi di dominio registrano "cosa e successo nel sistema" in formato strutturato, pronto per webhook futuri e ricostruzione stato.
 
 ---
 
-### FASE 1: Database - Enum e RLS
+### FASE 1: Database
 
 **Migrazione SQL**
 
-1. **Aggiungere valore enum**:
-   ```sql
-   ALTER TYPE user_role ADD VALUE 'medical_officer';
-   ```
+1. **Creare tabella `domain_events`**:
 
-2. **Aggiornare RLS sulle tabelle sanitarie** (8 tabelle):
-   Per ciascuna delle seguenti tabelle, aggiornare le policy "Admins and HR can manage..." per includere `'medical_officer'` nella lista dei ruoli autorizzati:
-   - `medical_records` (SELECT + ALL)
-   - `medical_visits` (SELECT + ALL)
-   - `fitness_judgments` (SELECT + ALL)
-   - `medical_documents` (SELECT + ALL)
-   - `medical_protocols` (SELECT + manage)
-   - `vaccinations` (SELECT + ALL)
-   - `medical_convocations` (SELECT + ALL)
-   - `visit_checklists` (SELECT + ALL)
-
-   Le policy FOR ALL esistenti gia verificano `role IN ('admin', 'admin_sub_azienda', 'hr_manager', 'superadmin')`. Si esegue DROP + RECREATE per aggiungere `'medical_officer'` a ciascuna.
-
-3. **Aggiungere SELECT su `employees`** per medical_officer:
-   Il medical_officer deve poter vedere la lista dipendenti (necessaria per selezionare un dipendente nella sorveglianza sanitaria), ma in sola lettura:
-   ```sql
-   CREATE POLICY "Medical officer can view employees"
-     ON public.employees FOR SELECT
-     USING (has_role_in_company(auth.uid(), company_id, 'medical_officer'::user_role));
-   ```
-
-4. **Aggiornare `has_role_in_company`**: nessuna modifica necessaria, la funzione e gia generica e funziona con qualsiasi valore dell'enum.
-
----
-
-### FASE 2: Frontend - Routing e Navigazione
-
-**Modifica `src/App.tsx`**
-
-Aggiungere `'medical_officer'` alle route a cui deve avere accesso:
-- `/dashboard` - si (vista limitata)
-- `/health-surveillance` - si
-- `/employees` - si (sola lettura)
-
-Non aggiungere a: `/payroll`, `/presence`, `/contract`, `/compliance`, `/reports`, `/documents`, `/settings`, `/simulator`, `/companies`.
-
-**Modifica `src/components/Navbar.tsx`**
-
-- Mostrare nel menu solo le voci accessibili al medical_officer:
-  - Dashboard
-  - Sorveglianza Sanitaria (come voce diretta, non dentro il dropdown Compliance)
-  - Elenco Dipendenti (sola lettura, dentro un dropdown o come voce singola)
-- Nascondere: Dipendenti (dropdown completo con presenze/cedolini/contratti), Compliance, Documenti, Report, Simulatore, Gestione Aziende, Impostazioni
-
-Logica: aggiungere un check `hasRole('medical_officer')` e creare un menu dedicato quando l'utente ha solo quel ruolo.
-
-**Modifica `src/pages/HealthSurveillance.tsx`**
-
-Il medical_officer avra accesso completo alle funzionalita sanitarie (azioni rapide, gestione protocolli, giudizi, timeline, ecc.). Aggiornare la condizione `isEmployee` per escludere medical_officer:
-```typescript
-const isEmployee = hasRole('employee') && !hasRole('admin') && !hasRole('hr_manager') && !hasRole('medical_officer');
+```
+domain_events
+  - id: uuid (PK, default gen_random_uuid())
+  - event_type: text NOT NULL (es. 'payroll_created', 'presence_validated')
+  - entity_type: text NOT NULL (es. 'payroll', 'presence')
+  - entity_id: uuid NOT NULL
+  - payload: jsonb DEFAULT '{}'
+  - company_id: uuid NOT NULL (FK -> companies)
+  - user_id: uuid (chi ha scatenato l'evento)
+  - created_at: timestamptz DEFAULT now()
 ```
 
-**Modifica `src/pages/Dashboard.tsx`**
+2. **Indici**:
+   - `idx_domain_events_company_created` su `(company_id, created_at DESC)` per query per azienda
+   - `idx_domain_events_entity` su `(entity_type, entity_id)` per lookup per entita
+   - `idx_domain_events_type` su `(event_type)` per filtraggio per tipo
 
-Per il medical_officer, mostrare una dashboard ridotta con sole statistiche sanitarie (cartelle attive, visite in scadenza) invece delle statistiche HR/payroll. Aggiungere un blocco condizionale che verifichi il ruolo e mostri le card appropriate.
+3. **RLS Policies**:
+   - Superadmin: SELECT su tutti gli eventi
+   - Admin/HR/Medical Officer: SELECT solo eventi della propria company_id
+   - INSERT: consentito a utenti autenticati (la utility controlla i permessi a monte)
+   - Nessun UPDATE o DELETE (gli eventi sono immutabili)
 
-**Modifica `src/pages/Employees.tsx`**
-
-Il medical_officer potra solo visualizzare la lista dipendenti senza poter aggiungere, modificare o eliminare. Nascondere i pulsanti di azione quando il ruolo e medical_officer.
+4. **Abilitare Realtime** (opzionale, per webhook futuri):
+   ```sql
+   ALTER PUBLICATION supabase_realtime ADD TABLE public.domain_events;
+   ```
 
 ---
 
-### FASE 3: Aggiornamento hook useAuth
+### FASE 2: Utility TypeScript
 
-Nessuna modifica strutturale necessaria. Il ruolo `medical_officer` viene gia gestito dal sistema esistente (tabella `user_roles`, funzione `has_role_in_company`, hook `useAuth` con `hasRole()`).
+**Nuovo file: `src/lib/domainEvents.ts`**
+
+Funzione centralizzata `emitEvent()`:
+
+```
+DomainEventType =
+  | 'presence_validated'
+  | 'payroll_created'
+  | 'payroll_confirmed'
+  | 'payroll_paid'
+  | 'payroll_sent'
+
+EmitEventParams {
+  eventType: DomainEventType
+  entityType: 'payroll' | 'presence'
+  entityId: string
+  companyId: string
+  payload?: Record<string, unknown>
+}
+```
+
+- Fire-and-forget (come l'audit logger): inserisce direttamente nella tabella `domain_events` via Supabase client senza bloccare il flusso principale
+- Recupera automaticamente lo `user_id` dall'utente autenticato corrente
+- Gestione errori silenziosa (console.error, mai throw)
+- Tipizzazione stretta per event_type e entity_type
 
 ---
 
-### FASE 4: Gestione assegnazione ruolo
+### FASE 3: Integrazione nei flussi esistenti
 
-**Modifica `src/components/settings/UserRolesManagement.tsx`**
+**Modifica: `src/hooks/usePayroll.tsx`**
 
-Aggiungere `medical_officer` alla lista dei ruoli selezionabili quando un admin assegna ruoli agli utenti, con etichetta "Medico Competente" e descrizione appropriata.
+Aggiungere chiamate `emitEvent()` accanto alle chiamate `logAuditEvent()` esistenti (i due sistemi coesistono):
 
-**Modifica `src/components/superadmin/HRSourcesTab.tsx`** (se gestisce ruoli)
+- `createPayrollRecord.onSuccess` -> `emitEvent({ eventType: 'payroll_created', ... })`
+- `confirmPayroll.onSuccess` -> `emitEvent({ eventType: 'payroll_confirmed', ... })`
+- `sendPayroll.onSuccess` -> `emitEvent({ eventType: 'payroll_sent', ... })`
 
-Aggiungere il nuovo ruolo alla lista disponibile.
+Payload tipico: `{ month, year, employee_id, net_salary, gross_total }`
+
+**Modifica: `src/hooks/usePresence.tsx`**
+
+Aggiungere chiamata `emitEvent()` in:
+
+- `validatePresence.onSuccess` -> `emitEvent({ eventType: 'presence_validated', entityType: 'presence', ... })`
+
+Payload tipico: `{ month, year, employee_id, working_days, validated_at }`
+
+Nota: `payroll_paid` viene predisposto come tipo evento ma non integrato immediatamente perche non esiste ancora un flusso "pagamento effettivo" nel sistema. Sara disponibile per integrazioni future.
 
 ---
 
@@ -102,15 +102,20 @@ Aggiungere il nuovo ruolo alla lista disponibile.
 
 | File | Azione |
 |------|--------|
-| Migration SQL | Nuovo - ALTER TYPE + aggiornamento 8+ RLS policies + nuova policy employees |
-| `src/App.tsx` | Modifica - aggiungere 'medical_officer' a 3 route |
-| `src/components/Navbar.tsx` | Modifica - menu dedicato per medical_officer |
-| `src/pages/HealthSurveillance.tsx` | Modifica - includere medical_officer nelle azioni |
-| `src/pages/Dashboard.tsx` | Modifica - dashboard sanitaria per medical_officer |
-| `src/pages/Employees.tsx` | Modifica - sola lettura per medical_officer |
-| `src/components/settings/UserRolesManagement.tsx` | Modifica - aggiungere ruolo alla selezione |
+| Migration SQL | Nuovo - tabella `domain_events` + indici + RLS |
+| `src/lib/domainEvents.ts` | Nuovo - utility `emitEvent()` |
+| `src/hooks/usePayroll.tsx` | Modifica - aggiungere `emitEvent()` in 3 mutation |
+| `src/hooks/usePresence.tsx` | Modifica - aggiungere `emitEvent()` in validatePresence |
 
-### Nota sulla sicurezza
+### Differenze rispetto all'Audit Log
 
-Il medical_officer NON avra policy RLS su: `payroll_records`, `payroll_settings`, `presence`, `employment_contracts`, `ccnl_contracts`, `companies` (gestione), `f24_*`, `tax_*`. L'isolamento e garantito a livello database: anche se l'utente tentasse di accedere via API, le RLS bloccano qualsiasi lettura/scrittura su dati non sanitari.
+| Aspetto | Audit Log | Domain Events |
+|---------|-----------|---------------|
+| Scopo | Chi ha fatto cosa | Cosa e successo nel sistema |
+| Storage | Edge function -> audit_logs | Insert diretto -> domain_events |
+| Mutabilita | Immutabile | Immutabile |
+| Payload | old_value / new_value | payload strutturato per evento |
+| Uso futuro | Compliance, indagini | Webhook, event sourcing, replay |
+
+Nessuna edge function necessaria. Insert diretto via Supabase client.
 
