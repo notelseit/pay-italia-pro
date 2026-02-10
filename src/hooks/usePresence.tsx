@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { emitEvent } from "@/lib/domainEvents";
 
 export interface PresenceRecord {
   id: string;
@@ -130,11 +131,18 @@ export const usePresence = (month: number, year: number) => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["presence"] });
       toast({
         title: "Presenza validata",
         description: "La registrazione è stata validata con successo.",
+      });
+      emitEvent({
+        eventType: "presence_validated",
+        entityType: "presence",
+        entityId: data.id,
+        companyId: data.company_id,
+        payload: { month: data.month, year: data.year, employee_id: data.employee_id, working_days: data.working_days, validated_at: data.validated_at },
       });
     },
     onError: (error: Error) => {
