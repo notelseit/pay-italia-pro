@@ -13,15 +13,38 @@ serve(async (req) => {
   }
 
   try {
-    // Rate limit by IP address
-    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0] || "unknown";
-    const rateLimitResult = checkRateLimit(clientIp, {
+    // Create Supabase client
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // Authenticate user
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Autenticazione richiesta" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Autenticazione non valida" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Rate limit by user ID instead of IP
+    const rateLimitResult = checkRateLimit(user.id, {
       windowMs: 60 * 1000, // 1 minute
       maxRequests: 20 // 20 messages per minute
     });
 
     if (!rateLimitResult.allowed) {
-      console.log(`Rate limit exceeded for IP: ${clientIp}`);
+      console.log(`Rate limit exceeded for user: ${user.id}`);
       return new Response(
         JSON.stringify({ error: "Troppe richieste. Riprova tra qualche minuto." }),
         { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -29,7 +52,7 @@ serve(async (req) => {
     }
 
     const { messages } = await req.json();
-    console.log("Chat request received with", messages?.length || 0, "messages");
+    console.log("Chat request received with", messages?.length || 0, "messages from user:", user.id);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -37,14 +60,8 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    // Create Supabase client
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
     // Fetch HR news sources
-    const { data: sources } = await supabase
+    const { data: sources } = await supabaseAdmin
       .from('hr_news_sources')
       .select('*')
       .eq('is_active', true);
@@ -145,7 +162,7 @@ Rispondi sempre in italiano.`;
     console.error("Chat error:", error);
     return new Response(
       JSON.stringify({ 
-        error: error instanceof Error ? error.message : "Errore sconosciuto" 
+        error: "Si è verificato un errore. Riprova più tardi." 
       }),
       {
         status: 500,
