@@ -10,6 +10,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
+import { VersionBadge } from "@/components/versioning/VersionBadge";
+import { VersionHistoryDialog } from "@/components/versioning/VersionHistoryDialog";
 
 interface ContractFormDialogProps {
   open: boolean;
@@ -27,7 +29,7 @@ export const ContractFormDialog = ({
   onSave,
 }: ContractFormDialogProps) => {
   const isEdit = !!contract?.id;
-
+  const [showHistory, setShowHistory] = useState(false);
   const [formData, setFormData] = useState({
     contract_name: "",
     contract_type: "indeterminato",
@@ -151,10 +153,29 @@ export const ContractFormDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {isEdit ? "Modifica Contratto" : "Nuovo Contratto"}
-          </DialogTitle>
+          <div className="flex items-center gap-3">
+            <DialogTitle>
+              {isEdit ? "Modifica Contratto" : "Nuovo Contratto"}
+            </DialogTitle>
+            {isEdit && contract?.id && (
+              <VersionBadge
+                entityType="contract"
+                entityId={contract.id}
+                onClick={() => setShowHistory(true)}
+              />
+            )}
+          </div>
         </DialogHeader>
+
+        {isEdit && contract?.id && (
+          <VersionHistoryDialog
+            open={showHistory}
+            onOpenChange={setShowHistory}
+            entityType="contract"
+            entityId={contract.id}
+            companyId={companyId}
+          />
+        )}
 
         <form onSubmit={handleSubmit}>
           <Tabs defaultValue="basic" className="w-full">

@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrayFieldManager } from "./ArrayFieldManager";
+import { VersionBadge } from "@/components/versioning/VersionBadge";
+import { VersionHistoryDialog } from "@/components/versioning/VersionHistoryDialog";
 
 interface CCNLFormDialogProps {
   open: boolean;
@@ -22,6 +24,7 @@ interface CCNLFormDialogProps {
 }
 
 export const CCNLFormDialog = ({ open, onOpenChange, editingContract, onSubmit }: CCNLFormDialogProps) => {
+  const [showHistory, setShowHistory] = useState(false);
   const [contractualEntities, setContractualEntities] = useState<any[]>(editingContract?.contractual_entities || []);
   const [trialPeriods, setTrialPeriods] = useState<any[]>(editingContract?.trial_periods || []);
   const [sickLeaveRules, setSickLeaveRules] = useState<any[]>(editingContract?.sick_leave_rules || []);
@@ -74,11 +77,30 @@ export const CCNLFormDialog = ({ open, onOpenChange, editingContract, onSubmit }
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{editingContract ? "Modifica Contratto CCNL" : "Nuovo Contratto CCNL"}</DialogTitle>
+          <div className="flex items-center gap-3">
+            <DialogTitle>{editingContract ? "Modifica Contratto CCNL" : "Nuovo Contratto CCNL"}</DialogTitle>
+            {editingContract?.id && (
+              <VersionBadge
+                entityType="ccnl"
+                entityId={editingContract.id}
+                onClick={() => setShowHistory(true)}
+              />
+            )}
+          </div>
           <DialogDescription>
             Configura i dettagli del contratto collettivo nazionale
           </DialogDescription>
         </DialogHeader>
+
+        {editingContract?.id && (
+          <VersionHistoryDialog
+            open={showHistory}
+            onOpenChange={setShowHistory}
+            entityType="ccnl"
+            entityId={editingContract.id}
+            companyId={editingContract.company_id}
+          />
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <Tabs defaultValue="basic" className="w-full">

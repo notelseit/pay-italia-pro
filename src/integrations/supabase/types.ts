@@ -163,6 +163,57 @@ export type Database = {
         }
         Relationships: []
       }
+      ccnl_versions: {
+        Row: {
+          ccnl_id: string
+          change_summary: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          data_json: Json
+          id: string
+          is_active: boolean
+          version_number: number
+        }
+        Insert: {
+          ccnl_id: string
+          change_summary?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          data_json: Json
+          id?: string
+          is_active?: boolean
+          version_number?: number
+        }
+        Update: {
+          ccnl_id?: string
+          change_summary?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          data_json?: Json
+          id?: string
+          is_active?: boolean
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ccnl_versions_ccnl_id_fkey"
+            columns: ["ccnl_id"]
+            isOneToOne: false
+            referencedRelation: "ccnl_contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ccnl_versions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           address: string | null
@@ -240,6 +291,57 @@ export type Database = {
             columns: ["parent_company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_versions: {
+        Row: {
+          change_summary: string | null
+          company_id: string
+          contract_id: string
+          created_at: string
+          created_by: string | null
+          data_json: Json
+          id: string
+          is_active: boolean
+          version_number: number
+        }
+        Insert: {
+          change_summary?: string | null
+          company_id: string
+          contract_id: string
+          created_at?: string
+          created_by?: string | null
+          data_json: Json
+          id?: string
+          is_active?: boolean
+          version_number?: number
+        }
+        Update: {
+          change_summary?: string | null
+          company_id?: string
+          contract_id?: string
+          created_at?: string
+          created_by?: string | null
+          data_json?: Json
+          id?: string
+          is_active?: boolean
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_versions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_versions_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "employment_contracts"
             referencedColumns: ["id"]
           },
         ]
@@ -1483,6 +1585,7 @@ export type Database = {
         Row: {
           base_salary: number
           bonuses: number | null
+          ccnl_version_id: string | null
           company_id: string
           confirmed_at: string | null
           created_at: string | null
@@ -1494,6 +1597,7 @@ export type Database = {
           month: number
           net_salary: number
           overtime_pay: number | null
+          payroll_settings_version_id: string | null
           pdf_url: string | null
           sent_at: string | null
           status: Database["public"]["Enums"]["payroll_status"] | null
@@ -1503,6 +1607,7 @@ export type Database = {
         Insert: {
           base_salary: number
           bonuses?: number | null
+          ccnl_version_id?: string | null
           company_id: string
           confirmed_at?: string | null
           created_at?: string | null
@@ -1514,6 +1619,7 @@ export type Database = {
           month: number
           net_salary: number
           overtime_pay?: number | null
+          payroll_settings_version_id?: string | null
           pdf_url?: string | null
           sent_at?: string | null
           status?: Database["public"]["Enums"]["payroll_status"] | null
@@ -1523,6 +1629,7 @@ export type Database = {
         Update: {
           base_salary?: number
           bonuses?: number | null
+          ccnl_version_id?: string | null
           company_id?: string
           confirmed_at?: string | null
           created_at?: string | null
@@ -1534,6 +1641,7 @@ export type Database = {
           month?: number
           net_salary?: number
           overtime_pay?: number | null
+          payroll_settings_version_id?: string | null
           pdf_url?: string | null
           sent_at?: string | null
           status?: Database["public"]["Enums"]["payroll_status"] | null
@@ -1541,6 +1649,13 @@ export type Database = {
           year?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "payroll_records_ccnl_version_id_fkey"
+            columns: ["ccnl_version_id"]
+            isOneToOne: false
+            referencedRelation: "ccnl_versions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "payroll_records_company_id_fkey"
             columns: ["company_id"]
@@ -1553,6 +1668,13 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_records_payroll_settings_version_id_fkey"
+            columns: ["payroll_settings_version_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_settings_versions"
             referencedColumns: ["id"]
           },
         ]
@@ -1609,6 +1731,57 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: true
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_settings_versions: {
+        Row: {
+          change_summary: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          data_json: Json
+          id: string
+          is_active: boolean
+          payroll_settings_id: string
+          version_number: number
+        }
+        Insert: {
+          change_summary?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          data_json: Json
+          id?: string
+          is_active?: boolean
+          payroll_settings_id: string
+          version_number?: number
+        }
+        Update: {
+          change_summary?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          data_json?: Json
+          id?: string
+          is_active?: boolean
+          payroll_settings_id?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_settings_versions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_settings_versions_payroll_settings_id_fkey"
+            columns: ["payroll_settings_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_settings"
             referencedColumns: ["id"]
           },
         ]

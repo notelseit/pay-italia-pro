@@ -65,7 +65,30 @@ export const useContracts = (companyId: string | null) => {
   });
 
   const updateContract = useMutation({
-    mutationFn: async ({ id, ...contractData }: any) => {
+    mutationFn: async ({ id, changeSummary, ...contractData }: any) => {
+      // Fetch current data for version snapshot
+      const { data: currentData, error: fetchError } = await supabase
+        .from("employment_contracts")
+        .select("*")
+        .eq("id", id)
+        .single();
+      if (fetchError) throw fetchError;
+
+      // Create immutable version
+      const { data: userData } = await supabase.auth.getUser();
+      const { error: versionError } = await supabase
+        .from("contract_versions" as any)
+        .insert({
+          contract_id: id,
+          company_id: currentData.company_id,
+          data_json: { ...currentData, ...contractData },
+          change_summary: changeSummary || "Aggiornamento contratto",
+          is_active: true,
+          created_by: userData.user?.id || null,
+        });
+      if (versionError) throw versionError;
+
+      // Update master record
       const { data, error } = await supabase
         .from("employment_contracts")
         .update(contractData)
@@ -78,7 +101,8 @@ export const useContracts = (companyId: string | null) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["employment_contracts"] });
-      toast.success("Contratto aggiornato con successo");
+      queryClient.invalidateQueries({ queryKey: ["version_history", "contract"] });
+      toast.success("Contratto aggiornato con successo (nuova versione creata)");
     },
     onError: (error: any) => {
       toast.error("Errore nell'aggiornamento del contratto: " + error.message);

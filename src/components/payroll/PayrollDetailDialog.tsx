@@ -30,6 +30,8 @@ interface PayrollRecord {
   confirmed_at: string | null;
   sent_at: string | null;
   pdf_url: string | null;
+  payroll_settings_version_id?: string | null;
+  ccnl_version_id?: string | null;
   employees?: { 
     full_name: string;
     tax_code?: string;
@@ -88,7 +90,7 @@ export function PayrollDetailDialog({
   const totalDeductions = Number(payroll.inps_contribution) + Number(payroll.irpef_tax);
 
   const handleDownloadPDF = async () => {
-    await generatePayrollPDF(payroll);
+    await generatePayrollPDF(payroll as any);
   };
 
   return (
