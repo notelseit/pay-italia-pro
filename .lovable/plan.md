@@ -1,115 +1,105 @@
 
 
-## Piano: Simulatore di Costo Azienda
+## Piano: Timeline Sanitaria Unificata per Dipendente
 
 ### Panoramica
-Creare una pagina dedicata `/simulator` con un wizard a step che riutilizza il motore `payrollCalculations.ts` per calcolare in tempo reale netto stimato, costo azienda e breakdown fiscale/contributivo. Nessun salvataggio DB, solo calcolo client-side con export PDF.
+Creare una timeline cronologica che aggrega tutti gli eventi sanitari di un dipendente (cartelle, visite, giudizi, documenti, scadenze future) in un'unica vista filtrata e navigabile.
 
 ---
 
-### FASE 1: Funzione di simulazione dedicata
+### FASE 1: Funzione RPC nel Database
 
-**Nuovo file: `src/lib/simulatorCalculations.ts`**
+Creare una funzione PostgreSQL `get_medical_timeline` che esegue una UNION ALL sulle 4 tabelle sanitarie, restituendo un formato uniforme:
 
-Funzione wrapper che estende `calculatePayroll` con logica specifica per la simulazione:
-- Input: RAL (annuale) o lordo mensile, CCNL opzionale, tipo contratto, regione/comune, figli a carico
-- Converte RAL in lordo mensile dividendo per numero mensilita (13 o 14 in base al CCNL)
-- Calcola addizionali regionali/comunali con aliquote personalizzate per regione (tabella statica con le 20 regioni italiane + aliquote medie comunali)
-- Output esteso rispetto a `PayrollResult`: include INAIL datore, costo azienda annuale, breakdown percentuali, cuneo fiscale
-- Supporto confronto tra due configurazioni (restituisce delta per ogni voce)
-
-Interfacce principali:
-```
-SimulatorInput {
-  inputType: 'ral' | 'mensile'
-  amount: number
-  ccnlContract?: CCNLContractData
-  contractType: 'indeterminato' | 'determinato' | 'apprendistato'
-  region: string
-  municipality: string
-  dependentsCount: number
-}
-
-SimulatorResult extends PayrollResult {
-  annualGross, annualNet, annualTotalCost
-  inailEmployer, cuneo fiscale %
-  breakdownPercentages: { irpef%, inps%, regional%, municipal% }
-}
+```sql
+CREATE FUNCTION get_medical_timeline(p_employee_id uuid, p_company_id uuid)
+RETURNS TABLE (
+  id uuid,
+  event_type text,        -- 'record_opened', 'visit_scheduled', 'visit_completed', 'judgment', 'document', 'expiry'
+  event_date timestamptz,
+  title text,
+  description text,
+  status text,
+  metadata jsonb,
+  is_future boolean
+)
 ```
 
----
+La funzione aggrega:
+- `medical_records` -> evento "Apertura cartella sanitaria" (opened_at) e "Chiusura cartella" (closed_at)
+- `medical_visits` -> evento per ogni visita (scheduled/completed), con tipo visita nel titolo
+- `fitness_judgments` -> evento giudizio + evento scadenza futura (expiry_date)
+- `medical_documents` -> evento documento caricato con tipo e nome file
 
-### FASE 2: Tabelle aliquote regionali/comunali
+Ordinamento: `event_date DESC`, con eventi futuri (scadenze) evidenziati separatamente.
 
-**Nuovo file: `src/lib/italianTaxRates.ts`**
-
-Tabella statica (no DB) con:
-- 20 regioni italiane + aliquote addizionale regionale 2025 (da 1.23% Lombardia a 3.33% Lazio per scaglioni alti)
-- Aliquote comunali medie per i capoluoghi principali
-- Funzioni helper: `getRegionalRate(region, income)` e `getMunicipalRate(municipality)`
-
----
-
-### FASE 3: Generatore PDF simulazione
-
-**Nuovo file: `src/lib/simulatorPdfGenerator.ts`**
-
-PDF dedicato (non riutilizza il PDF cedolino perche la struttura e diversa):
-- Header: "Simulazione Costo Azienda - PayHub"
-- Sezione input (RAL, CCNL, contratto, regione)
-- Tabella breakdown mensile e annuale
-- Grafico placeholder (nota: i grafici Recharts non si esportano nativamente in jsPDF, si usa una tabella visiva con barre ASCII o percentuali)
-- Se confronto attivo: tabella comparativa con delta
-- Footer: "Documento generato a scopo informativo - non costituisce busta paga"
+Sicurezza: la funzione usa `SECURITY DEFINER` con controllo RLS interno (verifica company_id dell'utente).
 
 ---
 
-### FASE 4: Pagina Wizard a Step
+### FASE 2: Hook React
 
-**Nuovo file: `src/pages/Simulator.tsx`**
+**Nuovo file: `src/hooks/useMedicalTimeline.tsx`**
 
-Wizard con 4 step usando Tabs di Shadcn:
-
-**Step 1 - Retribuzione**
-- Toggle RAL / Lordo mensile (RadioGroup)
-- Campo importo (Input numerico con formattazione EUR)
-- Select tipo contratto (indeterminato, determinato, apprendistato)
-
-**Step 2 - Contratto CCNL**
-- Select CCNL dalla lista caricata da DB (riutilizza `useCCNLContracts`)
-- Preview: 13a/14a, buoni pasto, aliquote INPS/INAIL del CCNL selezionato
-- Opzione "Nessun CCNL specifico" che usa valori standard
-
-**Step 3 - Localizzazione e Famiglia**
-- Select Regione (20 regioni)
-- Select Comune (capoluoghi principali della regione selezionata)
-- Input numero figli a carico
-
-**Step 4 - Risultati**
-- Card riepilogo: Lordo mensile, Netto stimato, Costo azienda
-- Grafico a torta (Recharts PieChart) breakdown: IRPEF, INPS dipendente, Addizionali, Netto
-- Grafico a barre (Recharts BarChart) per confronto mensile vs annuale
-- Tabella dettagliata con tutte le voci
-- Toggle "Confronta con altro contratto" che aggiunge una seconda colonna
-- Pulsanti: "Esporta PDF", "Nuova simulazione"
+Hook che:
+- Chiama la funzione RPC `get_medical_timeline` via `supabase.rpc()`
+- Accetta filtri: `employeeId`, `eventTypes[]`, `dateFrom`, `dateTo`
+- Applica filtraggio client-side per tipo evento e periodo
+- Restituisce `events`, `futureEvents`, `isLoading`
+- Usa React Query con chiave `['medical-timeline', employeeId, filters]`
 
 ---
 
-### FASE 5: Routing e Navigazione
+### FASE 3: Componenti UI
 
-**Modifica `src/App.tsx`**: aggiungere route `/simulator`
-- Accessibile a: superadmin, admin, admin_sub_azienda, hr_manager
+**Nuovo file: `src/components/health-surveillance/MedicalTimeline.tsx`**
 
-**Modifica `src/components/Navbar.tsx`**: aggiungere voce "Simulatore Costo" nel menu, sotto la sezione Dipendenti o come voce autonoma con icona Calculator
+Componente principale che include:
+
+1. **Barra filtri** in alto:
+   - Select multiplo tipo evento (Cartelle, Visite, Giudizi, Documenti, Scadenze)
+   - Date picker per periodo (da/a)
+   - Pulsante "Reset filtri"
+
+2. **Sezione Scadenze Future** (se presenti):
+   - Card con sfondo giallo/warning
+   - Lista scadenze ordinate per data piu vicina
+
+3. **Timeline cronologica**:
+   - Linea verticale con pallini colorati per tipo:
+     - Verde: Cartella sanitaria aperta
+     - Blu: Visita medica
+     - Viola: Giudizio di idoneita
+     - Arancione: Documento caricato
+     - Rosso: Scadenza
+   - Ogni nodo mostra: data, titolo, descrizione breve, badge tipo
+   - Espandibile per dettagli aggiuntivi (metadata JSON formattato)
+
+**Nuovo file: `src/components/health-surveillance/TimelineEvent.tsx`**
+
+Componente singolo evento con:
+- Icona e colore in base al tipo
+- Badge con label tipo evento
+- Formattazione data in italiano
+- Sezione dettagli espandibile
 
 ---
 
-### FASE 6: Confronto tra contratti (opzionale integrato)
+### FASE 4: Integrazione nella pagina
 
-Nello Step 4, un toggle "Attiva confronto" mostra:
-- Un secondo set di input ridotto (solo CCNL + tipo contratto)
-- I risultati affiancati in due colonne
-- Delta evidenziato in verde (risparmio) o rosso (costo aggiuntivo)
+**Nuovo file: `src/components/health-surveillance/MedicalTimelineDialog.tsx`**
+
+Dialog modale che:
+- Riceve `employeeId` e `companyId`
+- Mostra nome dipendente nell'header
+- Contiene il componente `MedicalTimeline`
+
+**Modifica: `src/pages/HealthSurveillance.tsx`**
+
+Aggiungere:
+- Pulsante "Timeline Sanitaria" nelle Azioni Rapide (con icona Clock/History)
+- Select dipendente per aprire la timeline
+- Integrazione nei punti dove si visualizzano i dipendenti (es. click su cartella -> apri timeline)
 
 ---
 
@@ -117,12 +107,10 @@ Nello Step 4, un toggle "Attiva confronto" mostra:
 
 | File | Azione |
 |------|--------|
-| `src/lib/simulatorCalculations.ts` | Nuovo - funzione di simulazione |
-| `src/lib/italianTaxRates.ts` | Nuovo - aliquote regionali/comunali |
-| `src/lib/simulatorPdfGenerator.ts` | Nuovo - generatore PDF simulazione |
-| `src/pages/Simulator.tsx` | Nuovo - pagina wizard |
-| `src/App.tsx` | Modifica - aggiunta route |
-| `src/components/Navbar.tsx` | Modifica - voce menu |
-
-Nessuna migrazione DB necessaria. Nessuna edge function. Tutto client-side.
+| Migration SQL | Nuovo - funzione RPC `get_medical_timeline` |
+| `src/hooks/useMedicalTimeline.tsx` | Nuovo - hook React |
+| `src/components/health-surveillance/MedicalTimeline.tsx` | Nuovo - componente timeline |
+| `src/components/health-surveillance/TimelineEvent.tsx` | Nuovo - componente singolo evento |
+| `src/components/health-surveillance/MedicalTimelineDialog.tsx` | Nuovo - dialog wrapper |
+| `src/pages/HealthSurveillance.tsx` | Modifica - aggiunta pulsante e dialog |
 
