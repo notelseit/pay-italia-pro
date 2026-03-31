@@ -1,17 +1,15 @@
 
 
-## Piano: Aggiornare email_settings nel database
+## Piano: Sostituire "Unilabgroup" con "Notelseit" (correzione)
 
-Eseguire una query UPDATE sulla tabella `email_settings` per sostituire i riferimenti Unilabgroup con Notelseit:
+Le modifiche precedenti non sono state applicate. I file contengono ancora il vecchio brand. Occorre modificare:
 
-```sql
-UPDATE email_settings
-SET smtp_host = 'mail.notelseit.com',
-    smtp_user = 'info@notelseit.com',
-    from_email = 'info@notelseit.com',
-    updated_at = now()
-WHERE smtp_user = 'crm@unilabgroup.it';
-```
+### Modifiche
 
-Nessuna modifica a file di codice. Solo aggiornamento dati DB tramite insert tool.
+| File | Riga | Da | A |
+|------|------|----|---|
+| `src/pages/Landing.tsx` | 50 | `PayHub by Unilabgroup` | `PayHub by Notelseit` |
+| `src/pages/Landing.tsx` | 64 | `by Unilabgroup` | `by Notelseit` |
+
+Verificherò anche `Login.tsx`, `Navbar.tsx` e `simulatorPdfGenerator.ts` per eventuali occorrenze residue.
 
