@@ -47,7 +47,7 @@ const Landing = () => {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FileText className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold text-foreground">PayHub by Unilabgroup</h1>
+            <h1 className="text-2xl font-bold text-foreground">PayHub by Notelseit</h1>
           </div>
           <Button variant="hero" onClick={() => navigate("/login")}>
             Accedi
