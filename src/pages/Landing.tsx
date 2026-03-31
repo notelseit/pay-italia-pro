@@ -47,7 +47,7 @@ const Landing = () => {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FileText className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold text-foreground"><h1 className="text-2xl font-bold text-foreground">PayHub by Notelseit</h1></h1>
+            <h1 className="text-2xl font-bold text-foreground">PayHub by Unilabgroup</h1>
           </div>
           <Button variant="hero" onClick={() => navigate("/login")}>
             Accedi
@@ -61,7 +61,7 @@ const Landing = () => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <h2 className="text-5xl font-bold leading-tight text-foreground">
-                Gestione Payroll <br /> Gestione Payroll <br /> by Notelseit
+                Gestione Payroll <br /> by Unilabgroup
                 <span className="block bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
                   Semplice e Conforme
                 </span>
@@ -130,8 +130,8 @@ const Landing = () => {
       <footer className="border-t py-8 px-4 bg-card">
         <div className="container mx-auto text-center text-muted-foreground">
           <p>
-            © 2025 PayHub by NOTELSEIT S.R.L.S. Tutti i diritti riservati. P.IVA 03436460731 - Piazzale Dante, 26,
-            74121, Taranto (TA)
+            © 2025 PayHub by Notelseit S.R.L.S. Tutti i diritti riservati. P.IVA 05495770652 - VIA SERRONI 58, 84091
+            BATTIPAGLIA (SA)
           </p>
         </div>
       </footer>
