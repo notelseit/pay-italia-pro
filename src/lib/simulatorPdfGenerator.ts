@@ -29,7 +29,7 @@ export function generateSimulatorPdf(
   doc.setFontSize(18);
   doc.text("Simulazione Costo Azienda", 14, 16);
   doc.setFontSize(10);
-  doc.text("PayHub by UnilabGroup", 14, 24);
+  doc.text("PayHub by Notelseit", 14, 24);
   doc.text(`Generato il ${new Date().toLocaleDateString("it-IT")}`, 14, 30);
 
   y = 45;

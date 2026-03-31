@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     console.debug('[Auth] Initializing auth provider');
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: ReturnType<typeof setTimeout>;
 
     // Set up auth state listener FIRST
     const subscription = authService.onAuthStateChange((user, session) => {
