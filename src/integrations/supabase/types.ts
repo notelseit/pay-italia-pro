@@ -603,6 +603,13 @@ export type Database = {
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "education_records_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_medical_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       email_logs: {
@@ -984,6 +991,13 @@ export type Database = {
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "employment_contracts_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_medical_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       fitness_judgments: {
@@ -1045,6 +1059,13 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fitness_judgments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_medical_view"
             referencedColumns: ["id"]
           },
           {
@@ -1231,6 +1252,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "medical_convocations_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_medical_view"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "medical_convocations_visit_id_fkey"
             columns: ["visit_id"]
             isOneToOne: false
@@ -1301,6 +1329,13 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_documents_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_medical_view"
             referencedColumns: ["id"]
           },
           {
@@ -1437,6 +1472,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "medical_records_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_medical_view"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "medical_records_protocol_id_fkey"
             columns: ["protocol_id"]
             isOneToOne: false
@@ -1513,6 +1555,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "medical_visits_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_medical_view"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "medical_visits_medical_record_id_fkey"
             columns: ["medical_record_id"]
             isOneToOne: false
@@ -1580,6 +1629,13 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_logs_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_medical_view"
             referencedColumns: ["id"]
           },
         ]
@@ -1709,6 +1765,13 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_records_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_medical_view"
             referencedColumns: ["id"]
           },
           {
@@ -2006,6 +2069,13 @@ export type Database = {
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "presence_records_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_medical_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
@@ -2182,6 +2252,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "vaccinations_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_medical_view"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "vaccinations_medical_record_id_fkey"
             columns: ["medical_record_id"]
             isOneToOne: false
@@ -2243,6 +2320,13 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "visit_checklists_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_medical_view"
             referencedColumns: ["id"]
           },
           {
@@ -2310,6 +2394,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "visit_confirmations_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_medical_view"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "visit_confirmations_visit_id_fkey"
             columns: ["visit_id"]
             isOneToOne: false
@@ -2320,7 +2411,59 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      employees_medical_view: {
+        Row: {
+          birth_date: string | null
+          company_id: string | null
+          created_at: string | null
+          email: string | null
+          employee_type: string | null
+          first_name: string | null
+          full_name: string | null
+          hire_date: string | null
+          id: string | null
+          is_active: boolean | null
+          last_name: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          birth_date?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          email?: string | null
+          employee_type?: string | null
+          first_name?: string | null
+          full_name?: string | null
+          hire_date?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          last_name?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          birth_date?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          email?: string | null
+          employee_type?: string | null
+          first_name?: string | null
+          full_name?: string | null
+          hire_date?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          last_name?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employees_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       cleanup_expired_sessions: { Args: never; Returns: number }
