@@ -118,7 +118,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!userToDelete || userToDelete.company_id !== companyId) {
       return new Response(
-        JSON.stringify({ error: "Utente non trovato o non appartiene a questa azienda" }),
+        JSON.stringify({ error: "Operazione non consentita." }),
         { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
