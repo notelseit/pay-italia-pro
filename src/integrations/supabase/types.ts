@@ -2158,7 +2158,7 @@ export type Database = {
           refresh_token_hash: string | null
           revoked_at: string | null
           revoked_reason: string | null
-          session_token: string
+          session_token_hash: string
           user_agent: string | null
           user_id: string
         }
@@ -2174,7 +2174,7 @@ export type Database = {
           refresh_token_hash?: string | null
           revoked_at?: string | null
           revoked_reason?: string | null
-          session_token: string
+          session_token_hash: string
           user_agent?: string | null
           user_id: string
         }
@@ -2190,7 +2190,7 @@ export type Database = {
           refresh_token_hash?: string | null
           revoked_at?: string | null
           revoked_reason?: string | null
-          session_token?: string
+          session_token_hash?: string
           user_agent?: string | null
           user_id?: string
         }
