@@ -19,6 +19,14 @@ interface SessionRequest {
   sessionId?: string;
 }
 
+async function hashToken(token: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(token);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -70,19 +78,21 @@ const handler = async (req: Request): Promise<Response> => {
 
     switch (action) {
       case "create": {
-        // Extract device and location info
         const userAgent = req.headers.get("user-agent") || "unknown";
         const ipAddress = clientIp;
 
-        // Create session record
         const expiresAt = new Date();
-        expiresAt.setHours(expiresAt.getHours() + 24); // 24-hour session
+        expiresAt.setHours(expiresAt.getHours() + 24);
+
+        // Generate a raw token, hash it before storing
+        const rawToken = sessionToken || crypto.randomUUID();
+        const tokenHash = await hashToken(rawToken);
 
         const { data: session, error: sessionError } = await supabaseAdmin
           .from("user_sessions")
           .insert({
             user_id: user.id,
-            session_token: sessionToken || crypto.randomUUID(),
+            session_token_hash: tokenHash,
             device_info: deviceInfo || {},
             ip_address: ipAddress,
             user_agent: userAgent,
@@ -95,13 +105,14 @@ const handler = async (req: Request): Promise<Response> => {
         if (sessionError) {
           console.error("Session creation error:", sessionError);
           return new Response(
-            JSON.stringify({ error: "Impossibile creare la sessione" }),
+            JSON.stringify({ error: "Errore del server" }),
             { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
 
+        // Return the raw token to the client (not the hash)
         return new Response(
-          JSON.stringify({ success: true, session }),
+          JSON.stringify({ success: true, session: { ...session, sessionToken: rawToken } }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
@@ -114,10 +125,13 @@ const handler = async (req: Request): Promise<Response> => {
           );
         }
 
+        // Hash the incoming token to compare
+        const tokenHash = await hashToken(sessionToken);
+
         const { data: session, error: validateError } = await supabaseAdmin
           .from("user_sessions")
           .select("*")
-          .eq("session_token", sessionToken)
+          .eq("session_token_hash", tokenHash)
           .eq("user_id", user.id)
           .eq("is_active", true)
           .gt("expires_at", new Date().toISOString())
@@ -130,9 +144,9 @@ const handler = async (req: Request): Promise<Response> => {
           );
         }
 
-        // Update last activity
+        // Update last activity using the hashed token
         await supabaseAdmin.rpc("update_session_activity", {
-          p_session_token: sessionToken,
+          p_session_token: tokenHash,
         });
 
         return new Response(
@@ -162,7 +176,7 @@ const handler = async (req: Request): Promise<Response> => {
         if (revokeError) {
           console.error("Session revoke error:", revokeError);
           return new Response(
-            JSON.stringify({ error: "Impossibile revocare la sessione" }),
+            JSON.stringify({ error: "Errore del server" }),
             { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
@@ -174,6 +188,9 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       case "revoke_all": {
+        // Hash current token to exclude it
+        const currentTokenHash = sessionToken ? await hashToken(sessionToken) : "";
+
         const { error: revokeAllError } = await supabaseAdmin
           .from("user_sessions")
           .update({
@@ -182,12 +199,12 @@ const handler = async (req: Request): Promise<Response> => {
             revoked_reason: "Revocate tutte le sessioni dall'utente",
           })
           .eq("user_id", user.id)
-          .neq("session_token", sessionToken || ""); // Don't revoke current session
+          .neq("session_token_hash", currentTokenHash);
 
         if (revokeAllError) {
           console.error("Revoke all sessions error:", revokeAllError);
           return new Response(
-            JSON.stringify({ error: "Impossibile revocare le sessioni" }),
+            JSON.stringify({ error: "Errore del server" }),
             { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
@@ -209,7 +226,7 @@ const handler = async (req: Request): Promise<Response> => {
         if (listError) {
           console.error("List sessions error:", listError);
           return new Response(
-            JSON.stringify({ error: "Impossibile recuperare le sessioni" }),
+            JSON.stringify({ error: "Errore del server" }),
             { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
