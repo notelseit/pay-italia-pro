@@ -1,41 +1,54 @@
 
 
-## Piano: Aggiungere Slide con Screenshot Pagine Interne
+## Piano: Presentazione Completa con Tutte le Pagine
 
 ### Panoramica
-Espandere la presentazione esistente aggiungendo 4 nuove slide con screenshot delle pagine interne dell'app: Dashboard, Dipendenti (Employees), Payroll e Presenze (Presence). Ogni slide mostrera uno screenshot con titolo e breve descrizione della funzionalita.
+Espandere la presentazione v3 aggiungendo slide per TUTTE le pagine mancanti dell'applicazione. La v3 copre 7 sezioni; mancano 6 pagine.
 
-### Fasi
+### Pagine gia presenti (v3)
+Landing, Login, Dashboard, Dipendenti, Payroll, Presenze, Sorveglianza Sanitaria (descrittiva), Report/Compliance (descrittiva), Adempimenti Fiscali (descrittiva)
 
-**1. Cattura Screenshot (Browser)**
-- Navigare alle pagine `/dashboard`, `/employees`, `/payroll`, `/presence`
-- Catturare screenshot ad alta risoluzione di ciascuna
-- Nota: richiede login attivo nel preview
+### Pagine da aggiungere
 
-**2. Rigenerare Presentazione**
-- Riutilizzare lo script pptxgenjs esistente
-- Aggiungere 4 nuove slide dopo la slide 5 (UI attuale)
-- Ogni slide: titolo + screenshot + didascalia descrittiva
-- Layout: immagine grande centrata con titolo sopra
+| # | Pagina | Route | Descrizione slide |
+|---|--------|-------|-------------------|
+| 1 | Contratti | /contract | Gestione contratti di lavoro e CCNL |
+| 2 | Documenti | /documents | Archivio documentale aziendale |
+| 3 | Gestione Aziende | /companies | Multi-tenant, gestione sedi e filiali |
+| 4 | Simulatore | /simulator | Simulazione costi del lavoro |
+| 5 | Impostazioni | /settings | Configurazione sistema, ruoli, email |
+| 6 | Super Admin | /superadmin | Pannello amministrazione globale |
 
-**3. Slide Aggiuntive**
+### Approccio
+1. Catturare screenshot via Puppeteer per le 6 pagine mancanti (richiede login attivo)
+2. Rigenerare la presentazione completa con tutte le 15+ slide
+3. Mantenere lo stesso stile grafico della v3 (palette Notelseit, layout consistente)
+4. QA visiva su tutte le slide
 
-| # | Titolo | Pagina | Descrizione |
-|---|--------|--------|-------------|
-| 6 | Dashboard HR | /dashboard | Panoramica KPI, scadenze e azioni rapide |
-| 7 | Gestione Dipendenti | /employees | Anagrafica, contratti e documenti |
-| 8 | Payroll & Cedolini | /payroll | Elaborazione stipendi e contributi |
-| 9 | Presenze & Calendario | /presence | Calendario mensile interattivo |
-
-Le slide esistenti 6-8 (Moduli, Tech Stack, CTA) slittano a 10-12.
-
-**4. QA Visiva**
-- Conversione PDF + immagini
-- Verifica layout, testo e screenshot integrati
+### Struttura finale (circa 18 slide)
+1. Titolo
+2. Profilo Aziendale
+3. Panoramica Piattaforma (screenshot landing)
+4. Funzionalita Principali
+5. Interfaccia Utente (screenshot login + features)
+6. Dashboard HR (screenshot)
+7. Gestione Dipendenti (screenshot)
+8. Payroll & Cedolini (screenshot)
+9. Presenze & Calendario (screenshot)
+10. Contratti di Lavoro (screenshot)
+11. Documenti (screenshot)
+12. Gestione Aziende (screenshot)
+13. Simulatore Costi (screenshot)
+14. Sorveglianza Sanitaria (descrittiva)
+15. Report e Compliance (descrittiva)
+16. Adempimenti Fiscali (descrittiva)
+17. Impostazioni e Super Admin (screenshot/descrittiva)
+18. Tech Stack & Sicurezza
+19. Contatti e CTA
 
 ### Output
-- File `PayHub_Notelseit_Presentazione_v2.pptx` in `/mnt/documents/`
+- `PayHub_Notelseit_Presentazione_v4.pptx` in `/mnt/documents/`
 
 ### Prerequisito
-L'utente deve essere loggato nel preview per catturare le pagine interne. Se non loggato, verra richiesto di farlo prima.
+Login attivo nel preview per catturare le pagine interne.
 
