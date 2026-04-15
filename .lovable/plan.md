@@ -1,30 +1,34 @@
 
 
-## Piano: Creare AuthSwitch e Aggiornare Login
+## Piano: Login Full-Page con Pannelli Animati
 
 ### Panoramica
-Creare un componente `AuthSwitch` animato in `/components/ui/auth-switch.tsx` che sostituisce i Tabs attuali nella pagina Login con un toggle switch stilizzato per passare tra Login e Registrazione.
+Sostituire la pagina login attuale (Card centrata con toggle) con un layout full-page a due pannelli scorrevoli, ispirato al componente fornito. Pannello sinistro/destro si animano per passare tra Sign In e Sign Up.
 
-### Componente AuthSwitch
+### File da modificare/creare
 
-Creare `src/components/ui/auth-switch.tsx`:
-- Toggle pill/switch animato con due opzioni: "Accedi" e "Registrati"
-- Stato controllato via props (`mode: 'login' | 'register'`, `onModeChange`)
-- Animazione sliding con `transition-all` Tailwind
-- Stile coerente con il design system (colori primary, border-radius, shadow)
-- Nessuna dipendenza esterna aggiuntiva (usa solo `cn`, `useState`, Tailwind)
+**1. `src/components/ui/auth-switch.tsx`** — Riscrivere completamente
+- Componente full-page con due pannelli (sign-in / sign-up) e overlay animato
+- CSS inline via `<style>` tag per le animazioni di sliding (::before pseudo-element, transitions)
+- Responsive: layout verticale sotto 870px
+- Icone social con Lucide (Facebook, Twitter/X, Google, LinkedIn placeholder via SVG)
+- Props: callback `onSignIn`, `onSignUp` per collegare la logica auth esistente
+- Testi in italiano ("Accedi", "Registrati", "Nuovo qui?", "Già registrato?")
 
-### Aggiornamento Login.tsx
+**2. `src/pages/Login.tsx`** — Aggiornare
+- Rimuovere Card/CardHeader/AuthSwitch toggle attuale
+- Usare il nuovo componente full-page come layout principale
+- Mantenere tutta la logica esistente: `handleLogin`, `handleRegister`, `handleForgotPassword`, validazione Zod, useAuth, redirect se loggato
+- Integrare i form dentro il componente (i campi input restano gli stessi: email, password, fullName, companyName, confirmPassword)
+- Mantenere il dialog "Password dimenticata"
+- Logo PayHub nell'header
 
-1. Sostituire `Tabs`/`TabsList`/`TabsTrigger` con `AuthSwitch`
-2. Usare stato locale `mode` per mostrare/nascondere i form login e register
-3. Correggere il bug HTML esistente: doppio tag `<h1>` annidato alla riga 149
-4. Ripristinare `grid-cols-2` (attualmente `grid-cols-1`, il tab Registrati non è visibile)
+### Adattamenti dal codice fornito
+- Convertire CSS raw in Tailwind dove possibile, mantenere `<style>` solo per animazioni complesse (::before, transitions)
+- Sostituire emoji (📧🔒👤) con icone Lucide (`Mail`, `Lock`, `User`)
+- Usare i colori del design system (primary HSL 217 83% 51%) invece di hardcoded `#5995fd`
+- Aggiungere i campi mancanti per la registrazione PayHub (Nome Azienda, Conferma Password)
+- Social icons: solo visual per ora (non funzionali), usando Lucide
 
-### Dipendenze
-Nessuna nuova — usa solo `cn` da `@/lib/utils` e Tailwind CSS.
-
-### File modificati
-- `src/components/ui/auth-switch.tsx` (nuovo)
-- `src/pages/Login.tsx` (aggiornato)
+### Nessuna nuova dipendenza
 
