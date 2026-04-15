@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { useAccessLogger } from "@/hooks/useAccessLogger";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AppLayout } from "@/components/AppLayout";
 import { Chatbot } from "@/components/Chatbot";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
@@ -36,76 +37,29 @@ const AppContent = () => {
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/dashboard" element={
+      
+      {/* Protected routes with sidebar layout */}
+      <Route element={
         <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda', 'hr_manager', 'employee', 'medical_officer']}>
-          <Dashboard />
+          <AppLayout />
         </ProtectedRoute>
-      } />
-      <Route path="/employees" element={
-        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda', 'hr_manager', 'employee', 'medical_officer']}>
-          <Employees />
-        </ProtectedRoute>
-      } />
-      <Route path="/presence" element={
-        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda', 'hr_manager', 'employee']}>
-          <Presence />
-        </ProtectedRoute>
-      } />
-      <Route path="/payroll" element={
-        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda', 'hr_manager', 'employee']}>
-          <Payroll />
-        </ProtectedRoute>
-      } />
-      <Route path="/contract" element={
-        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda', 'hr_manager', 'employee']}>
-          <Contract />
-        </ProtectedRoute>
-      } />
-      <Route path="/compliance" element={
-        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda']}>
-          <Compliance />
-        </ProtectedRoute>
-      } />
-      <Route path="/compliance/f24" element={
-        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda']}>
-          <F24 />
-        </ProtectedRoute>
-      } />
-      <Route path="/health-surveillance" element={
-        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda', 'hr_manager', 'employee', 'medical_officer']}>
-          <HealthSurveillance />
-        </ProtectedRoute>
-      } />
-      <Route path="/reports" element={
-        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda', 'hr_manager']}>
-          <Reports />
-        </ProtectedRoute>
-      } />
-      <Route path="/documents" element={
-        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda', 'hr_manager']}>
-          <Documents />
-        </ProtectedRoute>
-      } />
-      <Route path="/settings" element={
-        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda']}>
-          <Settings />
-        </ProtectedRoute>
-      } />
-      <Route path="/superadmin" element={
-        <ProtectedRoute requireRole={['superadmin']}>
-          <SuperAdmin />
-        </ProtectedRoute>
-      } />
-      <Route path="/companies" element={
-        <ProtectedRoute requireRole={['superadmin', 'admin']}>
-          <Companies />
-        </ProtectedRoute>
-      } />
-      <Route path="/simulator" element={
-        <ProtectedRoute requireRole={['superadmin', 'admin', 'admin_sub_azienda', 'hr_manager']}>
-          <Simulator />
-        </ProtectedRoute>
-      } />
+      }>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/employees" element={<Employees />} />
+        <Route path="/presence" element={<Presence />} />
+        <Route path="/payroll" element={<Payroll />} />
+        <Route path="/contract" element={<Contract />} />
+        <Route path="/compliance" element={<Compliance />} />
+        <Route path="/compliance/f24" element={<F24 />} />
+        <Route path="/health-surveillance" element={<HealthSurveillance />} />
+        <Route path="/reports" element={<Reports />} />
+        <Route path="/documents" element={<Documents />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/superadmin" element={<SuperAdmin />} />
+        <Route path="/companies" element={<Companies />} />
+        <Route path="/simulator" element={<Simulator />} />
+      </Route>
+
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>
