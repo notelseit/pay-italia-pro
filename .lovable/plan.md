@@ -1,54 +1,30 @@
 
 
-## Piano: Presentazione Completa con Tutte le Pagine
+## Piano: Creare AuthSwitch e Aggiornare Login
 
 ### Panoramica
-Espandere la presentazione v3 aggiungendo slide per TUTTE le pagine mancanti dell'applicazione. La v3 copre 7 sezioni; mancano 6 pagine.
+Creare un componente `AuthSwitch` animato in `/components/ui/auth-switch.tsx` che sostituisce i Tabs attuali nella pagina Login con un toggle switch stilizzato per passare tra Login e Registrazione.
 
-### Pagine gia presenti (v3)
-Landing, Login, Dashboard, Dipendenti, Payroll, Presenze, Sorveglianza Sanitaria (descrittiva), Report/Compliance (descrittiva), Adempimenti Fiscali (descrittiva)
+### Componente AuthSwitch
 
-### Pagine da aggiungere
+Creare `src/components/ui/auth-switch.tsx`:
+- Toggle pill/switch animato con due opzioni: "Accedi" e "Registrati"
+- Stato controllato via props (`mode: 'login' | 'register'`, `onModeChange`)
+- Animazione sliding con `transition-all` Tailwind
+- Stile coerente con il design system (colori primary, border-radius, shadow)
+- Nessuna dipendenza esterna aggiuntiva (usa solo `cn`, `useState`, Tailwind)
 
-| # | Pagina | Route | Descrizione slide |
-|---|--------|-------|-------------------|
-| 1 | Contratti | /contract | Gestione contratti di lavoro e CCNL |
-| 2 | Documenti | /documents | Archivio documentale aziendale |
-| 3 | Gestione Aziende | /companies | Multi-tenant, gestione sedi e filiali |
-| 4 | Simulatore | /simulator | Simulazione costi del lavoro |
-| 5 | Impostazioni | /settings | Configurazione sistema, ruoli, email |
-| 6 | Super Admin | /superadmin | Pannello amministrazione globale |
+### Aggiornamento Login.tsx
 
-### Approccio
-1. Catturare screenshot via Puppeteer per le 6 pagine mancanti (richiede login attivo)
-2. Rigenerare la presentazione completa con tutte le 15+ slide
-3. Mantenere lo stesso stile grafico della v3 (palette Notelseit, layout consistente)
-4. QA visiva su tutte le slide
+1. Sostituire `Tabs`/`TabsList`/`TabsTrigger` con `AuthSwitch`
+2. Usare stato locale `mode` per mostrare/nascondere i form login e register
+3. Correggere il bug HTML esistente: doppio tag `<h1>` annidato alla riga 149
+4. Ripristinare `grid-cols-2` (attualmente `grid-cols-1`, il tab Registrati non è visibile)
 
-### Struttura finale (circa 18 slide)
-1. Titolo
-2. Profilo Aziendale
-3. Panoramica Piattaforma (screenshot landing)
-4. Funzionalita Principali
-5. Interfaccia Utente (screenshot login + features)
-6. Dashboard HR (screenshot)
-7. Gestione Dipendenti (screenshot)
-8. Payroll & Cedolini (screenshot)
-9. Presenze & Calendario (screenshot)
-10. Contratti di Lavoro (screenshot)
-11. Documenti (screenshot)
-12. Gestione Aziende (screenshot)
-13. Simulatore Costi (screenshot)
-14. Sorveglianza Sanitaria (descrittiva)
-15. Report e Compliance (descrittiva)
-16. Adempimenti Fiscali (descrittiva)
-17. Impostazioni e Super Admin (screenshot/descrittiva)
-18. Tech Stack & Sicurezza
-19. Contatti e CTA
+### Dipendenze
+Nessuna nuova — usa solo `cn` da `@/lib/utils` e Tailwind CSS.
 
-### Output
-- `PayHub_Notelseit_Presentazione_v4.pptx` in `/mnt/documents/`
-
-### Prerequisito
-Login attivo nel preview per catturare le pagine interne.
+### File modificati
+- `src/components/ui/auth-switch.tsx` (nuovo)
+- `src/pages/Login.tsx` (aggiornato)
 
