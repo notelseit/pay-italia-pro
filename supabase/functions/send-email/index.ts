@@ -24,10 +24,49 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+    // Authentication: require either a valid user JWT or the service role key
+    // (the service role path is used by internal edge functions like
+    // check-medical-visit-expiry).
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const token = authHeader.replace("Bearer ", "").trim();
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+
+    const supabaseClient = createClient(supabaseUrl, serviceRoleKey);
+
+    let isAuthorized = false;
+    if (token === serviceRoleKey) {
+      // Internal call from another edge function
+      isAuthorized = true;
+    } else {
+      // Verify user JWT
+      const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+      if (!userError && userData?.user) {
+        // Optional: ensure user has an HR/admin role somewhere
+        const { data: roles } = await supabaseClient
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userData.user.id);
+        const allowed = (roles ?? []).some((r: { role: string }) =>
+          ["admin", "admin_sub_azienda", "hr_manager", "superadmin", "medical_officer"].includes(r.role)
+        );
+        if (allowed) isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     const emailRequest: EmailRequest = await req.json();
     console.log("Email request received:", { 
