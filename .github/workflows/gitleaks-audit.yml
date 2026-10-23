@@ -1,0 +1,35 @@
+name: Gitleaks full-history audit
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Scan all reachable Git history with Gitleaks
+        run: |
+          docker run --rm -v "$PWD:/repo" -w /repo ghcr.io/gitleaks/gitleaks:v8.24.3 git --redact --exit-code 0 --report-format json --report-path /repo/gitleaks-report.json --log-opts="--all" .
+      - name: Summarize findings without disclosing secrets
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, os
+          findings=json.load(open('gitleaks-report.json'))
+          print(f"Gitleaks findings: {len(findings)}")
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
+              f.write(f"### Gitleaks full Git history\n\n**Findings: {len(findings)}**\n\n")
+              f.write("Report artifact uses redacted matches. Treat paths and metadata as potentially sensitive.\n")
+          PY
+      - name: Upload redacted audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-redacted-report
+          path: gitleaks-report.json
+          retention-days: 7
